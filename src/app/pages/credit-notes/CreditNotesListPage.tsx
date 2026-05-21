@@ -50,6 +50,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from '@/app/components/ui/label';
 import { toast } from 'sonner';
 import { formatDocumentCurrency } from '@/lib/currencyUtils';
+import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface CreditNote {
   _id: string;
@@ -70,6 +71,7 @@ interface CreditNote {
     name: string;
   };
   reason?: string;
+  ebm?: { ebmStatus?: string };
 }
 
 interface Client {
@@ -243,7 +245,7 @@ export default function CreditNotesListPage() {
   };
 
   const formatCurrency = (amount: number, currency?: string) => {
-    const curr = currency || companyCurrency || 'RWF';
+    const curr = currency || companyCurrency || 'FRW';
     return formatDocumentCurrency(amount || 0, curr);
   };
 
@@ -597,6 +599,7 @@ export default function CreditNotesListPage() {
                         <TableHead className="text-xs font-semibold text-slate-500 dark:text-slate-400">Date</TableHead>
                         <TableHead className="text-xs font-semibold text-slate-500 dark:text-slate-400">Type</TableHead>
                         <TableHead className="text-xs font-semibold text-slate-500 dark:text-slate-400">Status</TableHead>
+                        <TableHead className="text-xs font-semibold text-slate-500 dark:text-slate-400">EBM</TableHead>
                         <TableHead className="text-right text-xs font-semibold text-slate-500 dark:text-slate-400">Total</TableHead>
                         <TableHead className="w-24"></TableHead>
                       </TableRow>
@@ -623,6 +626,7 @@ export default function CreditNotesListPage() {
                           <TableCell>
                             <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusStyle(cn.status)}`}>{getStatusLabel(cn.status)}</span>
                           </TableCell>
+                          <TableCell><EBMStatusBadge status={cn.ebm?.ebmStatus} /></TableCell>
                           <TableCell className="text-right text-sm font-semibold text-slate-900 dark:text-white">{formatCurrency(cn.grandTotal || cn.totalAmount, cn.currencyCode)}</TableCell>
                           <TableCell>
                             <div className="flex items-center justify-end gap-1">

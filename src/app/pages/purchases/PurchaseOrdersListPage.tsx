@@ -52,6 +52,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { formatDocumentCurrency } from '@/lib/currencyUtils';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
+import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface PurchaseOrder {
   _id: string;
@@ -76,6 +77,7 @@ interface PurchaseOrder {
   notes?: string;
   linesCount: number;
   createdAt: string;
+  ebm?: { ebmStatus?: string };
 }
 
 interface Supplier {
@@ -627,6 +629,9 @@ export default function PurchaseOrdersListPage() {
                         {t('purchase.orders.status', 'Status')}
                       </TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        EBM
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {t('purchase.orders.totalAmount', 'Total Amount')}
                       </TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -665,6 +670,7 @@ export default function PurchaseOrdersListPage() {
                           {po.expectedDeliveryDate ? formatDate(po.expectedDeliveryDate) : '-'}
                         </TableCell>
                         <TableCell>{getStatusBadge(po.status)}</TableCell>
+                        <TableCell><EBMStatusBadge status={po.ebm?.ebmStatus} /></TableCell>
                         <TableCell className="font-mono font-medium text-slate-950 dark:text-white">
                           {formatCurrency(po.totalAmount, po.currencyCode)}
                         </TableCell>

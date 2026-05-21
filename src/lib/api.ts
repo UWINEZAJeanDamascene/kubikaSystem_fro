@@ -1345,6 +1345,11 @@ export const productsApi = {
       method: "PUT",
       body: { notes },
     }),
+  registerWithEBM: (id: string) =>
+    request<{ success: boolean; data: unknown; message?: string }>(
+      `/products/${id}/ebm/register`,
+      { method: "POST" },
+    ),
   getLowStock: () =>
     request<{ success: boolean; data: unknown }>("/products/low-stock"),
   checkLowStockAndNotify: () =>
@@ -1453,6 +1458,97 @@ export const warehousesApi = {
   delete: (id: string) =>
     request<WarehouseDeleteResponse>(`/stock/warehouses/${id}`, {
       method: "DELETE",
+    }),
+};
+
+export interface EBMDeviceBranchStatus {
+  branchId: string;
+  branchName: string;
+  branchRef?: string | null;
+  tin?: string | null;
+  deviceSerialNo?: string | null;
+  status: "not_initialized" | "initialized" | "failed";
+  initializedAt?: string | null;
+  lastAttemptAt?: string | null;
+  lastErrorMessage?: string | null;
+  initializedMode?: "mock" | "sandbox" | "production" | null;
+  lastAttemptMode?: "mock" | "sandbox" | "production" | null;
+  modeMatches: boolean;
+  recordId?: string | null;
+}
+
+export interface EBMDeviceStatusResponse {
+  success: boolean;
+  data: {
+    mode: "mock" | "sandbox" | "production";
+    tin?: string | null;
+    branches: EBMDeviceBranchStatus[];
+  };
+}
+
+export interface EBMInitializeResponse {
+  success: boolean;
+  data: EBMDeviceBranchStatus;
+  vsdc?: {
+    resultCd: string;
+    resultMsg: string;
+    resultDt: string;
+  };
+}
+
+export const ebmApi = {
+  getDevices: () => request<EBMDeviceStatusResponse>("/ebm/devices"),
+  initializeDevice: (payload: {
+    branchId: string;
+    deviceSerialNo?: string | null;
+    tin?: string | null;
+  }) =>
+    request<EBMInitializeResponse>("/ebm/devices/initialize", {
+      method: "POST",
+      body: payload,
+    }),
+  getCodeSyncStatus: () => request<{ success: boolean; data: unknown[] }>("/ebm/codes/status"),
+  syncCodes: (payload?: { branchId?: string; full?: boolean }) =>
+    request<{ success: boolean; data: unknown }>("/ebm/codes/sync", {
+      method: "POST",
+      body: payload || {},
+    }),
+  getCodes: () => request<{ success: boolean; data: Record<string, { codeClass: string; codeClassName?: string | null; codes: Array<{ code: string; name?: string | null; description?: string | null; source?: any }> }> }>("/ebm/codes"),
+  getItemClasses: (params?: { search?: string; limit?: number }) => {
+    const query = buildQuery(params as Record<string, any>);
+    return request<{ success: boolean; data: Array<{ itemClassCode: string; itemClassName: string; itemClassLevel?: number; taxTypeCode?: string | null }> }>(`/ebm/codes/item-classes${query ? `?${query}` : ""}`);
+  },
+  searchTINs: (params?: { search?: string; limit?: number }) => {
+    const query = buildQuery(params as Record<string, any>);
+    return request<{ success: boolean; data: Array<{ tin: string; taxpayerName: string; statusCode?: string | null }> }>(`/ebm/codes/tins${query ? `?${query}` : ""}`);
+  },
+  getNotices: () => request<{ success: boolean; data: Array<{ noticeNumber: string; title?: string | null; content?: string | null; noticeDate?: string | null }> }>("/ebm/notices"),
+  registerBranch: (payload: { branchId: string }) =>
+    request<{ success: boolean; data: unknown }>("/ebm/branches/register", {
+      method: "POST",
+      body: payload,
+    }),
+  getImportedItems: (params?: { status?: string; branchId?: string; limit?: number }) =>
+    request<{ success: boolean; data: unknown[] }>("/ebm/imports", { params }),
+  syncImportedItems: (payload?: { branchId?: string; full?: boolean }) =>
+    request<{ success: boolean; data: unknown }>("/ebm/imports/sync", {
+      method: "POST",
+      body: payload || {},
+    }),
+  confirmImportedItem: (id: string, payload: { productId: string; warehouseId: string; supplierId?: string; branchId?: string; unitCost?: number }) =>
+    request<{ success: boolean; data: unknown }>(`/ebm/imports/${id}/confirm`, {
+      method: "POST",
+      body: payload,
+    }),
+  rejectImportedItem: (id: string, reason: string) =>
+    request<{ success: boolean; data: unknown }>(`/ebm/imports/${id}/reject`, {
+      method: "POST",
+      body: { reason },
+    }),
+  retryImportedItemStock: (id: string, payload: { productId: string; warehouseId: string; supplierId?: string; unitCost?: number }) =>
+    request<{ success: boolean; data: unknown }>(`/ebm/imports/${id}/retry-stock`, {
+      method: "POST",
+      body: payload,
     }),
 };
 

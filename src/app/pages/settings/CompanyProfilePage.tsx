@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { companyApi } from '@/lib/api';
+import { companyApi, ebmApi, type EBMDeviceBranchStatus } from '@/lib/api';
 import { Layout } from '../../layout/Layout';
 import {
   Loader2,
@@ -13,10 +13,14 @@ import {
   FileText,
   RefreshCw,
   BadgeCheck,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
   Briefcase,
   Landmark,
   DollarSign,
   Settings2,
+  ReceiptText,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -84,10 +88,18 @@ const MONTHS = [
 export default function CompanyProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'settings' | 'ebm'>('profile');
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [companyId, setCompanyId] = useState('');
+  const [ebmMode, setEbmMode] = useState<'mock' | 'sandbox' | 'production'>('mock');
+  const [ebmTin, setEbmTin] = useState<string | null>(null);
+  const [ebmBranches, setEbmBranches] = useState<EBMDeviceBranchStatus[]>([]);
+  const [ebmLoading, setEbmLoading] = useState(false);
+  const [initializingBranch, setInitializingBranch] = useState<string | null>(null);
+  const [codeSyncStates, setCodeSyncStates] = useState<any[]>([]);
+  const [rraNotices, setRraNotices] = useState<any[]>([]);
+  const [syncingCodes, setSyncingCodes] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -107,8 +119,39 @@ export default function CompanyProfilePage() {
     }
   };
 
+  const loadEbmDevices = async () => {
+    setEbmLoading(true);
+    try {
+      const response = await ebmApi.getDevices();
+      if (response.success && response.data) {
+        setEbmMode(response.data.mode);
+        setEbmTin(response.data.tin || null);
+        setEbmBranches(response.data.branches || []);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to load EBM device status');
+    } finally {
+      setEbmLoading(false);
+    }
+  };
+
+  const loadEbmCodeData = async () => {
+    try {
+      const [statusResponse, noticesResponse] = await Promise.all([
+        ebmApi.getCodeSyncStatus(),
+        ebmApi.getNotices(),
+      ]);
+      if (statusResponse.success) setCodeSyncStates(statusResponse.data as any[]);
+      if (noticesResponse.success) setRraNotices(noticesResponse.data as any[]);
+    } catch (error) {
+      console.error('Failed to load EBM code sync data:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    loadEbmDevices();
+    loadEbmCodeData();
   }, []);
 
   const handleSaveProfile = async () => {
@@ -163,6 +206,82 @@ export default function CompanyProfilePage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleInitializeEbm = async (branch: EBMDeviceBranchStatus) => {
+    setInitializingBranch(branch.branchId);
+    try {
+      await ebmApi.initializeDevice({
+        branchId: branch.branchId,
+        deviceSerialNo: branch.deviceSerialNo,
+        tin: ebmTin || undefined,
+      });
+      toast.success(`EBM device initialized for branch ${branch.branchId}`);
+      await loadEbmDevices();
+    } catch (error: any) {
+      toast.error(error.message || 'EBM device initialization failed');
+      await loadEbmDevices();
+    } finally {
+      setInitializingBranch(null);
+    }
+  };
+
+  const handleSyncCodes = async () => {
+    setSyncingCodes(true);
+    try {
+      const branchId = ebmBranches.find((branch) => branch.modeMatches)?.branchId || '00';
+      await ebmApi.syncCodes({ branchId });
+      toast.success('RRA code data synced');
+      await loadEbmCodeData();
+    } catch (error: any) {
+      toast.error(error.message || 'RRA code sync failed');
+    } finally {
+      setSyncingCodes(false);
+    }
+  };
+
+  const renderEbmStatus = (branch: EBMDeviceBranchStatus) => {
+    if (branch.status === 'initialized' && branch.modeMatches) {
+      return (
+        <Badge className="gap-1 border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Initialized
+        </Badge>
+      );
+    }
+    if (branch.status === 'failed') {
+      return (
+        <Badge className="gap-1 border-red-200 bg-red-50 text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+          <XCircle className="h-3.5 w-3.5" />
+          Failed
+        </Badge>
+      );
+    }
+    if (branch.status === 'initialized' && !branch.modeMatches) {
+      return (
+        <Badge className="gap-1 border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+          <AlertTriangle className="h-3.5 w-3.5" />
+          Re-init for {ebmMode}
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="gap-1 border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+        <AlertTriangle className="h-3.5 w-3.5" />
+        Not initialized
+      </Badge>
+    );
+  };
+
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return '-';
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(value));
   };
 
   if (loading) {
@@ -307,6 +426,17 @@ export default function CompanyProfilePage() {
             >
               <Settings2 className="h-4 w-4" />
               System Settings
+            </button>
+            <button
+              onClick={() => setActiveTab('ebm')}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all ${
+                activeTab === 'ebm'
+                  ? 'bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950'
+                  : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10'
+              }`}
+            >
+              <ReceiptText className="h-4 w-4" />
+              EBM Devices
             </button>
           </div>
 
@@ -797,6 +927,181 @@ export default function CompanyProfilePage() {
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Save System Settings
             </Button>
+          </div>
+        )}
+
+        {activeTab === 'ebm' && (
+          <div className="space-y-6">
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 p-5 dark:border-white/10">
+                <div className="flex items-start gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950">
+                    <ReceiptText className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                      EBM Device Initialization
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                      VSDC devices are initialized per branch before invoices, purchases, and stock movements can be reported.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-50 dark:border-cyan-900/60 dark:bg-cyan-950/40 dark:text-cyan-200">
+                    Mode: {ebmMode}
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadEbmDevices}
+                    disabled={ebmLoading}
+                    className="gap-2 border-slate-300 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/10"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${ebmLoading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-5">
+                {!ebmTin && (
+                  <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                    Add the company TIN in the Company Profile tab before initializing EBM devices.
+                  </div>
+                )}
+
+                {ebmLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <Skeleton key={index} className="h-16 w-full rounded-lg" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[900px] text-left">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-xs uppercase text-slate-500 dark:border-white/10 dark:text-slate-400">
+                          <th className="px-3 py-3 font-semibold">Branch</th>
+                          <th className="px-3 py-3 font-semibold">Branch ID</th>
+                          <th className="px-3 py-3 font-semibold">Device Serial</th>
+                          <th className="px-3 py-3 font-semibold">Status</th>
+                          <th className="px-3 py-3 font-semibold">Initialized</th>
+                          <th className="px-3 py-3 font-semibold">Mode</th>
+                          <th className="px-3 py-3 text-right font-semibold">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ebmBranches.map((branch) => (
+                          <tr key={branch.branchId} className="border-b border-slate-100 last:border-b-0 dark:border-white/10">
+                            <td className="px-3 py-4">
+                              <div className="font-medium text-slate-900 dark:text-white">{branch.branchName}</div>
+                              {branch.lastErrorMessage && (
+                                <div className="mt-1 max-w-sm truncate text-xs text-red-600 dark:text-red-300" title={branch.lastErrorMessage}>
+                                  {branch.lastErrorMessage}
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-3 py-4 font-mono text-sm text-slate-700 dark:text-slate-200">{branch.branchId}</td>
+                            <td className="px-3 py-4 font-mono text-sm text-slate-700 dark:text-slate-200">{branch.deviceSerialNo || '-'}</td>
+                            <td className="px-3 py-4">{renderEbmStatus(branch)}</td>
+                            <td className="px-3 py-4 text-sm text-slate-600 dark:text-slate-300">{formatDateTime(branch.initializedAt)}</td>
+                            <td className="px-3 py-4 text-sm text-slate-600 dark:text-slate-300">{branch.initializedMode || '-'}</td>
+                            <td className="px-3 py-4 text-right">
+                              <Button
+                                size="sm"
+                                onClick={() => handleInitializeEbm(branch)}
+                                disabled={!ebmTin || initializingBranch === branch.branchId}
+                                className="gap-2 bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-cyan-100"
+                              >
+                                {initializingBranch === branch.branchId ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <ReceiptText className="h-4 w-4" />
+                                )}
+                                Initialize
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+              <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900 dark:text-white">RRA Code Data</h3>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                      Standard codes, item classes, TINs, branches, and notices synced from VSDC.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleSyncCodes}
+                    disabled={syncingCodes || !ebmBranches.some((branch) => branch.modeMatches)}
+                    className="gap-2 bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-cyan-100"
+                  >
+                    {syncingCodes ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    Sync Codes
+                  </Button>
+                </div>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full min-w-[640px] text-left">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-xs uppercase text-slate-500 dark:border-white/10 dark:text-slate-400">
+                        <th className="px-3 py-3 font-semibold">Code Type</th>
+                        <th className="px-3 py-3 font-semibold">Last Request</th>
+                        <th className="px-3 py-3 font-semibold">Last Sync</th>
+                        <th className="px-3 py-3 font-semibold">Result</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {codeSyncStates.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-3 py-6 text-sm text-slate-500 dark:text-slate-400">
+                            No RRA code sync has run yet.
+                          </td>
+                        </tr>
+                      ) : codeSyncStates.map((state) => (
+                        <tr key={`${state.syncType}-${state.branchId}-${state.mode}`} className="border-b border-slate-100 last:border-b-0 dark:border-white/10">
+                          <td className="px-3 py-3 text-sm font-medium text-slate-900 dark:text-white">{String(state.syncType).replace(/_/g, ' ')}</td>
+                          <td className="px-3 py-3 font-mono text-xs text-slate-600 dark:text-slate-300">{state.lastReqDt || '-'}</td>
+                          <td className="px-3 py-3 text-sm text-slate-600 dark:text-slate-300">{formatDateTime(state.lastSuccessfulSyncAt)}</td>
+                          <td className="px-3 py-3 text-sm">
+                            {state.lastErrorMessage ? (
+                              <span className="text-red-600 dark:text-red-300">{state.lastErrorMessage}</span>
+                            ) : (
+                              <span className="text-emerald-700 dark:text-emerald-300">
+                                {(state.summary?.upserted || 0) + (state.summary?.matched || 0)} records
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white">RRA Notices</h3>
+                <div className="mt-4 space-y-3">
+                  {rraNotices.length === 0 ? (
+                    <p className="text-sm text-slate-500 dark:text-slate-400">No notices synced yet.</p>
+                  ) : rraNotices.slice(0, 5).map((notice) => (
+                    <div key={notice.noticeNumber} className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.06]">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{notice.title || notice.noticeNumber}</p>
+                      {notice.content && <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{notice.content}</p>}
+                      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{notice.noticeDate || notice.noticeNumber}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

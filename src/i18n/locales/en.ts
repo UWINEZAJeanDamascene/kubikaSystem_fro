@@ -43,6 +43,7 @@ const en = {
     purchases: "Purchases",
     purchaseOrders: "Purchase Orders",
     grn: "Goods Received Notes",
+    importedItems: "Imported Items",
     purchaseReturns: "Purchase Returns",
     arReceipts: "AR Receipts",
     apPayments: "AP Payments",

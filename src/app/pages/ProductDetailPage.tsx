@@ -18,7 +18,8 @@ import {
   FileText,
   Clock,
   ShoppingCart,
-  Receipt
+  Receipt,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -77,6 +78,15 @@ interface Product {
   revenueAccount?: string;
   taxCode?: string;
   taxRate?: number;
+  ebm?: {
+    itemClassCd?: string | null;
+    taxTyCd?: string | null;
+    pkgUnitCd?: string | null;
+    qtyUnitCd?: string | null;
+    isRegisteredWithEBM?: boolean;
+    ebmRegisteredAt?: string | null;
+    ebmRegistrationError?: string | null;
+  };
   brand?: string;
   location?: string;
   trackingType?: string;
@@ -229,6 +239,7 @@ export default function ProductDetailPage() {
 
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState<Product | null>(null);
+  const [registeringEbm, setRegisteringEbm] = useState(false);
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [movementsLoading, setMovementsLoading] = useState(false);
   const [movementPagination, setMovementPagination] = useState({
@@ -342,6 +353,20 @@ export default function ProductDetailPage() {
     }
   };
 
+  const handleRegisterEbm = async () => {
+    if (!id) return;
+    setRegisteringEbm(true);
+    try {
+      await productsApi.registerWithEBM(id);
+      await loadProduct();
+    } catch (error) {
+      console.error('Failed to register product with EBM:', error);
+      await loadProduct();
+    } finally {
+      setRegisteringEbm(false);
+    }
+  };
+
   const formatCurrency = (value: number | string | undefined) => {
     if (!value) return '0.00';
     const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -441,6 +466,13 @@ export default function ProductDetailPage() {
                 </span>
                 <Badge variant="outline">{product.category?.name || 'Uncategorized'}</Badge>
                 <Badge variant="outline" className="uppercase">{product.costingMethod || 'fifo'}</Badge>
+                {product.ebm?.isRegisteredWithEBM ? (
+                  <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">EBM registered</Badge>
+                ) : product.ebm?.ebmRegistrationError ? (
+                  <Badge className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300">EBM failed</Badge>
+                ) : (
+                  <Badge className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">EBM not registered</Badge>
+                )}
                 {product.isArchived && (
                   <Badge variant="outline" className="bg-slate-100 dark:bg-slate-700">
                     {t('products.archived') || 'Archived'}
@@ -460,6 +492,9 @@ export default function ProductDetailPage() {
                   </p>
                 </div>
                 <div className="ml-3 flex-shrink-0">
+                  <Button size="sm" variant="ghost" onClick={handleRegisterEbm} disabled={registeringEbm}>
+                    {registeringEbm ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                  </Button>
                   <Button size="sm" variant="ghost" onClick={() => navigate(`/products/${product._id}/edit`)}>
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -572,6 +607,21 @@ export default function ProductDetailPage() {
                 <FieldRow label="Low Stock Threshold" value={product.lowStockThreshold || 10} mono />
                 <FieldRow label="Reorder Point" value={product.reorderPoint || 0} mono />
                 <FieldRow label="Reorder Quantity" value={product.reorderQuantity || 0} mono />
+              </DetailCard>
+
+              <DetailCard title="EBM Registration" description="RRA item codes required before this product can be used on EBM documents.">
+                {!product.ebm?.isRegisteredWithEBM && (
+                  <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                    This product cannot be added to EBM-submitted documents until registered with RRA.
+                  </div>
+                )}
+                <FieldRow label="Status" value={product.ebm?.isRegisteredWithEBM ? 'Registered' : product.ebm?.ebmRegistrationError ? 'Failed' : 'Not registered'} />
+                <FieldRow label="Registered At" value={formatDate(product.ebm?.ebmRegisteredAt || undefined)} />
+                <FieldRow label="Item Class" value={product.ebm?.itemClassCd || '-'} mono />
+                <FieldRow label="Tax Type" value={product.ebm?.taxTyCd || product.taxCode || '-'} mono />
+                <FieldRow label="Packaging Unit" value={product.ebm?.pkgUnitCd || '-'} mono />
+                <FieldRow label="Quantity Unit" value={product.ebm?.qtyUnitCd || '-'} mono />
+                {product.ebm?.ebmRegistrationError && <FieldRow label="Last Error" value={product.ebm.ebmRegistrationError} />}
               </DetailCard>
 
               {/* Accounting */}

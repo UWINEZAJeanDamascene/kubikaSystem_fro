@@ -45,6 +45,7 @@ import {
 import { Badge } from "@/app/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { useTranslation } from "react-i18next";
+import { EBMStatusBadge } from "@/app/components/EBMStatusBadge";
 
 /* ═══════════════════════════════════════════════════════════════
    TYPES
@@ -66,6 +67,7 @@ interface GRN {
   totalAmount: number;
   paymentStatus: "pending" | "partially_paid" | "paid";
   supplierInvoiceNo?: string;
+  ebm?: { ebmStatus?: string };
 }
 
 interface Supplier {
@@ -348,6 +350,7 @@ export default function GRNListPage() {
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("grn.supplier", "Supplier")}</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("grn.receivedDate", "Received")}</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("grn.status", "Status")}</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">EBM</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("grn.totalAmount", "Amount")}</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("grn.paymentStatus", "Payment")}</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("common.actions", "Actions")}</TableHead>
@@ -368,6 +371,7 @@ export default function GRNListPage() {
                         <TableCell>
                           <StatusBadge status={grn.status} />
                         </TableCell>
+                        <TableCell><EBMStatusBadge status={grn.ebm?.ebmStatus} /></TableCell>
                         <TableCell className="font-mono font-medium text-slate-900 dark:text-white">{formatCurrency(grn.totalAmount)}</TableCell>
                         <TableCell>
                           <PaymentStatusBadge status={grn.paymentStatus} />

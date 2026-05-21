@@ -32,7 +32,7 @@ export default function DailyARActivityReportPage() {
   return (
     <DailyReportScaffold title="Daily AR Activity" shortTitle="AR Activity" subtitle="New invoices, customer payments, credit notes, and net receivables movement." icon={Users} tone="indigo" date={date} onDateChange={onDateChange} loading={isLoading} downloading={downloading} onBack={() => navigate(-1)} onDownloadPDF={downloadPDF} onDownloadExcel={downloadExcel} metrics={metrics}>
       {data && !isLoading && (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-3">
           <Card className={reportCardClass}>
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><FileText className="h-4 w-4 text-indigo-600" />New Invoices</CardTitle></CardHeader>
             <CardContent><div className="space-y-2 max-h-80 overflow-y-auto">{data.newInvoices?.map((invoice: { invoiceNumber: string; clientName: string; status: string; total: number }, idx: number) => <div key={`${invoice.invoiceNumber}-${idx}`} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/50"><div className="min-w-0"><p className="font-medium">{invoice.invoiceNumber}</p><p className="truncate text-xs text-slate-500">{invoice.clientName}</p></div><Badge variant={invoice.status === "paid" ? "default" : "secondary"}>{invoice.status}</Badge><span className="font-mono">{fmt(invoice.total)}</span></div>)}</div></CardContent>
@@ -40,6 +40,10 @@ export default function DailyARActivityReportPage() {
           <Card className={reportCardClass}>
             <CardHeader><CardTitle className="flex items-center gap-2 text-base"><CreditCard className="h-4 w-4 text-emerald-600" />Payments Received</CardTitle></CardHeader>
             <CardContent><div className="space-y-2 max-h-80 overflow-y-auto">{data.paymentsReceived?.map((payment: { receiptNumber: string; clientName: string; amount: number }, idx: number) => <div key={`${payment.receiptNumber}-${idx}`} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/50"><div className="min-w-0"><p className="font-medium">{payment.receiptNumber}</p><p className="truncate text-xs text-slate-500">{payment.clientName}</p></div><span className="font-mono text-emerald-600">{fmt(payment.amount)}</span></div>)}</div></CardContent>
+          </Card>
+          <Card className={reportCardClass}>
+            <CardHeader><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="h-4 w-4 text-rose-600" />Credit Notes</CardTitle></CardHeader>
+            <CardContent><div className="space-y-2 max-h-80 overflow-y-auto">{data.creditNotes?.map((note: { creditNoteNumber: string; clientName: string; total: number; reason?: string }, idx: number) => <div key={`${note.creditNoteNumber}-${idx}`} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/50"><div className="min-w-0"><p className="font-medium">{note.creditNoteNumber}</p><p className="truncate text-xs text-slate-500">{note.clientName}{note.reason ? ` - ${note.reason}` : ""}</p></div><span className="font-mono text-rose-600">{fmt(note.total)}</span></div>)}</div></CardContent>
           </Card>
         </div>
       )}

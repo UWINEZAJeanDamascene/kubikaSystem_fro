@@ -92,6 +92,7 @@ import PurchaseFormPage from './pages/purchases/PurchaseFormPage';
 import PurchaseOrdersListPage from './pages/purchases/PurchaseOrdersListPage';
 import PurchaseOrderFormPage from './pages/purchases/PurchaseOrderFormPage';
 import PurchaseOrderDetailPage from './pages/purchases/PurchaseOrderDetailPage';
+import ImportedItemsPage from './pages/purchases/ImportedItemsPage';
 import GRNListPage from './pages/grn/GRNListPage';
 import GRNCreatePage from './pages/grn/GRNCreatePage';
 import GRNDetailPage from './pages/grn/GRNDetailPage';
@@ -412,6 +413,7 @@ function AppRoutes() {
         <Route path="/purchases/new" element={<PurchaseFormPage />} />
         <Route path="/purchases/:id/edit" element={<PurchaseFormPage />} />
         <Route path="/purchases/:id" element={<PurchaseDetailPage />} />
+        <Route path="/imported-items" element={<ImportedItemsPage />} />
         <Route path="/grn" element={
           <ErrorBoundary>
             <GRNListPageWrapper />

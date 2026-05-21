@@ -50,6 +50,7 @@ import {
   DialogFooter,
 } from '@/app/components/ui/dialog';
 import { useTranslation } from 'react-i18next';
+import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface Invoice {
   _id: string;
@@ -128,6 +129,16 @@ interface Invoice {
   cogsJournalEntry?: {
     _id: string;
     entryNumber: string;
+  };
+  ebm?: {
+    rcptSign?: string | null;
+    intrlData?: string | null;
+    rcptNo?: string | null;
+    submittedAt?: string | null;
+    ebmStatus?: string;
+    retryCount?: number;
+    lastError?: string | null;
+    qrCode?: string | null;
   };
 }
 
@@ -614,6 +625,10 @@ export default function InvoiceDetailPage() {
                 <BookOpen className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Journal</span>
               </TabsTrigger>
+              <TabsTrigger value="ebm" className="gap-1.5 text-xs data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 dark:data-[state=active]:bg-emerald-950/40 dark:data-[state=active]:text-emerald-300 dark:text-slate-400">
+                <Receipt className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">EBM</span>
+              </TabsTrigger>
             </TabsList>
 
             {/* Details Tab */}
@@ -741,6 +756,37 @@ export default function InvoiceDetailPage() {
                       </div>
                       <h3 className="text-base font-semibold text-slate-900 dark:text-white">No payments recorded yet</h3>
                       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Payments will appear here once recorded</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="ebm" className="mt-4">
+              <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <CardTitle className="text-base text-slate-900 dark:text-white">EBM Submission</CardTitle>
+                    <EBMStatusBadge status={invoice.ebm?.ebmStatus} />
+                  </div>
+                </CardHeader>
+                <CardContent className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ["RRA receipt number", invoice.ebm?.rcptNo || "-"],
+                    ["Submitted at", invoice.ebm?.submittedAt ? new Date(invoice.ebm.submittedAt).toLocaleString() : "-"],
+                    ["Retry count", String(invoice.ebm?.retryCount || 0)],
+                    ["RRA internal data", invoice.ebm?.intrlData || "-"],
+                    ["Receipt signature", invoice.ebm?.rcptSign || "-"],
+                    ["QR code data", invoice.ebm?.qrCode || "-"],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+                      <p className="mt-1 break-words text-sm text-slate-900 dark:text-slate-100">{value}</p>
+                    </div>
+                  ))}
+                  {invoice.ebm?.lastError && (
+                    <div className="sm:col-span-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                      {invoice.ebm.lastError}
                     </div>
                   )}
                 </CardContent>

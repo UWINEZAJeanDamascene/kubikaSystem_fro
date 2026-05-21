@@ -46,6 +46,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import DeferredRevenueTab from './DeferredRevenueTab';
+import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface Invoice {
   _id: string;
@@ -67,6 +68,7 @@ interface Invoice {
   grandTotal: number;
   amountPaid: number;
   balance: number;
+  ebm?: { ebmStatus?: string };
 }
 
 interface Client {
@@ -463,6 +465,7 @@ export default function InvoicesListPage() {
                           <TableHead className="hidden text-xs font-semibold text-slate-500 dark:text-slate-400 lg:table-cell">Date</TableHead>
                           <TableHead className="hidden text-xs font-semibold text-slate-500 dark:text-slate-400 lg:table-cell">Due Date</TableHead>
                           <TableHead className="text-xs font-semibold text-slate-500 dark:text-slate-400">Status</TableHead>
+                          <TableHead className="text-xs font-semibold text-slate-500 dark:text-slate-400">EBM</TableHead>
                           <TableHead className="whitespace-nowrap text-right text-xs font-semibold text-slate-500 dark:text-slate-400">Total</TableHead>
                           <TableHead className="hidden whitespace-nowrap text-right text-xs font-semibold text-slate-500 dark:text-slate-400 sm:table-cell">Balance</TableHead>
                           <TableHead className="text-right text-xs font-semibold text-slate-500 dark:text-slate-400">Actions</TableHead>
@@ -486,6 +489,7 @@ export default function InvoicesListPage() {
                                 {getStatusLabel(invoice.status)}
                               </span>
                             </TableCell>
+                            <TableCell><EBMStatusBadge status={invoice.ebm?.ebmStatus} /></TableCell>
                             <TableCell className="whitespace-nowrap text-right font-semibold text-slate-900 dark:text-white">{formatCurrency(invoice.grandTotal)}</TableCell>
                             <TableCell className="hidden whitespace-nowrap text-right text-slate-600 dark:text-slate-400 sm:table-cell">{formatCurrency(invoice.balance || invoice.grandTotal - invoice.amountPaid)}</TableCell>
                             <TableCell className="text-right">

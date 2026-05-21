@@ -42,6 +42,7 @@ const fr = {
     subscriptions: "Abonnements",
     purchases: "Achats",
     purchaseOrders: "Bons de commande",
+    importedItems: "Articles importes",
     grn: "Bons de réception",
     purchaseReturns: "Retours achats",
     arReceipts: "Reçus AR",

@@ -14,9 +14,11 @@ const formatDate = (date: Date): string => {
 // Helper to download file with auth token
 const downloadFile = async (url: string, filename: string) => {
   const token = localStorage.getItem("token");
+  const companyId = localStorage.getItem("companyId");
   const response = await fetch(url, {
     headers: {
       Authorization: token ? `Bearer ${token}` : "",
+      ...(companyId ? { "X-Company-Id": companyId } : {}),
     },
   });
   if (!response.ok) {
@@ -334,82 +336,82 @@ export const dailyReportsApi = {
   // 1. Daily Sales Summary
   getSalesSummary: (date: string) =>
     request<{ success: boolean; data: DailySalesSummary }>(
-      `/reports/daily/sales?date=${date}`
+      `/reports/daily/sales?date=${encodeURIComponent(date)}`
     ),
   downloadSalesPDF: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/sales/pdf?date=${date}`, `daily-sales-${date}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/daily/sales/pdf?date=${encodeURIComponent(date)}`, `daily-sales-${date}.pdf`),
   downloadSalesExcel: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/sales/excel?date=${date}`, `daily-sales-${date}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/daily/sales/excel?date=${encodeURIComponent(date)}`, `daily-sales-${date}.xlsx`),
 
   // 2. Daily Purchases Summary
   getPurchasesSummary: (date: string) =>
     request<{ success: boolean; data: DailyPurchasesSummary }>(
-      `/reports/daily/purchases?date=${date}`
+      `/reports/daily/purchases?date=${encodeURIComponent(date)}`
     ),
   downloadPurchasesPDF: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/purchases/pdf?date=${date}`, `daily-purchases-${date}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/daily/purchases/pdf?date=${encodeURIComponent(date)}`, `daily-purchases-${date}.pdf`),
   downloadPurchasesExcel: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/purchases/excel?date=${date}`, `daily-purchases-${date}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/daily/purchases/excel?date=${encodeURIComponent(date)}`, `daily-purchases-${date}.xlsx`),
 
   // 3. Daily Cash Position
   getCashPosition: (date: string) =>
     request<{ success: boolean; data: DailyCashPosition }>(
-      `/reports/daily/cash-position?date=${date}`
+      `/reports/daily/cash-position?date=${encodeURIComponent(date)}`
     ),
   downloadCashPositionPDF: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/cash-position/pdf?date=${date}`, `daily-cash-${date}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/daily/cash-position/pdf?date=${encodeURIComponent(date)}`, `daily-cash-${date}.pdf`),
   downloadCashPositionExcel: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/cash-position/excel?date=${date}`, `daily-cash-${date}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/daily/cash-position/excel?date=${encodeURIComponent(date)}`, `daily-cash-${date}.xlsx`),
 
   // 4. Daily Stock Movement
   getStockMovement: (date: string) =>
     request<{ success: boolean; data: DailyStockMovement }>(
-      `/reports/daily/stock-movement?date=${date}`
+      `/reports/daily/stock-movement?date=${encodeURIComponent(date)}`
     ),
   downloadStockMovementPDF: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/stock-movement/pdf?date=${date}`, `daily-stock-${date}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/daily/stock-movement/pdf?date=${encodeURIComponent(date)}`, `daily-stock-${date}.pdf`),
   downloadStockMovementExcel: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/stock-movement/excel?date=${date}`, `daily-stock-${date}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/daily/stock-movement/excel?date=${encodeURIComponent(date)}`, `daily-stock-${date}.xlsx`),
 
   // 5. Daily AR Activity
   getARActivity: (date: string) =>
     request<{ success: boolean; data: DailyARActivity }>(
-      `/reports/daily/ar-activity?date=${date}`
+      `/reports/daily/ar-activity?date=${encodeURIComponent(date)}`
     ),
   downloadARActivityPDF: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/ar-activity/pdf?date=${date}`, `daily-ar-${date}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/daily/ar-activity/pdf?date=${encodeURIComponent(date)}`, `daily-ar-${date}.pdf`),
   downloadARActivityExcel: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/ar-activity/excel?date=${date}`, `daily-ar-${date}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/daily/ar-activity/excel?date=${encodeURIComponent(date)}`, `daily-ar-${date}.xlsx`),
 
   // 6. Daily AP Activity
   getAPActivity: (date: string) =>
     request<{ success: boolean; data: DailyAPActivity }>(
-      `/reports/daily/ap-activity?date=${date}`
+      `/reports/daily/ap-activity?date=${encodeURIComponent(date)}`
     ),
   downloadAPActivityPDF: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/ap-activity/pdf?date=${date}`, `daily-ap-${date}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/daily/ap-activity/pdf?date=${encodeURIComponent(date)}`, `daily-ap-${date}.pdf`),
   downloadAPActivityExcel: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/ap-activity/excel?date=${date}`, `daily-ap-${date}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/daily/ap-activity/excel?date=${encodeURIComponent(date)}`, `daily-ap-${date}.xlsx`),
 
   // 7. Daily Journal Entries
   getJournalEntries: (date: string) =>
     request<{ success: boolean; data: DailyJournalEntries }>(
-      `/reports/daily/journal-entries?date=${date}`
+      `/reports/daily/journal-entries?date=${encodeURIComponent(date)}`
     ),
   downloadJournalEntriesPDF: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/journal-entries/pdf?date=${date}`, `daily-journal-${date}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/daily/journal-entries/pdf?date=${encodeURIComponent(date)}`, `daily-journal-${date}.pdf`),
   downloadJournalEntriesExcel: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/journal-entries/excel?date=${date}`, `daily-journal-${date}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/daily/journal-entries/excel?date=${encodeURIComponent(date)}`, `daily-journal-${date}.xlsx`),
 
   // 8. Daily Tax Collected
   getTaxCollected: (date: string) =>
     request<{ success: boolean; data: DailyTaxCollected }>(
-      `/reports/daily/tax-collected?date=${date}`
+      `/reports/daily/tax-collected?date=${encodeURIComponent(date)}`
     ),
   downloadTaxCollectedPDF: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/tax-collected/pdf?date=${date}`, `daily-tax-${date}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/daily/tax-collected/pdf?date=${encodeURIComponent(date)}`, `daily-tax-${date}.pdf`),
   downloadTaxCollectedExcel: (date: string) =>
-    downloadFile(`${API_BASE_URL}/reports/daily/tax-collected/excel?date=${date}`, `daily-tax-${date}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/daily/tax-collected/excel?date=${encodeURIComponent(date)}`, `daily-tax-${date}.xlsx`),
 
   // Helper: Get today's date formatted
   getToday: () => formatDate(new Date()),

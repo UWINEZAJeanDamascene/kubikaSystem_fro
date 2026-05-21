@@ -50,6 +50,7 @@ import {
   ClipboardList,
   Clock,
   HelpCircle,
+  DownloadCloud,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -376,6 +377,14 @@ const purchasingNav: NavSection = {
       moduleNames: ["Purchase orders"],
     },
     { nameKey: "nav.grn", href: "/grn", icon: Truck, permission: "grn:read", featureKey: "purchases", moduleNames: ["GRN"] },
+    {
+      nameKey: "nav.importedItems",
+      href: "/imported-items",
+      icon: DownloadCloud,
+      permission: "grn:read",
+      featureKey: "purchases",
+      moduleNames: ["GRN"],
+    },
     {
       nameKey: "nav.purchases",
       href: "/purchases",

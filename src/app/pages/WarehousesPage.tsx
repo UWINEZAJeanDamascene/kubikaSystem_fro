@@ -12,7 +12,8 @@ import {
   XCircle,
   Search,
   Boxes,
-  Landmark
+  Landmark,
+  RefreshCw
 } from 'lucide-react';
 import { Layout } from '@/app/layout/Layout';
 import { Button } from '@/app/components/ui/button';
@@ -39,7 +40,7 @@ import {
   AlertDialogTitle,
 } from '@/app/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { warehousesApi } from '@/lib/api';
+import { warehousesApi, ebmApi } from '@/lib/api';
 
 // Type definitions
 interface Warehouse {
@@ -61,6 +62,10 @@ interface Warehouse {
   totalProducts?: number;
   totalQuantity?: number;
   totalValue?: number;
+  rraBranchId?: string | null;
+  ebmRegistrationStatus?: 'not_registered' | 'registered' | 'failed';
+  ebmRegisteredAt?: string | null;
+  ebmRegistrationError?: string | null;
 }
 
 interface WarehouseFormData {
@@ -273,6 +278,18 @@ export default function WarehousesPage() {
     }
   };
 
+  const handleRegisterBranch = async (warehouse: Warehouse) => {
+    if (!warehouse.rraBranchId) return;
+    try {
+      await ebmApi.registerBranch({ branchId: warehouse.rraBranchId });
+      toast.success('Branch registered with RRA');
+      fetchWarehouses();
+    } catch (error: any) {
+      toast.error(error.message || 'Branch registration failed');
+      fetchWarehouses();
+    }
+  };
+
   const getAddress = (warehouse: Warehouse): string => {
     if (!warehouse.location) return '-';
     const parts = [
@@ -402,6 +419,7 @@ export default function WarehousesPage() {
                       <th className="px-4 py-3 text-left text-sm font-medium text-slate-900 dark:text-white">{t('pages.warehouses.name')}</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-slate-900 dark:text-white">{t('pages.warehouses.address')}</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-slate-900 dark:text-white">{t('pages.warehouses.inventoryAccount')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-slate-900 dark:text-white">RRA Branch</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-slate-900 dark:text-white">{t('pages.warehouses.default')}</th>
                       <th className="px-4 py-3 text-left text-sm font-medium text-slate-900 dark:text-white">{t('pages.warehouses.status')}</th>
                       <th className="px-4 py-3 text-right text-sm font-medium text-slate-900 dark:text-white">{t('common.actions')}</th>
@@ -425,6 +443,23 @@ export default function WarehousesPage() {
                         </td>
                         <td className="px-4 py-3 text-sm font-mono text-muted-foreground">
                           {warehouse.inventoryAccount || '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <div className="font-mono text-slate-900 dark:text-white">{warehouse.rraBranchId || '-'}</div>
+                          {warehouse.ebmRegistrationStatus === 'registered' ? (
+                            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                              <CheckCircle className="h-3 w-3" /> Registered
+                            </span>
+                          ) : warehouse.ebmRegistrationStatus === 'failed' ? (
+                            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700 dark:bg-red-950/50 dark:text-red-300" title={warehouse.ebmRegistrationError || ''}>
+                              <XCircle className="h-3 w-3" /> Failed
+                            </span>
+                          ) : (
+                            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+                              <AlertCircle className="h-3 w-3" /> Not registered
+                            </span>
+                          )}
+                          {warehouse.ebmRegisteredAt && <div className="mt-1 text-xs text-slate-500">{new Date(warehouse.ebmRegisteredAt).toLocaleString()}</div>}
                         </td>
                         <td className="px-4 py-3">
                           {warehouse.isDefault ? (
@@ -458,6 +493,14 @@ export default function WarehousesPage() {
                               title={t('common.edit')}
                             >
                               <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRegisterBranch(warehouse)}
+                              title="Register branch with RRA"
+                            >
+                              <RefreshCw className="h-4 w-4" />
                             </Button>
                             {warehouse.isActive && warehouse.isDefault !== true && (
                               <Button

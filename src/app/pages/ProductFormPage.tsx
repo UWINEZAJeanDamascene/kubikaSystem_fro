@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { productsApi, categoriesApi, suppliersApi, warehousesApi, stockApi, chartOfAccountsApi } from '@/lib/api';
+import { productsApi, categoriesApi, suppliersApi, warehousesApi, stockApi, chartOfAccountsApi, ebmApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
 import { 
   ArrowLeft, 
@@ -93,19 +93,32 @@ interface ProductFormData {
   inventory_account_id: string;
   cogs_account_id: string;
   revenue_account_id: string;
+  ebmItemClassCode: string;
+  ebmTaxTypeCode: string;
+  ebmPackagingUnitCode: string;
+  ebmQuantityUnitCode: string;
 }
 
-// Unit options - will be translated in the render
+interface EBMCodeOption {
+  code: string;
+  name?: string | null;
+  description?: string | null;
+}
+
+interface EBMItemClassOption {
+  itemClassCode: string;
+  itemClassName: string;
+  itemClassLevel?: number;
+}
+
 const UNIT_OPTIONS = ['kg', 'g', 'pcs', 'box', 'm', 'm2', 'm3', 'l', 'ml', 'ton', 'bag', 'roll', 'sheet', 'set'];
 
 // Get translated options helper
 const getUnitLabel = (t: Function, unit: string) => t(`products.units.${unit}`) || unit;
 const getCostingMethodLabel = (t: Function, value: string) => t(`products.costingMethods.${value}`) || value;
-const getTaxCodeLabel = (t: Function, value: string) => t(`products.taxCodes.${value}`) || value;
 const getTrackingTypeLabel = (t: Function, value: string) => t(`products.trackingTypes.${value}`) || value;
 
 // Option arrays for selects
-const TAX_CODE_VALUES = ['A', 'B', 'None'];
 const COSTING_METHOD_VALUES = ['fifo', 'weighted', 'wac', 'avg'];
 const TRACKING_TYPE_VALUES = ['none', 'batch', 'serial'];
 const BARCODE_TYPE_VALUES = ['CODE128', 'EAN13', 'EAN8', 'UPC', 'CODE39', 'ITF14', 'QR', 'NONE'];
@@ -152,6 +165,14 @@ const flattenCategories = (cats: Category[], prefix = ''): { _id: string; label:
   return result;
 };
 
+const findCodeGroup = (groups: Record<string, { codeClassName?: string | null; codes: EBMCodeOption[] }>, patterns: RegExp[]) => {
+  const entries = Object.values(groups || {});
+  return entries.find((group) => {
+    const label = String(group.codeClassName || '').toLowerCase();
+    return patterns.some((pattern) => pattern.test(label));
+  })?.codes || [];
+};
+
 export default function ProductFormPage() {
   const { t } = useTranslation();
   const tr = (key: string, fallback: string) => {
@@ -172,6 +193,12 @@ export default function ProductFormPage() {
   const [accounts, setAccounts] = useState<ChartAccount[]>([]);
   const [costingMethodLocked, setCostingMethodLocked] = useState(false);
   const [skuWarning, setSkuWarning] = useState<string | null>(null);
+  const [ebmCodesLoading, setEbmCodesLoading] = useState(false);
+  const [ebmCodeMessage, setEbmCodeMessage] = useState<string | null>(null);
+  const [ebmTaxTypes, setEbmTaxTypes] = useState<EBMCodeOption[]>([]);
+  const [ebmPackagingUnits, setEbmPackagingUnits] = useState<EBMCodeOption[]>([]);
+  const [ebmQuantityUnits, setEbmQuantityUnits] = useState<EBMCodeOption[]>([]);
+  const [ebmItemClasses, setEbmItemClasses] = useState<EBMItemClassOption[]>([]);
   
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
@@ -201,6 +228,10 @@ export default function ProductFormPage() {
     inventory_account_id: '',
     cogs_account_id: '',
     revenue_account_id: '',
+    ebmItemClassCode: '',
+    ebmTaxTypeCode: '',
+    ebmPackagingUnitCode: '',
+    ebmQuantityUnitCode: '',
   });
 
   useEffect(() => {
@@ -208,6 +239,7 @@ export default function ProductFormPage() {
     loadSuppliers();
     loadWarehouses();
     loadAccounts();
+    loadEbmCodes();
     if (isEditMode) {
       loadProduct();
     }
@@ -266,6 +298,33 @@ export default function ProductFormPage() {
     }
   };
 
+  const loadEbmCodes = async () => {
+    setEbmCodesLoading(true);
+    setEbmCodeMessage(null);
+    try {
+      const [codesResponse, itemClassResponse] = await Promise.all([
+        ebmApi.getCodes(),
+        ebmApi.getItemClasses({ limit: 5000 }),
+      ]);
+      const groups = codesResponse.success ? codesResponse.data : {};
+      const taxTypes = findCodeGroup(groups, [/tax.*type/, /^tax$/]);
+      const packagingUnits = findCodeGroup(groups, [/packag/]);
+      const quantityUnits = findCodeGroup(groups, [/quantity/, /unit.*quantity/, /unit of quantity/]);
+      setEbmTaxTypes(taxTypes);
+      setEbmPackagingUnits(packagingUnits);
+      setEbmQuantityUnits(quantityUnits);
+      setEbmItemClasses(itemClassResponse.success ? itemClassResponse.data : []);
+      if (!taxTypes.length || !packagingUnits.length || !quantityUnits.length || !(itemClassResponse.data || []).length) {
+        setEbmCodeMessage('Sync RRA code data before selecting EBM product fields.');
+      }
+    } catch (error: any) {
+      console.error('Failed to load EBM codes:', error);
+      setEbmCodeMessage(error.message || 'Sync RRA code data before selecting EBM product fields.');
+    } finally {
+      setEbmCodesLoading(false);
+    }
+  };
+
   const loadProduct = async () => {
     setInitialLoading(true);
     try {
@@ -299,7 +358,11 @@ export default function ProductFormPage() {
           defaultWarehouse: product.defaultWarehouse?._id || product.defaultWarehouse || '',
           inventory_account_id: product.inventory_account_id || product.inventoryAccount || '',
           cogs_account_id: product.cogs_account_id || product.cogsAccount || '',
-          revenue_account_id: product.revenue_account_id || product.revenueAccount || ''
+          revenue_account_id: product.revenue_account_id || product.revenueAccount || '',
+          ebmItemClassCode: product.ebm?.itemClassCd || product.ebm?.itemClassCode || '',
+          ebmTaxTypeCode: product.ebm?.taxTyCd || product.ebm?.taxTypeCode || product.taxCode || '',
+          ebmPackagingUnitCode: product.ebm?.pkgUnitCd || product.ebm?.packagingUnitCode || '',
+          ebmQuantityUnitCode: product.ebm?.qtyUnitCd || product.ebm?.quantityUnitCode || product.unit || '',
         });
       }
     } catch (error) {
@@ -388,6 +451,12 @@ export default function ProductFormPage() {
         sellingPrice: parseFloat(formData.sellingPrice) || 0,
         taxCode: formData.taxCode,
         taxRate: parseFloat(formData.taxRate) || 0,
+        ebm: {
+          itemClassCd: formData.ebmItemClassCode || null,
+          taxTyCd: formData.ebmTaxTypeCode || null,
+          pkgUnitCd: formData.ebmPackagingUnitCode || null,
+          qtyUnitCd: formData.ebmQuantityUnitCode || null,
+        },
         costingMethod: formData.costingMethod,
         reorderPoint: parseFloat(formData.reorderPoint) || 0,
         reorderQuantity: parseFloat(formData.reorderQuantity) || 0,
@@ -644,6 +713,108 @@ export default function ProductFormPage() {
               </CardContent>
             </Card>
 
+            <Card className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 shadow-xl">
+              <CardHeader className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+                <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+                  <Package className="h-5 w-5" />
+                  EBM Classification
+                </CardTitle>
+                <CardDescription className="text-slate-500 dark:text-slate-300">
+                  RRA product codes used for EBM item registration and invoice validation
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-2 px-6 py-6">
+                {ebmCodeMessage && (
+                  <div className="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                    {ebmCodeMessage}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="ebmItemClassCode" className="dark:text-slate-200">Item Classification Code</Label>
+                  <Select
+                    value={formData.ebmItemClassCode}
+                    onValueChange={(value) => handleChange('ebmItemClassCode', value)}
+                    disabled={ebmCodesLoading || ebmItemClasses.length === 0}
+                  >
+                    <SelectTrigger className="h-10 rounded-md flex items-center px-3">
+                      <SelectValue placeholder={ebmCodesLoading ? 'Loading RRA codes...' : 'Select item class'} />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-slate-800">
+                      {ebmItemClasses.map((itemClass) => (
+                        <SelectItem key={itemClass.itemClassCode} value={itemClass.itemClassCode} className="dark:text-slate-200">
+                          {itemClass.itemClassCode} - {itemClass.itemClassName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ebmTaxTypeCode" className="dark:text-slate-200">Tax Type Code</Label>
+                  <Select
+                    value={formData.ebmTaxTypeCode}
+                    onValueChange={(value) => {
+                      handleChange('ebmTaxTypeCode', value);
+                      handleChange('taxCode', value);
+                    }}
+                    disabled={ebmCodesLoading || ebmTaxTypes.length === 0}
+                  >
+                    <SelectTrigger className="h-10 rounded-md flex items-center px-3">
+                      <SelectValue placeholder={ebmCodesLoading ? 'Loading RRA codes...' : 'Select tax type'} />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-slate-800">
+                      {ebmTaxTypes.map((code) => (
+                        <SelectItem key={code.code} value={code.code} className="dark:text-slate-200">
+                          {code.code} - {code.name || code.description || code.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ebmPackagingUnitCode" className="dark:text-slate-200">Packaging Unit Code</Label>
+                  <Select
+                    value={formData.ebmPackagingUnitCode}
+                    onValueChange={(value) => handleChange('ebmPackagingUnitCode', value)}
+                    disabled={ebmCodesLoading || ebmPackagingUnits.length === 0}
+                  >
+                    <SelectTrigger className="h-10 rounded-md flex items-center px-3">
+                      <SelectValue placeholder={ebmCodesLoading ? 'Loading RRA codes...' : 'Select packaging unit'} />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-slate-800">
+                      {ebmPackagingUnits.map((code) => (
+                        <SelectItem key={code.code} value={code.code} className="dark:text-slate-200">
+                          {code.code} - {code.name || code.description || code.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ebmQuantityUnitCode" className="dark:text-slate-200">Quantity Unit Code</Label>
+                  <Select
+                    value={formData.ebmQuantityUnitCode}
+                    onValueChange={(value) => handleChange('ebmQuantityUnitCode', value)}
+                    disabled={ebmCodesLoading || ebmQuantityUnits.length === 0}
+                  >
+                    <SelectTrigger className="h-10 rounded-md flex items-center px-3">
+                      <SelectValue placeholder={ebmCodesLoading ? 'Loading RRA codes...' : 'Select quantity unit'} />
+                    </SelectTrigger>
+                    <SelectContent className="dark:bg-slate-800">
+                      {ebmQuantityUnits.map((code) => (
+                        <SelectItem key={code.code} value={code.code} className="dark:text-slate-200">
+                          {code.code} - {code.name || code.description || code.code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Pricing */}
               <Card className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 shadow-xl">
               <CardHeader className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
@@ -692,8 +863,8 @@ export default function ProductFormPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-slate-800">
-                      {TAX_CODE_VALUES.map((code) => (
-                        <SelectItem key={code} value={code} className="dark:text-slate-200">{getTaxCodeLabel(t, code)}</SelectItem>
+                      {ebmTaxTypes.map((code) => (
+                        <SelectItem key={code.code} value={code.code} className="dark:text-slate-200">{code.code} - {code.name || code.description || code.code}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

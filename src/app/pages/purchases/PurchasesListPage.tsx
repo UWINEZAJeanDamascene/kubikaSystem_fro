@@ -40,6 +40,7 @@ import { Badge } from '@/app/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { useFormatCurrency } from '@/lib/currencyUtils';
+import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface PurchaseItem {
   product: { _id: string; name: string; sku: string; unit?: string };
@@ -63,6 +64,7 @@ interface Purchase {
   items: PurchaseItem[];
   payments?: { _id?: string; amount?: string; date?: string; method?: string }[];
   createdBy?: { name: string; email: string };
+  ebm?: { ebmStatus?: string };
 }
 
 interface Supplier {
@@ -340,6 +342,7 @@ export default function PurchasesListPage() {
                       <TableHead className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.supplier', 'Supplier')}</TableHead>
                       <TableHead className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.purchaseDate', 'Date')}</TableHead>
                       <TableHead className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.status', 'Status')}</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">EBM</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.totalAmount', 'Total')}</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.balance', 'Balance')}</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.items', 'Items')}</TableHead>
@@ -366,6 +369,7 @@ export default function PurchasesListPage() {
                           <TableCell className="text-slate-600 dark:text-slate-300">{p.supplier?.name || '-'}</TableCell>
                           <TableCell className="text-slate-600 dark:text-slate-300">{formatDate(p.purchaseDate)}</TableCell>
                           <TableCell><StatusBadge status={p.status} /></TableCell>
+                          <TableCell><EBMStatusBadge status={p.ebm?.ebmStatus} /></TableCell>
                           <TableCell className="text-right font-medium text-slate-900 dark:text-white">{formatCurrency(p.grandTotal)}</TableCell>
                           <TableCell className="text-right text-slate-600 dark:text-slate-300">
                             {formatCurrency(

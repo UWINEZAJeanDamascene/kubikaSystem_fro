@@ -89,6 +89,11 @@ interface Product {
   revenueAccount?: string;
   taxCode?: string;
   taxRate?: number;
+  ebm?: {
+    isRegisteredWithEBM?: boolean;
+    ebmRegisteredAt?: string | null;
+    ebmRegistrationError?: string | null;
+  };
   brand?: string;
   location?: string;
   trackingType?: string;
@@ -243,6 +248,20 @@ export default function ProductsListPage() {
 
   const handleViewStock = (product: Product) => {
     navigate(`/products/${product._id}?tab=stock`);
+  };
+
+  const handleRegisterEbm = async (product: Product) => {
+    setActionLoading(true);
+    try {
+      await productsApi.registerWithEBM(product._id);
+      toast.success('Product registered with RRA EBM');
+      loadProducts();
+    } catch (error: any) {
+      toast.error(error.message || 'EBM product registration failed');
+      loadProducts();
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleToggleActive = async (product: Product) => {
@@ -531,6 +550,7 @@ export default function ProductsListPage() {
                   <SelectItem value="in_stock">{t('products.inStock') || 'In Stock'}</SelectItem>
                   <SelectItem value="low_stock">{t('products.lowStock') || 'Low Stock'}</SelectItem>
                   <SelectItem value="out_of_stock">{t('products.outOfStock') || 'Out of Stock'}</SelectItem>
+                  <SelectItem value="ebm_unregistered">EBM Unregistered</SelectItem>
                   <SelectItem value="archived">{t('products.archived') || 'Archived'}</SelectItem>
                 </SelectContent>
               </Select>
@@ -574,6 +594,7 @@ export default function ProductsListPage() {
                     <TableHead className="font-semibold text-right">{t('products.stockValue') || 'Stock Value'}</TableHead>
                     <TableHead className="font-semibold">{t('products.costingMethod') || 'Costing'}</TableHead>
                     <TableHead className="font-semibold text-center">{t('products.status') || 'Status'}</TableHead>
+                    <TableHead className="font-semibold text-center">EBM</TableHead>
                     <TableHead className="font-semibold text-right">{t('common.actions') || 'Actions'}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -634,6 +655,15 @@ export default function ProductsListPage() {
                             {stockStatus.label}
                           </span>
                         </TableCell>
+                        <TableCell className="text-center">
+                          {product.ebm?.isRegisteredWithEBM ? (
+                            <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Registered</Badge>
+                          ) : product.ebm?.ebmRegistrationError ? (
+                            <Badge className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300" title={product.ebm.ebmRegistrationError}>Failed</Badge>
+                          ) : (
+                            <Badge className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">Not registered</Badge>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button
@@ -643,6 +673,15 @@ export default function ProductsListPage() {
                               title={t('common.edit') || 'Edit'}
                             >
                               <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRegisterEbm(product)}
+                              title="Register with RRA EBM"
+                              disabled={actionLoading}
+                            >
+                              <ShieldCheck className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
