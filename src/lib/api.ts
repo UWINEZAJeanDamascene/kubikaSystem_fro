@@ -1550,6 +1550,29 @@ export const ebmApi = {
       method: "POST",
       body: payload,
     }),
+  syncPurchases: (payload?: { branchId?: string; full?: boolean }) =>
+    request<{ success: boolean; data: unknown }>("/ebm/purchases/sync", {
+      method: "POST",
+      body: payload || {},
+    }),
+  getUnmatchedPurchases: (params?: { status?: string; limit?: number }) =>
+    request<{ success: boolean; data: unknown[] }>("/ebm/purchases/unmatched", { params }),
+  getQueue: (params?: { status?: string; documentType?: string; fromDate?: string; toDate?: string; companyId?: string; page?: number; pageSize?: number; limit?: number }) =>
+    request<{ success: boolean; data: { counts: Record<string, number>; queue: unknown[]; records?: unknown[]; pagination?: { page: number; pageSize: number; total: number; pages: number } } }>("/ebm/queue", { params }),
+  getQueueItem: (id: string) =>
+    request<{ success: boolean; data: unknown }>(`/ebm/queue/${id}`),
+  retryQueueItem: (id: string) =>
+    request<{ success: boolean; data: unknown }>(`/ebm/queue/${id}/retry`, { method: "POST" }),
+  bulkRetryQueueItems: (ids: string[]) =>
+    request<{ success: boolean; data: unknown }>("/ebm/queue/bulk-retry", { method: "POST", body: { ids } }),
+  resolveQueueItem: (id: string) =>
+    request<{ success: boolean; data: unknown }>(`/ebm/queue/${id}/resolve`, { method: "POST" }),
+  getAlerts: (params?: { documentType?: string; fromDate?: string; toDate?: string }) =>
+    request<{ success: boolean; data: unknown[] }>("/ebm/alerts", { params }),
+  acknowledgeAlert: (id: string) =>
+    request<{ success: boolean; data: unknown }>(`/ebm/alerts/${id}/acknowledge`, { method: "POST" }),
+  resetAlert: (id: string) =>
+    request<{ success: boolean; data: unknown }>(`/ebm/alerts/${id}/reset`, { method: "POST" }),
 };
 
 // Suppliers API
@@ -2151,11 +2174,17 @@ export const creditNotesApi = {
       method: "PUT",
       body: data,
     }),
-  confirm: (id: string, sendEmail?: boolean) =>
+  confirm: (id: string, sendEmailOrOptions?: boolean | { sendEmail?: boolean; refundRsnCd?: string }) => {
+    const body = typeof sendEmailOrOptions === "object"
+      ? sendEmailOrOptions
+      : { sendEmail: sendEmailOrOptions };
+    return (
     request<{ success: boolean; data: unknown }>(
       `/credit-notes/${id}/confirm`,
-      { method: "POST", body: { sendEmail } },
-    ),
+      { method: "POST", body },
+    )
+    );
+  },
 };
 
 // Recurring Invoices API
@@ -5801,6 +5830,7 @@ export const budgetsApi = {
         };
       };
       message: string;
+      error?: string;
     }>("/budgets/import/validate", { method: "POST", body: { parsedData } }),
   executeImport: (
     validatedData: any,
@@ -5822,6 +5852,7 @@ export const budgetsApi = {
         budgets: Budget[];
       };
       message: string;
+      error?: string;
     }>("/budgets/import/execute", {
       method: "POST",
       body: { validatedData, options },
@@ -5847,7 +5878,7 @@ export const budgetsApi = {
       notes?: string;
     },
   ) =>
-    request<{ success: boolean; data: Budget; message: string }>(
+    request<{ success: boolean; data: Budget; message: string; error?: string }>(
       `/budgets/${budgetId}/scenarios`,
       { method: "POST", body: data },
     ),
@@ -5888,12 +5919,12 @@ export const budgetsApi = {
       };
     }>("/budgets/scenarios/compare", { method: "POST", body: { scenarioIds } }),
   setPrimaryScenario: (scenarioId: string) =>
-    request<{ success: boolean; data: Budget; message: string }>(
+    request<{ success: boolean; data: Budget; message: string; error?: string }>(
       `/budgets/scenarios/${scenarioId}/set-primary`,
       { method: "POST" },
     ),
   deleteScenario: (scenarioId: string) =>
-    request<{ success: boolean; data: { deleted: boolean; scenario_id: string }; message: string }>(
+    request<{ success: boolean; data: { deleted: boolean; scenario_id: string }; message: string; error?: string }>(
       `/budgets/scenarios/${scenarioId}`,
       { method: "DELETE" },
     ),
@@ -8343,6 +8374,11 @@ export const bankAccountsApi = {
       method: "POST",
       body: data,
     }),
+  accrueInterest: (id: string) =>
+    request<{ success: boolean; data: any; message?: string }>(
+      `/interest/bank-accounts/${id}/interest-post`,
+      { method: "POST" },
+    ),
   importCSV: (id: string, data: { transactions: any[]; autoMatch?: boolean }) =>
     request<{ success: boolean; data: { imported: number } }>(
       `/bank-accounts/${id}/import-csv`,
@@ -10372,6 +10408,48 @@ export interface APPaymentAllocation {
  * No manual transaction entry through this API.
  */
 export const apPaymentsApi = {
+  getAll: (params?: {
+    supplier_id?: string;
+    status?: string;
+    date_from?: string;
+    date_to?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const query = buildQuery(params as Record<string, any>);
+    return request<{ success: boolean; data: APPayment[]; count?: number }>(
+      `/ap/payments${query ? `?${query}` : ""}`,
+    );
+  },
+
+  getById: (id: string) =>
+    request<{ success: boolean; data: APPayment; allocations?: APPaymentAllocation[] }>(
+      `/ap/payments/${id}`,
+    ),
+
+  create: (data: any) =>
+    request<{ success: boolean; data: APPayment }>("/ap/payments", {
+      method: "POST",
+      body: data,
+    }),
+
+  update: (id: string, data: any) =>
+    request<{ success: boolean; data: APPayment }>(`/ap/payments/${id}`, {
+      method: "PUT",
+      body: data,
+    }),
+
+  post: (id: string) =>
+    request<{ success: boolean; data: APPayment }>(`/ap/payments/${id}/post`, {
+      method: "POST",
+    }),
+
+  reverse: (id: string, reason: string) =>
+    request<{ success: boolean; data: APPayment }>(`/ap/payments/${id}/reverse`, {
+      method: "POST",
+      body: { reason },
+    }),
+
   // Get aging report
   getAgingReport: (params?: { supplier_id?: string; as_of_date?: string }) => {
     const query = buildQuery(params as Record<string, any>);

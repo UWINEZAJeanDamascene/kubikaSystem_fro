@@ -93,6 +93,8 @@ import PurchaseOrdersListPage from './pages/purchases/PurchaseOrdersListPage';
 import PurchaseOrderFormPage from './pages/purchases/PurchaseOrderFormPage';
 import PurchaseOrderDetailPage from './pages/purchases/PurchaseOrderDetailPage';
 import ImportedItemsPage from './pages/purchases/ImportedItemsPage';
+import UnmatchedPurchasesPage from './pages/purchases/UnmatchedPurchasesPage';
+import EBMRetryQueuePage from './pages/ebm/EBMRetryQueuePage';
 import GRNListPage from './pages/grn/GRNListPage';
 import GRNCreatePage from './pages/grn/GRNCreatePage';
 import GRNDetailPage from './pages/grn/GRNDetailPage';
@@ -414,6 +416,8 @@ function AppRoutes() {
         <Route path="/purchases/:id/edit" element={<PurchaseFormPage />} />
         <Route path="/purchases/:id" element={<PurchaseDetailPage />} />
         <Route path="/imported-items" element={<ImportedItemsPage />} />
+        <Route path="/ebm/unmatched-purchases" element={<UnmatchedPurchasesPage />} />
+        <Route path="/ebm/retry-queue" element={<EBMRetryQueuePage />} />
         <Route path="/grn" element={
           <ErrorBoundary>
             <GRNListPageWrapper />

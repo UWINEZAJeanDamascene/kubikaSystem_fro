@@ -30,6 +30,7 @@ import {
 import { stockApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
 import { useFormatCurrency } from '@/lib/currencyUtils';
+import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface TransferItem {
   product: {
@@ -57,6 +58,10 @@ interface StockTransfer {
   items: TransferItem[];
   journalEntry?: string;
   createdAt: string;
+  ebm?: {
+    stockStatus?: string;
+    ebmStatus?: string;
+  };
 }
 
 interface PaginationInfo {
@@ -503,7 +508,10 @@ export default function TransfersListPage() {
                         <div className="min-w-0">
                           <p className="font-mono text-sm font-black text-slate-950 dark:text-white">{item.reference}</p>
                           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.transferDate ? new Date(item.transferDate).toLocaleDateString() : '-'}</p>
-                          <div className="mt-2">{getStatusChip(item.status)}</div>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {getStatusChip(item.status)}
+                            <EBMStatusBadge status={item.ebm?.stockStatus || item.ebm?.ebmStatus} />
+                          </div>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div className="rounded-md bg-slate-50 p-3 dark:bg-slate-900">

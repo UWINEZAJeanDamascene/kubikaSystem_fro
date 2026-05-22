@@ -32,6 +32,7 @@ import { stockApi, warehousesApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
 import { StockAdjustmentDialog } from '@/app/components/StockAdjustmentDialog';
 import { useFormatCurrency } from '@/lib/currencyUtils';
+import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface StockMovement {
   _id: string;
@@ -55,6 +56,10 @@ interface StockMovement {
   reference?: string;
   referenceNumber?: string;
   notes?: string;
+  ebm?: {
+    stockStatus?: string;
+    ebmStatus?: string;
+  };
 }
 
 interface Warehouse {
@@ -576,6 +581,7 @@ export default function StockMovementsPage() {
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                               {getTypeChip(item.type)}
+                              <EBMStatusBadge status={item.ebm?.stockStatus || item.ebm?.ebmStatus} />
                               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{movementDate}</span>
                             </div>
                             <p className="mt-2 truncate text-sm font-bold text-slate-950 dark:text-white">{item.product?.name || '-'}</p>

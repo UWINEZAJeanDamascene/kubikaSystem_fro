@@ -64,7 +64,7 @@ interface Purchase {
   items: PurchaseItem[];
   payments?: { _id?: string; amount?: string; date?: string; method?: string }[];
   createdBy?: { name: string; email: string };
-  ebm?: { ebmStatus?: string };
+  ebm?: { ebmStatus?: string; ebmPurchaseMatchStatus?: string };
 }
 
 interface Supplier {
@@ -369,7 +369,16 @@ export default function PurchasesListPage() {
                           <TableCell className="text-slate-600 dark:text-slate-300">{p.supplier?.name || '-'}</TableCell>
                           <TableCell className="text-slate-600 dark:text-slate-300">{formatDate(p.purchaseDate)}</TableCell>
                           <TableCell><StatusBadge status={p.status} /></TableCell>
-                          <TableCell><EBMStatusBadge status={p.ebm?.ebmStatus} /></TableCell>
+                          <TableCell>
+                            <div className="flex flex-col gap-1">
+                              <EBMStatusBadge status={p.ebm?.ebmStatus} />
+                              {p.ebm?.ebmPurchaseMatchStatus && (
+                                <Badge variant="outline" className="w-fit text-[10px] capitalize">
+                                  {p.ebm.ebmPurchaseMatchStatus.replace(/_/g, ' ')}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="text-right font-medium text-slate-900 dark:text-white">{formatCurrency(p.grandTotal)}</TableCell>
                           <TableCell className="text-right text-slate-600 dark:text-slate-300">
                             {formatCurrency(

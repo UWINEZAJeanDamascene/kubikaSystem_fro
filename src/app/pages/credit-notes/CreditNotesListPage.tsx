@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { creditNotesApi, clientsApi, invoicesApi } from '@/lib/api';
+import { creditNotesApi, clientsApi, invoicesApi, ebmApi } from '@/lib/api';
 import { Layout } from '../../layout/Layout';
 import { useCompany } from '@/hooks/useCompany';
 import {
@@ -74,6 +74,12 @@ interface CreditNote {
   ebm?: { ebmStatus?: string };
 }
 
+interface RefundReasonCode {
+  code: string;
+  name?: string | null;
+  description?: string | null;
+}
+
 interface Client {
   _id: string;
   name: string;
@@ -125,6 +131,8 @@ export default function CreditNotesListPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedCreditNote, setSelectedCreditNote] = useState<CreditNote | null>(null);
+  const [refundReasons, setRefundReasons] = useState<RefundReasonCode[]>([]);
+  const [selectedRefundReason, setSelectedRefundReason] = useState('');
 
   const fetchCreditNotes = useCallback(async () => {
     setLoading(true);
@@ -194,6 +202,26 @@ export default function CreditNotesListPage() {
   useEffect(() => {
     fetchCreditNotes();
   }, [fetchCreditNotes]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadRefundReasons = async () => {
+      try {
+        const response = await ebmApi.getCodes();
+        const groups = response.success ? response.data : {};
+        const group = Object.values(groups).find((entry: any) =>
+          /refund/i.test(String(entry.codeClassName || entry.codeClass || '')),
+        ) as any;
+        if (!cancelled) setRefundReasons(group?.codes || []);
+      } catch (error) {
+        console.error('Failed to load RRA refund reason codes:', error);
+      }
+    };
+    loadRefundReasons();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -360,6 +388,7 @@ export default function CreditNotesListPage() {
 
   const openConfirmDialog = (cn: CreditNote) => {
     setSelectedCreditNote(cn);
+    setSelectedRefundReason('');
     setShowConfirmDialog(true);
   };
 
@@ -372,7 +401,9 @@ export default function CreditNotesListPage() {
     if (!selectedCreditNote) return;
     setConfirmingId(selectedCreditNote._id);
     try {
-      const response = await creditNotesApi.confirm(selectedCreditNote._id);
+      const response = await creditNotesApi.confirm(selectedCreditNote._id, {
+        refundRsnCd: selectedRefundReason,
+      });
       if (response.success) {
         toast.success('Credit note confirmed successfully');
         setShowConfirmDialog(false);
@@ -794,12 +825,27 @@ export default function CreditNotesListPage() {
                 <span className="text-slate-700 dark:text-slate-300">Goods Return - Stock will be returned</span>
               </div>
             )}
+            <div className="space-y-1.5">
+              <Label className="text-xs text-slate-500 dark:text-slate-400">RRA refund reason</Label>
+              <Select value={selectedRefundReason} onValueChange={setSelectedRefundReason}>
+                <SelectTrigger className="bg-white dark:border-slate-700 dark:bg-slate-950">
+                  <SelectValue placeholder="Select RRA reason code" />
+                </SelectTrigger>
+                <SelectContent>
+                  {refundReasons.map((reason) => (
+                    <SelectItem key={reason.code} value={reason.code}>
+                      {reason.code} - {reason.name || reason.description || 'Refund reason'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setShowConfirmDialog(false)} disabled={!!confirmingId} className="dark:border-slate-700 dark:text-slate-200">
               <X className="mr-1.5 h-4 w-4" /> Cancel
             </Button>
-            <Button size="sm" onClick={handleConfirm} disabled={!!confirmingId} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button size="sm" onClick={handleConfirm} disabled={!!confirmingId || !selectedRefundReason} className="bg-emerald-600 hover:bg-emerald-700">
               <CheckCircle className="mr-1.5 h-4 w-4" /> Confirm
             </Button>
           </DialogFooter>

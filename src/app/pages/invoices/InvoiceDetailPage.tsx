@@ -67,6 +67,7 @@ interface Invoice {
     };
     taxId?: string;
   };
+  customerTin?: string;
   invoiceDate: string;
   dueDate: string;
   status: 'draft' | 'confirmed' | 'partially_paid' | 'fully_paid' | 'cancelled' | 'partial' | 'paid';
@@ -383,6 +384,8 @@ export default function InvoiceDetailPage() {
     };
     return map[status] || status;
   };
+  const customerTin = invoice.customerTin || invoice.client?.taxId || '';
+  const hasInvalidCustomerTin = Boolean(customerTin) && !/^\d{9}$/.test(customerTin);
 
   return (
     <Layout>
@@ -391,6 +394,12 @@ export default function InvoiceDetailPage() {
           {/* Hero Header */}
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
             <div className="p-5">
+              {hasInvalidCustomerTin && (
+                <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                  Customer TIN invalid - verify before sending to customer.
+                </div>
+              )}
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">

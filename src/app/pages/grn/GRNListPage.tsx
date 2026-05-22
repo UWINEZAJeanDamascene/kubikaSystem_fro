@@ -67,7 +67,7 @@ interface GRN {
   totalAmount: number;
   paymentStatus: "pending" | "partially_paid" | "paid";
   supplierInvoiceNo?: string;
-  ebm?: { ebmStatus?: string };
+  ebm?: { ebmStatus?: string; stockStatus?: string };
 }
 
 interface Supplier {
@@ -371,7 +371,7 @@ export default function GRNListPage() {
                         <TableCell>
                           <StatusBadge status={grn.status} />
                         </TableCell>
-                        <TableCell><EBMStatusBadge status={grn.ebm?.ebmStatus} /></TableCell>
+                        <TableCell><EBMStatusBadge status={grn.ebm?.stockStatus || grn.ebm?.ebmStatus} /></TableCell>
                         <TableCell className="font-mono font-medium text-slate-900 dark:text-white">{formatCurrency(grn.totalAmount)}</TableCell>
                         <TableCell>
                           <PaymentStatusBadge status={grn.paymentStatus} />

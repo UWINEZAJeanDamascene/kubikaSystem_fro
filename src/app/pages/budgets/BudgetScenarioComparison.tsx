@@ -163,7 +163,7 @@ export function BudgetScenarioComparison({
   }
 
   const { base_scenario, scenarios: comparisonScenarios, summary } = comparison;
-  const allScenarios = [base_scenario, ...comparisonScenarios.filter(s => s.scenario_id !== base_scenario.scenario_id)];
+  const allScenarios = [base_scenario, ...comparisonScenarios.filter((s: { scenario_id: string }) => s.scenario_id !== base_scenario.scenario_id)];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

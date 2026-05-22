@@ -77,7 +77,7 @@ interface PurchaseOrder {
   notes?: string;
   linesCount: number;
   createdAt: string;
-  ebm?: { ebmStatus?: string };
+  ebm?: { ebmStatus?: string; ebmPurchaseMatchStatus?: string };
 }
 
 interface Supplier {
@@ -670,7 +670,16 @@ export default function PurchaseOrdersListPage() {
                           {po.expectedDeliveryDate ? formatDate(po.expectedDeliveryDate) : '-'}
                         </TableCell>
                         <TableCell>{getStatusBadge(po.status)}</TableCell>
-                        <TableCell><EBMStatusBadge status={po.ebm?.ebmStatus} /></TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <EBMStatusBadge status={po.ebm?.ebmStatus} />
+                            {po.ebm?.ebmPurchaseMatchStatus && (
+                              <Badge variant="outline" className="w-fit text-[10px] capitalize">
+                                {po.ebm.ebmPurchaseMatchStatus.replace(/_/g, ' ')}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="font-mono font-medium text-slate-950 dark:text-white">
                           {formatCurrency(po.totalAmount, po.currencyCode)}
                         </TableCell>

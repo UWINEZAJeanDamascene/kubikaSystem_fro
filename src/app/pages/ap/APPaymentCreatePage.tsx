@@ -184,7 +184,7 @@ export default function APPaymentCreatePage() {
 
           // Fetch existing allocations
           if (response.allocations && response.allocations.length > 0) {
-            const existingAllocations = response.allocations.map((alloc) => ({
+            const existingAllocations = response.allocations.map((alloc: any) => ({
               grn: alloc.grn._id,
               amount: parseFloat(alloc.amountAllocated),
             }));

@@ -36,6 +36,7 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/app/components/ui/dialog';
 import { Separator } from '@/app/components/ui/separator';
 import { toast } from 'sonner';
+import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface CreditNoteLine {
   _id: string;
@@ -109,6 +110,18 @@ interface CreditNote {
     name: string;
     code?: string;
     taxId?: string;
+  };
+  ebm?: {
+    ebmStatus?: string;
+    rcptNo?: string | null;
+    rcptSign?: string | null;
+    intrlData?: string | null;
+    qrCode?: string | null;
+    orgRcptNo?: string | null;
+    rfdRsnCd?: string | null;
+    submittedAt?: string | null;
+    lastError?: string | null;
+    retryCount?: number;
   };
 }
 
@@ -587,6 +600,26 @@ export default function CreditNoteDetailPage() {
                     <span className="text-sm font-semibold text-slate-900 dark:text-white">Total</span>
                     <span className="text-lg font-bold text-slate-900 dark:text-white">{formatCurrency(displayTotal, creditNote.currencyCode)}</span>
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-lg bg-emerald-50 p-1.5 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300">
+                      <Receipt className="h-4 w-4" />
+                    </div>
+                    <CardTitle className="text-base text-slate-900 dark:text-white">RRA EBM</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between"><span className="text-slate-500">Status</span><EBMStatusBadge status={creditNote.ebm?.ebmStatus} /></div>
+                  <div className="flex items-center justify-between"><span className="text-slate-500">Receipt No</span><span className="font-mono">{creditNote.ebm?.rcptNo || '-'}</span></div>
+                  <div className="flex items-center justify-between"><span className="text-slate-500">Original Receipt</span><span className="font-mono">{creditNote.ebm?.orgRcptNo || '-'}</span></div>
+                  <div className="flex items-center justify-between"><span className="text-slate-500">Refund Reason</span><span className="font-mono">{creditNote.ebm?.rfdRsnCd || '-'}</span></div>
+                  <div className="flex items-center justify-between"><span className="text-slate-500">Submitted</span><span>{creditNote.ebm?.submittedAt ? new Date(creditNote.ebm.submittedAt).toLocaleString() : '-'}</span></div>
+                  {creditNote.ebm?.rcptSign && <div className="break-all rounded-md bg-slate-50 p-2 font-mono text-xs dark:bg-slate-900">{creditNote.ebm.rcptSign}</div>}
+                  {creditNote.ebm?.lastError && <div className="rounded-md bg-red-50 p-2 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300">{creditNote.ebm.lastError}</div>}
                 </CardContent>
               </Card>
 
