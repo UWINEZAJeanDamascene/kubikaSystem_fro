@@ -1,6 +1,6 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { productsApi, stockApi } from '@/lib/api';
+import { productsApi, stockApi, ebmApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
 import { 
   ArrowLeft, 
@@ -83,8 +83,10 @@ interface Product {
     taxTyCd?: string | null;
     pkgUnitCd?: string | null;
     qtyUnitCd?: string | null;
+    ebmItemCode?: string | null;
     isRegisteredWithEBM?: boolean;
     ebmRegisteredAt?: string | null;
+    ebmLastAttemptAt?: string | null;
     ebmRegistrationError?: string | null;
   };
   brand?: string;
@@ -148,6 +150,17 @@ interface LifecycleTimelineEntry {
   details?: any;
 }
 
+interface EBMCodeOption {
+  code: string;
+  name?: string | null;
+  description?: string | null;
+}
+
+interface EBMItemClassOption {
+  itemClassCode: string;
+  itemClassName: string;
+}
+
 const MOVEMENT_REASON_LABELS: Record<string, string> = {
   purchase: 'Purchase',
   sale: 'Sale',
@@ -188,6 +201,30 @@ const getTimelineIcon = (type: string) => {
     case 'invoice': return <Receipt className="h-4 w-4" />;
     default: return <Clock className="h-4 w-4" />;
   }
+};
+
+const findCodeGroup = (groups: Record<string, { codeClassName?: string | null; codes: EBMCodeOption[] }>, patterns: RegExp[]) => {
+  const entries = Object.values(groups || {});
+  return entries.find((group) => {
+    const label = String(group.codeClassName || '').toLowerCase();
+    return patterns.some((pattern) => pattern.test(label));
+  })?.codes || [];
+};
+
+const codeLabel = (code: EBMCodeOption | undefined, fallbackCode?: string | null) => {
+  if (code) return `${code.code} - ${code.name || code.description || code.code}`;
+  return fallbackCode || '-';
+};
+
+const taxTypeDisplay = (code: string | null | undefined, options: EBMCodeOption[]) => {
+  const fallback: Record<string, string> = {
+    A: 'A - Exempt (0% VAT)',
+    B: 'B - Taxable (18% VAT)',
+    C: 'C - Export (0% VAT)',
+    D: 'D - Non-Taxable (0% VAT)',
+  };
+  const matched = options.find((option) => option.code === code);
+  return fallback[code || ''] || codeLabel(matched, code);
 };
 
 const productPanelClass = 'border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900';
@@ -240,6 +277,10 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState<Product | null>(null);
   const [registeringEbm, setRegisteringEbm] = useState(false);
+  const [ebmTaxTypes, setEbmTaxTypes] = useState<EBMCodeOption[]>([]);
+  const [ebmPackagingUnits, setEbmPackagingUnits] = useState<EBMCodeOption[]>([]);
+  const [ebmQuantityUnits, setEbmQuantityUnits] = useState<EBMCodeOption[]>([]);
+  const [ebmItemClasses, setEbmItemClasses] = useState<EBMItemClassOption[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [movementsLoading, setMovementsLoading] = useState(false);
   const [movementPagination, setMovementPagination] = useState({
@@ -258,6 +299,7 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     loadProduct();
+    loadEbmCodes();
   }, [id]);
 
   useEffect(() => {
@@ -293,6 +335,22 @@ export default function ProductDetailPage() {
       console.error('Failed to load product:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEbmCodes = async () => {
+    try {
+      const [codesResponse, itemClassResponse] = await Promise.all([
+        ebmApi.getCodes(),
+        ebmApi.getItemClasses({ limit: 5000 }),
+      ]);
+      const groups = codesResponse.success ? codesResponse.data : {};
+      setEbmTaxTypes(findCodeGroup(groups, [/tax.*type/, /^tax$/]));
+      setEbmPackagingUnits(findCodeGroup(groups, [/packag/]));
+      setEbmQuantityUnits(findCodeGroup(groups, [/quantity/, /unit.*quantity/, /unit of quantity/]));
+      setEbmItemClasses(itemClassResponse.success ? itemClassResponse.data : []);
+    } catch (error) {
+      console.error('Failed to load EBM codes:', error);
     }
   };
 
@@ -442,6 +500,17 @@ export default function ProductDetailPage() {
   const barcodeType = (product.barcodeType || 'CODE128').toUpperCase();
   const barcodeCanRenderAsLinear = Boolean(product.barcode && barcodeType !== 'QR' && barcodeType !== 'NONE');
   const scanValue = product.barcode || product.sku || product._id;
+  const ebm = product.ebm || {};
+  const itemClass = ebmItemClasses.find((item) => item.itemClassCode === ebm.itemClassCd);
+  const packagingUnit = ebmPackagingUnits.find((code) => code.code === ebm.pkgUnitCd);
+  const quantityUnit = ebmQuantityUnits.find((code) => code.code === ebm.qtyUnitCd);
+  const ebmStatusBadge = ebm.isRegisteredWithEBM ? (
+    <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">Registered with RRA</Badge>
+  ) : ebm.ebmRegistrationError ? (
+    <Badge className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300">Registration Failed</Badge>
+  ) : (
+    <Badge className="bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300">Not Registered</Badge>
+  );
 
   return (
     <Layout>
@@ -611,17 +680,35 @@ export default function ProductDetailPage() {
 
               <DetailCard title="EBM Registration" description="RRA item codes required before this product can be used on EBM documents.">
                 {!product.ebm?.isRegisteredWithEBM && (
-                  <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-                    This product cannot be added to EBM-submitted documents until registered with RRA.
+                  <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+                    This product is not registered with RRA. It cannot be added to any sales invoice, POS transaction, or EBM document until registration is complete.
                   </div>
                 )}
-                <FieldRow label="Status" value={product.ebm?.isRegisteredWithEBM ? 'Registered' : product.ebm?.ebmRegistrationError ? 'Failed' : 'Not registered'} />
-                <FieldRow label="Registered At" value={formatDate(product.ebm?.ebmRegisteredAt || undefined)} />
-                <FieldRow label="Item Class" value={product.ebm?.itemClassCd || '-'} mono />
-                <FieldRow label="Tax Type" value={product.ebm?.taxTyCd || product.taxCode || '-'} mono />
-                <FieldRow label="Packaging Unit" value={product.ebm?.pkgUnitCd || '-'} mono />
-                <FieldRow label="Quantity Unit" value={product.ebm?.qtyUnitCd || '-'} mono />
-                {product.ebm?.ebmRegistrationError && <FieldRow label="Last Error" value={product.ebm.ebmRegistrationError} />}
+                <FieldRow label="Status" value={ebmStatusBadge} />
+                {product.ebm?.isRegisteredWithEBM && (
+                  <>
+                    <FieldRow label="RRA Item Code" value={product.ebm?.ebmItemCode || '-'} mono />
+                    <FieldRow label="Registered At" value={formatDate(product.ebm?.ebmRegisteredAt || undefined)} />
+                  </>
+                )}
+                <FieldRow label="Tax Type" value={taxTypeDisplay(product.ebm?.taxTyCd || product.taxCode, ebmTaxTypes)} mono />
+                <FieldRow label="Item Classification" value={itemClass ? `${itemClass.itemClassCode} - ${itemClass.itemClassName}` : product.ebm?.itemClassCd || '-'} mono />
+                <FieldRow label="Packaging Unit" value={codeLabel(packagingUnit, product.ebm?.pkgUnitCd)} mono />
+                <FieldRow label="Quantity Unit" value={codeLabel(quantityUnit, product.ebm?.qtyUnitCd)} mono />
+                {product.ebm?.ebmRegistrationError && (
+                  <>
+                    <FieldRow label="Last Attempt" value={formatDate(product.ebm?.ebmLastAttemptAt || product.updatedAt || undefined)} />
+                    <FieldRow label="Error Message" value={product.ebm.ebmRegistrationError} />
+                  </>
+                )}
+                {!product.ebm?.isRegisteredWithEBM && (
+                  <div className="mt-4">
+                    <Button size="sm" onClick={handleRegisterEbm} disabled={registeringEbm}>
+                      {registeringEbm ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+                      Retry Registration
+                    </Button>
+                  </div>
+                )}
               </DetailCard>
 
               {/* Accounting */}

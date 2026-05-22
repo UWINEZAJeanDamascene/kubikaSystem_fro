@@ -1890,6 +1890,7 @@ export const invoicesApi = {
   getAll: (params?: {
     clientId?: string;
     status?: string;
+    ebmStatus?: string;
     startDate?: string;
     endDate?: string;
     page?: number;
@@ -2546,6 +2547,7 @@ export const purchasesApi = {
   getAll: (params?: {
     supplierId?: string;
     status?: string;
+    ebmPurchaseMatchStatus?: string;
     startDate?: string;
     endDate?: string;
     page?: number;
@@ -2627,6 +2629,7 @@ export const purchaseOrdersApi = {
   getAll: (params?: {
     supplier_id?: string;
     status?: string;
+    ebmPurchaseMatchStatus?: string;
     date_from?: string;
     date_to?: string;
     page?: number;
@@ -2685,6 +2688,7 @@ export const grnApi = {
   getAll: (params?: {
     supplier_id?: string;
     status?: string;
+    ebmStatus?: string;
     date_from?: string;
     date_to?: string;
     page?: number;

@@ -86,6 +86,14 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
+const EBM_STATUS_OPTIONS = [
+  { value: 'all', label: 'All RRA Status' },
+  { value: 'not_submitted', label: 'Not Submitted' },
+  { value: 'pending', label: 'Pending RRA' },
+  { value: 'submitted', label: 'Certified' },
+  { value: 'failed', label: 'Failed' },
+];
+
 export default function InvoicesListPage() {
   const { t } = useTranslation();
   const { formatCurrency } = useCurrency();
@@ -96,6 +104,7 @@ export default function InvoicesListPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [ebmStatusFilter, setEbmStatusFilter] = useState('all');
   const [clientFilter, setClientFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -114,6 +123,7 @@ export default function InvoicesListPage() {
         page: pagination.page,
         limit: pagination.limit,
         status: statusFilter !== 'all' ? statusFilter : undefined,
+        ebmStatus: ebmStatusFilter !== 'all' ? ebmStatusFilter : undefined,
         clientId: clientFilter !== 'all' ? clientFilter : undefined,
         startDate: dateFrom || undefined,
         endDate: dateTo || undefined,
@@ -142,7 +152,7 @@ export default function InvoicesListPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.limit, statusFilter, clientFilter, dateFrom, dateTo, search]);
+  }, [pagination.page, pagination.limit, statusFilter, ebmStatusFilter, clientFilter, dateFrom, dateTo, search]);
 
   const fetchClients = useCallback(async () => {
     try {
@@ -193,6 +203,11 @@ export default function InvoicesListPage() {
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
+  const handleEbmStatusFilter = (value: string) => {
+    setEbmStatusFilter(value);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
   const handleClientFilter = (value: string) => {
     setClientFilter(value);
     setPagination(prev => ({ ...prev, page: 1 }));
@@ -232,6 +247,7 @@ export default function InvoicesListPage() {
   const clearFilters = () => {
     setSearch('');
     setStatusFilter('all');
+    setEbmStatusFilter('all');
     setClientFilter('all');
     setDateFrom('');
     setDateTo('');
@@ -378,7 +394,7 @@ export default function InvoicesListPage() {
           {/* Filters */}
           <Card className="border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <CardContent className="p-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
@@ -394,6 +410,16 @@ export default function InvoicesListPage() {
                   </SelectTrigger>
                   <SelectContent className="dark:border-slate-800 dark:bg-slate-950">
                     {STATUS_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value} className="dark:text-slate-200">{option.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={ebmStatusFilter} onValueChange={handleEbmStatusFilter}>
+                  <SelectTrigger className="h-10 bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white">
+                    <SelectValue placeholder="RRA Status" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:border-slate-800 dark:bg-slate-950">
+                    {EBM_STATUS_OPTIONS.map(option => (
                       <SelectItem key={option.value} value={option.value} className="dark:text-slate-200">{option.label}</SelectItem>
                     ))}
                   </SelectContent>
@@ -414,7 +440,7 @@ export default function InvoicesListPage() {
                   <Input type="date" value={dateTo} onChange={(e) => handleDateToChange(e.target.value)} className="h-10 bg-white text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-white" />
                 </div>
               </div>
-              {(search || statusFilter !== 'all' || clientFilter !== 'all' || dateFrom || dateTo) && (
+              {(search || statusFilter !== 'all' || ebmStatusFilter !== 'all' || clientFilter !== 'all' || dateFrom || dateTo) && (
                 <div className="mt-3 flex items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 gap-1 text-slate-500 dark:text-slate-400">
                     <RotateCcw className="h-3.5 w-3.5" />
@@ -465,7 +491,7 @@ export default function InvoicesListPage() {
                           <TableHead className="hidden text-xs font-semibold text-slate-500 dark:text-slate-400 lg:table-cell">Date</TableHead>
                           <TableHead className="hidden text-xs font-semibold text-slate-500 dark:text-slate-400 lg:table-cell">Due Date</TableHead>
                           <TableHead className="text-xs font-semibold text-slate-500 dark:text-slate-400">Status</TableHead>
-                          <TableHead className="text-xs font-semibold text-slate-500 dark:text-slate-400">EBM</TableHead>
+                          <TableHead className="text-xs font-semibold text-slate-500 dark:text-slate-400">RRA Status</TableHead>
                           <TableHead className="whitespace-nowrap text-right text-xs font-semibold text-slate-500 dark:text-slate-400">Total</TableHead>
                           <TableHead className="hidden whitespace-nowrap text-right text-xs font-semibold text-slate-500 dark:text-slate-400 sm:table-cell">Balance</TableHead>
                           <TableHead className="text-right text-xs font-semibold text-slate-500 dark:text-slate-400">Actions</TableHead>
@@ -489,7 +515,19 @@ export default function InvoicesListPage() {
                                 {getStatusLabel(invoice.status)}
                               </span>
                             </TableCell>
-                            <TableCell><EBMStatusBadge status={invoice.ebm?.ebmStatus} /></TableCell>
+                            <TableCell>
+                              <span
+                                className={invoice.ebm?.ebmStatus === 'failed' ? 'inline-flex cursor-pointer' : 'inline-flex'}
+                                onClick={(event) => {
+                                  if (invoice.ebm?.ebmStatus === 'failed') {
+                                    event.stopPropagation();
+                                    navigate(`/invoices/${invoice._id}`);
+                                  }
+                                }}
+                              >
+                                <EBMStatusBadge ebmStatus={invoice.ebm?.ebmStatus} />
+                              </span>
+                            </TableCell>
                             <TableCell className="whitespace-nowrap text-right font-semibold text-slate-900 dark:text-white">{formatCurrency(invoice.grandTotal)}</TableCell>
                             <TableCell className="hidden whitespace-nowrap text-right text-slate-600 dark:text-slate-400 sm:table-cell">{formatCurrency(invoice.balance || invoice.grandTotal - invoice.amountPaid)}</TableCell>
                             <TableCell className="text-right">

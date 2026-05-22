@@ -40,7 +40,7 @@ import { Badge } from '@/app/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { useTranslation } from 'react-i18next';
 import { useFormatCurrency } from '@/lib/currencyUtils';
-import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
+import { EBMPurchaseStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface PurchaseItem {
   product: { _id: string; name: string; sku: string; unit?: string };
@@ -89,6 +89,7 @@ export default function PurchasesListPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [ebmPurchaseStatusFilter, setEbmPurchaseStatusFilter] = useState<string>('');
   const [supplierFilter, setSupplierFilter] = useState<string>('');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
@@ -110,6 +111,7 @@ export default function PurchasesListPage() {
     try {
       const params: Record<string, unknown> = { page, limit: 20 };
       if (statusFilter) params.status = statusFilter;
+      if (ebmPurchaseStatusFilter) params.ebmPurchaseMatchStatus = ebmPurchaseStatusFilter;
       if (supplierFilter) params.supplierId = supplierFilter;
       if (dateFrom) params.startDate = dateFrom;
       if (dateTo) params.endDate = dateTo;
@@ -131,7 +133,7 @@ export default function PurchasesListPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, supplierFilter, dateFrom, dateTo]);
+  }, [page, statusFilter, ebmPurchaseStatusFilter, supplierFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     fetchSuppliers();
@@ -283,7 +285,7 @@ export default function PurchasesListPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">{t('purchases.status', 'Status')}</label>
                   <Select value={statusFilter || 'all'} onValueChange={(v) => setStatusFilter(v === 'all' ? '' : v)}>
@@ -298,6 +300,21 @@ export default function PurchasesListPage() {
                       <SelectItem value="partial">{t('purchases.status.partial', 'Partial')}</SelectItem>
                       <SelectItem value="paid">{t('purchases.status.paid', 'Paid')}</SelectItem>
                       <SelectItem value="cancelled">{t('purchases.status.cancelled', 'Cancelled')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">RRA Purchase Status</label>
+                  <Select value={ebmPurchaseStatusFilter || 'all'} onValueChange={(v) => setEbmPurchaseStatusFilter(v === 'all' ? '' : v)}>
+                    <SelectTrigger className="h-9 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                      <SelectValue placeholder="All RRA Purchase Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All RRA Purchase Status</SelectItem>
+                      <SelectItem value="unmatched">Unmatched</SelectItem>
+                      <SelectItem value="matched">Matched - Pending Confirm</SelectItem>
+                      <SelectItem value="confirmed">RRA Confirmed</SelectItem>
+                      <SelectItem value="unconfirmable">Not EBM Supplier</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -342,7 +359,7 @@ export default function PurchasesListPage() {
                       <TableHead className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.supplier', 'Supplier')}</TableHead>
                       <TableHead className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.purchaseDate', 'Date')}</TableHead>
                       <TableHead className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.status', 'Status')}</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">EBM</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">RRA Purchase Status</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.totalAmount', 'Total')}</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.balance', 'Balance')}</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{t('purchases.items', 'Items')}</TableHead>
@@ -370,14 +387,7 @@ export default function PurchasesListPage() {
                           <TableCell className="text-slate-600 dark:text-slate-300">{formatDate(p.purchaseDate)}</TableCell>
                           <TableCell><StatusBadge status={p.status} /></TableCell>
                           <TableCell>
-                            <div className="flex flex-col gap-1">
-                              <EBMStatusBadge status={p.ebm?.ebmStatus} />
-                              {p.ebm?.ebmPurchaseMatchStatus && (
-                                <Badge variant="outline" className="w-fit text-[10px] capitalize">
-                                  {p.ebm.ebmPurchaseMatchStatus.replace(/_/g, ' ')}
-                                </Badge>
-                              )}
-                            </div>
+                            <EBMPurchaseStatusBadge status={p.ebm?.ebmPurchaseMatchStatus} />
                           </TableCell>
                           <TableCell className="text-right font-medium text-slate-900 dark:text-white">{formatCurrency(p.grandTotal)}</TableCell>
                           <TableCell className="text-right text-slate-600 dark:text-slate-300">

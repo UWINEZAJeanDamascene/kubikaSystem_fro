@@ -173,6 +173,49 @@ const findCodeGroup = (groups: Record<string, { codeClassName?: string | null; c
   })?.codes || [];
 };
 
+const codeLabel = (code: EBMCodeOption) => `${code.code} - ${code.name || code.description || code.code}`;
+const itemClassLabel = (itemClass: EBMItemClassOption) => `${itemClass.itemClassCode} - ${itemClass.itemClassName}`;
+const taxTypeLabel = (code: EBMCodeOption) => {
+  const fallback: Record<string, string> = {
+    A: 'A - Exempt (0% VAT)',
+    B: 'B - Taxable (18% VAT)',
+    C: 'C - Export (0% VAT)',
+    D: 'D - Non-Taxable (0% VAT)',
+  };
+  return fallback[code.code] || codeLabel(code);
+};
+
+const filterCodes = (codes: EBMCodeOption[], search: string) => {
+  const term = search.trim().toLowerCase();
+  if (!term) return codes;
+  return codes.filter((code) => codeLabel(code).toLowerCase().includes(term));
+};
+
+const filterItemClasses = (itemClasses: EBMItemClassOption[], search: string) => {
+  const term = search.trim().toLowerCase();
+  if (!term) return itemClasses.slice(0, 250);
+  return itemClasses.filter((itemClass) => itemClassLabel(itemClass).toLowerCase().includes(term)).slice(0, 250);
+};
+
+const mapUnitToRraCode = (unit: string, options: EBMCodeOption[]) => {
+  const normalized = (unit || '').trim().toLowerCase();
+  const aliases: Record<string, string[]> = {
+    pcs: ['u', 'nt', 'nx', 'ea', 'pc'],
+    piece: ['u', 'nt', 'nx', 'ea', 'pc'],
+    kg: ['kg'],
+    g: ['g', 'gr'],
+    l: ['l', 'lt'],
+    litre: ['l', 'lt'],
+    liter: ['l', 'lt'],
+    ml: ['ml'],
+    box: ['bx'],
+    bag: ['bg'],
+    ton: ['tn'],
+  };
+  const candidates = aliases[normalized] || [normalized];
+  return options.find((option) => candidates.includes(option.code.toLowerCase()))?.code || '';
+};
+
 export default function ProductFormPage() {
   const { t } = useTranslation();
   const tr = (key: string, fallback: string) => {
@@ -199,6 +242,9 @@ export default function ProductFormPage() {
   const [ebmPackagingUnits, setEbmPackagingUnits] = useState<EBMCodeOption[]>([]);
   const [ebmQuantityUnits, setEbmQuantityUnits] = useState<EBMCodeOption[]>([]);
   const [ebmItemClasses, setEbmItemClasses] = useState<EBMItemClassOption[]>([]);
+  const [itemClassSearch, setItemClassSearch] = useState('');
+  const [packagingUnitSearch, setPackagingUnitSearch] = useState('');
+  const [quantityUnitSearch, setQuantityUnitSearch] = useState('');
   
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
@@ -214,8 +260,8 @@ export default function ProductFormPage() {
     costPrice: '0',
     averageCost: '0',
     sellingPrice: '0',
-    taxCode: 'A',
-    taxRate: '0',
+          taxCode: 'B',
+          taxRate: '18',
     costingMethod: 'fifo',
     reorderPoint: '10',
     reorderQuantity: '10',
@@ -229,7 +275,7 @@ export default function ProductFormPage() {
     cogs_account_id: '',
     revenue_account_id: '',
     ebmItemClassCode: '',
-    ebmTaxTypeCode: '',
+    ebmTaxTypeCode: 'B',
     ebmPackagingUnitCode: '',
     ebmQuantityUnitCode: '',
   });
@@ -314,6 +360,20 @@ export default function ProductFormPage() {
       setEbmPackagingUnits(packagingUnits);
       setEbmQuantityUnits(quantityUnits);
       setEbmItemClasses(itemClassResponse.success ? itemClassResponse.data : []);
+      if (!isEditMode) {
+        setFormData((prev) => {
+          const mappedPackaging = prev.ebmPackagingUnitCode || mapUnitToRraCode(prev.unit, packagingUnits);
+          const mappedQuantity = prev.ebmQuantityUnitCode || mapUnitToRraCode(prev.unit, quantityUnits);
+          return {
+            ...prev,
+            ebmTaxTypeCode: prev.ebmTaxTypeCode || 'B',
+            taxCode: prev.taxCode || 'B',
+            taxRate: prev.taxRate || '18',
+            ebmPackagingUnitCode: mappedPackaging,
+            ebmQuantityUnitCode: mappedQuantity,
+          };
+        });
+      }
       if (!taxTypes.length || !packagingUnits.length || !quantityUnits.length || !(itemClassResponse.data || []).length) {
         setEbmCodeMessage('Sync RRA code data before selecting EBM product fields.');
       }
@@ -345,8 +405,8 @@ export default function ProductFormPage() {
           costPrice: String(product.costPrice || 0),
           averageCost: String(product.averageCost || 0),
           sellingPrice: String(product.sellingPrice || 0),
-          taxCode: product.taxCode || 'A',
-          taxRate: String(product.taxRate || 0),
+          taxCode: product.taxCode || 'B',
+          taxRate: String(product.taxRate ?? 18),
           costingMethod: product.costingMethod || 'fifo',
           reorderPoint: String(product.reorderPoint || 10),
           reorderQuantity: String(product.reorderQuantity || 10),
@@ -360,7 +420,7 @@ export default function ProductFormPage() {
           cogs_account_id: product.cogs_account_id || product.cogsAccount || '',
           revenue_account_id: product.revenue_account_id || product.revenueAccount || '',
           ebmItemClassCode: product.ebm?.itemClassCd || product.ebm?.itemClassCode || '',
-          ebmTaxTypeCode: product.ebm?.taxTyCd || product.ebm?.taxTypeCode || product.taxCode || '',
+          ebmTaxTypeCode: product.ebm?.taxTyCd || product.ebm?.taxTypeCode || product.taxCode || 'B',
           ebmPackagingUnitCode: product.ebm?.pkgUnitCd || product.ebm?.packagingUnitCode || '',
           ebmQuantityUnitCode: product.ebm?.qtyUnitCd || product.ebm?.quantityUnitCode || product.unit || '',
         });
@@ -375,7 +435,18 @@ export default function ProductFormPage() {
   };
 
   const handleChange = (field: keyof ProductFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [field]: value };
+      if (field === 'unit') {
+        if (!next.ebmPackagingUnitCode) next.ebmPackagingUnitCode = mapUnitToRraCode(value, ebmPackagingUnits);
+        if (!next.ebmQuantityUnitCode) next.ebmQuantityUnitCode = mapUnitToRraCode(value, ebmQuantityUnits);
+      }
+      if (field === 'ebmTaxTypeCode') {
+        next.taxCode = value;
+        next.taxRate = value === 'B' ? '18' : '0';
+      }
+      return next;
+    });
   };
 
   // Check if costing method should be locked (product has stock movements)
@@ -431,6 +502,22 @@ export default function ProductFormPage() {
     }
     if (!formData.revenue_account_id) {
       toast.error(t('products.revenueAccountRequired') || 'Revenue Account is required');
+      return;
+    }
+    if (!formData.ebmTaxTypeCode) {
+      toast.error('Tax type is required for RRA EBM compliance.');
+      return;
+    }
+    if (!formData.ebmItemClassCode) {
+      toast.error('Item classification code is required for RRA EBM compliance.');
+      return;
+    }
+    if (!formData.ebmPackagingUnitCode) {
+      toast.error('Packaging unit is required for RRA EBM compliance.');
+      return;
+    }
+    if (!formData.ebmQuantityUnitCode) {
+      toast.error('Quantity unit is required for RRA EBM compliance.');
       return;
     }
 
@@ -717,7 +804,7 @@ export default function ProductFormPage() {
               <CardHeader className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
                 <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
                   <Package className="h-5 w-5" />
-                  EBM Classification
+                  RRA EBM Information
                 </CardTitle>
                 <CardDescription className="text-slate-500 dark:text-slate-300">
                   RRA product codes used for EBM item registration and invoice validation
@@ -731,33 +818,10 @@ export default function ProductFormPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="ebmItemClassCode" className="dark:text-slate-200">Item Classification Code</Label>
-                  <Select
-                    value={formData.ebmItemClassCode}
-                    onValueChange={(value) => handleChange('ebmItemClassCode', value)}
-                    disabled={ebmCodesLoading || ebmItemClasses.length === 0}
-                  >
-                    <SelectTrigger className="h-10 rounded-md flex items-center px-3">
-                      <SelectValue placeholder={ebmCodesLoading ? 'Loading RRA codes...' : 'Select item class'} />
-                    </SelectTrigger>
-                    <SelectContent className="dark:bg-slate-800">
-                      {ebmItemClasses.map((itemClass) => (
-                        <SelectItem key={itemClass.itemClassCode} value={itemClass.itemClassCode} className="dark:text-slate-200">
-                          {itemClass.itemClassCode} - {itemClass.itemClassName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="ebmTaxTypeCode" className="dark:text-slate-200">Tax Type Code</Label>
+                  <Label htmlFor="ebmTaxTypeCode" className="dark:text-slate-200">RRA Tax Type</Label>
                   <Select
                     value={formData.ebmTaxTypeCode}
-                    onValueChange={(value) => {
-                      handleChange('ebmTaxTypeCode', value);
-                      handleChange('taxCode', value);
-                    }}
+                    onValueChange={(value) => handleChange('ebmTaxTypeCode', value)}
                     disabled={ebmCodesLoading || ebmTaxTypes.length === 0}
                   >
                     <SelectTrigger className="h-10 rounded-md flex items-center px-3">
@@ -766,7 +830,7 @@ export default function ProductFormPage() {
                     <SelectContent className="dark:bg-slate-800">
                       {ebmTaxTypes.map((code) => (
                         <SelectItem key={code.code} value={code.code} className="dark:text-slate-200">
-                          {code.code} - {code.name || code.description || code.code}
+                          {taxTypeLabel(code)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -774,7 +838,44 @@ export default function ProductFormPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="ebmPackagingUnitCode" className="dark:text-slate-200">Packaging Unit Code</Label>
+                  <Label htmlFor="ebmItemClassCode" className="dark:text-slate-200">Item Classification Code</Label>
+                  <Input
+                    value={itemClassSearch}
+                    onChange={(event) => setItemClassSearch(event.target.value)}
+                    placeholder="Search item class"
+                    className="h-9 rounded-md px-3"
+                    disabled={ebmCodesLoading || ebmItemClasses.length === 0}
+                  />
+                  <Select
+                    value={formData.ebmItemClassCode}
+                    onValueChange={(value) => handleChange('ebmItemClassCode', value)}
+                    disabled={ebmCodesLoading || ebmItemClasses.length === 0}
+                  >
+                    <SelectTrigger className="h-10 rounded-md flex items-center px-3">
+                      <SelectValue placeholder={ebmCodesLoading ? 'Loading RRA codes...' : 'Select item class'} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72 dark:bg-slate-800">
+                      {filterItemClasses(ebmItemClasses, itemClassSearch).map((itemClass) => (
+                        <SelectItem key={itemClass.itemClassCode} value={itemClass.itemClassCode} className="dark:text-slate-200">
+                          {itemClassLabel(itemClass)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Select the RRA classification that best describes this product. If unsure, contact your accountant or check the RRA item classification list.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ebmPackagingUnitCode" className="dark:text-slate-200">Packaging Unit</Label>
+                  <Input
+                    value={packagingUnitSearch}
+                    onChange={(event) => setPackagingUnitSearch(event.target.value)}
+                    placeholder="Search packaging unit"
+                    className="h-9 rounded-md px-3"
+                    disabled={ebmCodesLoading || ebmPackagingUnits.length === 0}
+                  />
                   <Select
                     value={formData.ebmPackagingUnitCode}
                     onValueChange={(value) => handleChange('ebmPackagingUnitCode', value)}
@@ -783,10 +884,10 @@ export default function ProductFormPage() {
                     <SelectTrigger className="h-10 rounded-md flex items-center px-3">
                       <SelectValue placeholder={ebmCodesLoading ? 'Loading RRA codes...' : 'Select packaging unit'} />
                     </SelectTrigger>
-                    <SelectContent className="dark:bg-slate-800">
-                      {ebmPackagingUnits.map((code) => (
+                    <SelectContent className="max-h-72 dark:bg-slate-800">
+                      {filterCodes(ebmPackagingUnits, packagingUnitSearch).map((code) => (
                         <SelectItem key={code.code} value={code.code} className="dark:text-slate-200">
-                          {code.code} - {code.name || code.description || code.code}
+                          {codeLabel(code)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -794,7 +895,14 @@ export default function ProductFormPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="ebmQuantityUnitCode" className="dark:text-slate-200">Quantity Unit Code</Label>
+                  <Label htmlFor="ebmQuantityUnitCode" className="dark:text-slate-200">Quantity Unit</Label>
+                  <Input
+                    value={quantityUnitSearch}
+                    onChange={(event) => setQuantityUnitSearch(event.target.value)}
+                    placeholder="Search quantity unit"
+                    className="h-9 rounded-md px-3"
+                    disabled={ebmCodesLoading || ebmQuantityUnits.length === 0}
+                  />
                   <Select
                     value={formData.ebmQuantityUnitCode}
                     onValueChange={(value) => handleChange('ebmQuantityUnitCode', value)}
@@ -803,10 +911,10 @@ export default function ProductFormPage() {
                     <SelectTrigger className="h-10 rounded-md flex items-center px-3">
                       <SelectValue placeholder={ebmCodesLoading ? 'Loading RRA codes...' : 'Select quantity unit'} />
                     </SelectTrigger>
-                    <SelectContent className="dark:bg-slate-800">
-                      {ebmQuantityUnits.map((code) => (
+                    <SelectContent className="max-h-72 dark:bg-slate-800">
+                      {filterCodes(ebmQuantityUnits, quantityUnitSearch).map((code) => (
                         <SelectItem key={code.code} value={code.code} className="dark:text-slate-200">
-                          {code.code} - {code.name || code.description || code.code}
+                          {codeLabel(code)}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -52,7 +52,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/ca
 import { formatDocumentCurrency } from '@/lib/currencyUtils';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
-import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
+import { EBMPurchaseStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface PurchaseOrder {
   _id: string;
@@ -111,6 +111,7 @@ export default function PurchaseOrdersListPage() {
   // Filters
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [ebmPurchaseStatusFilter, setEbmPurchaseStatusFilter] = useState<string>('');
   const [supplierFilter, setSupplierFilter] = useState<string>('');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
@@ -203,6 +204,7 @@ export default function PurchaseOrdersListPage() {
       };
       
       if (statusFilter) params.status = statusFilter;
+      if (ebmPurchaseStatusFilter) params.ebmPurchaseMatchStatus = ebmPurchaseStatusFilter;
       if (supplierFilter) params.supplier_id = supplierFilter;
       if (dateFrom) params.date_from = dateFrom;
       if (dateTo) params.date_to = dateTo;
@@ -224,7 +226,7 @@ export default function PurchaseOrdersListPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, supplierFilter, dateFrom, dateTo, searchQuery]);
+  }, [page, statusFilter, ebmPurchaseStatusFilter, supplierFilter, dateFrom, dateTo, searchQuery]);
 
   useEffect(() => {
     fetchSuppliers();
@@ -551,6 +553,23 @@ export default function PurchaseOrdersListPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    RRA Purchase Status
+                  </label>
+                  <Select value={ebmPurchaseStatusFilter || 'all'} onValueChange={(value) => setEbmPurchaseStatusFilter(value === 'all' ? '' : value)}>
+                    <SelectTrigger className="border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                      <SelectValue placeholder="All RRA Purchase Status" />
+                    </SelectTrigger>
+                    <SelectContent className="border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                      <SelectItem value="all" className="dark:text-slate-200">All RRA Purchase Status</SelectItem>
+                      <SelectItem value="unmatched" className="dark:text-slate-200">Unmatched</SelectItem>
+                      <SelectItem value="matched" className="dark:text-slate-200">Matched - Pending Confirm</SelectItem>
+                      <SelectItem value="confirmed" className="dark:text-slate-200">RRA Confirmed</SelectItem>
+                      <SelectItem value="unconfirmable" className="dark:text-slate-200">Not EBM Supplier</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     {t('purchase.orders.supplier', 'Supplier')}
                   </label>
                   <Select value={supplierFilter || 'all'} onValueChange={(value) => setSupplierFilter(value === 'all' ? '' : value)}>
@@ -629,7 +648,7 @@ export default function PurchaseOrdersListPage() {
                         {t('purchase.orders.status', 'Status')}
                       </TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        EBM
+                        RRA Purchase Status
                       </TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         {t('purchase.orders.totalAmount', 'Total Amount')}
@@ -671,14 +690,7 @@ export default function PurchaseOrdersListPage() {
                         </TableCell>
                         <TableCell>{getStatusBadge(po.status)}</TableCell>
                         <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <EBMStatusBadge status={po.ebm?.ebmStatus} />
-                            {po.ebm?.ebmPurchaseMatchStatus && (
-                              <Badge variant="outline" className="w-fit text-[10px] capitalize">
-                                {po.ebm.ebmPurchaseMatchStatus.replace(/_/g, ' ')}
-                              </Badge>
-                            )}
-                          </div>
+                          <EBMPurchaseStatusBadge status={po.ebm?.ebmPurchaseMatchStatus} />
                         </TableCell>
                         <TableCell className="font-mono font-medium text-slate-950 dark:text-white">
                           {formatCurrency(po.totalAmount, po.currencyCode)}

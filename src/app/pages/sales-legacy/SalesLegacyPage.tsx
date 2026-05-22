@@ -51,6 +51,7 @@ import {
 import { salesLegacyApi, clientsApi, warehouseApi, PosProduct, bankAccountsApi, invoicesApi, creditNotesApi } from '@/lib/api';
 import { useFormatCurrency } from '@/lib/currencyUtils';
 import { useTranslation } from 'react-i18next';
+import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
 
 interface CartItem extends PosProduct {
   cartQuantity: number;
@@ -103,6 +104,7 @@ interface PosInvoice {
   totalAmount?: number;
   currencyCode?: string;
   status?: string;
+  ebm?: { ebmStatus?: string };
   lines?: Array<{
     _id?: string;
     product?: string | { _id?: string; name?: string; sku?: string };
@@ -159,6 +161,7 @@ export default function SalesLegacyPage() {
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [recentInvoices, setRecentInvoices] = useState<PosInvoice[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
+  const [posEbmStatusFilter, setPosEbmStatusFilter] = useState('all');
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const scannerRef = useRef<any>(null);
   const scanBufferRef = useRef('');
@@ -525,7 +528,11 @@ export default function SalesLegacyPage() {
   const loadRecentInvoices = async () => {
     setLoadingInvoices(true);
     try {
-      const response = await invoicesApi.getAll({ page: 1, limit: 15 });
+      const response = await invoicesApi.getAll({
+        page: 1,
+        limit: 15,
+        ebmStatus: posEbmStatusFilter !== 'all' ? posEbmStatusFilter : undefined,
+      });
       const data = response.data as any;
       setRecentInvoices(Array.isArray(data) ? data : data?.invoices || data?.data || []);
     } catch (error: any) {
@@ -540,6 +547,12 @@ export default function SalesLegacyPage() {
     setInvoiceDialogOpen(true);
     loadRecentInvoices();
   };
+
+  useEffect(() => {
+    if (invoiceDialogOpen) {
+      loadRecentInvoices();
+    }
+  }, [posEbmStatusFilter]);
 
   const requireManagerPin = () => {
     const pin = window.prompt('Manager PIN required');
@@ -1386,6 +1399,20 @@ export default function SalesLegacyPage() {
               Void keeps an audit trail through invoice cancellation. Refund creates and confirms a credit note.
             </DialogDescription>
           </DialogHeader>
+          <div className="flex justify-end">
+            <Select value={posEbmStatusFilter} onValueChange={setPosEbmStatusFilter}>
+              <SelectTrigger className="h-9 w-full bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white sm:w-48">
+                <SelectValue placeholder="RRA Status" />
+              </SelectTrigger>
+              <SelectContent className="dark:border-slate-800 dark:bg-slate-950">
+                <SelectItem value="all" className="dark:text-slate-200">All RRA Status</SelectItem>
+                <SelectItem value="not_submitted" className="dark:text-slate-200">Not Submitted</SelectItem>
+                <SelectItem value="pending" className="dark:text-slate-200">Pending RRA</SelectItem>
+                <SelectItem value="submitted" className="dark:text-slate-200">Certified</SelectItem>
+                <SelectItem value="failed" className="dark:text-slate-200">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="max-h-[520px] space-y-2 overflow-y-auto">
             {loadingInvoices ? (
               <div className="py-8 text-center text-sm text-slate-500">Loading invoices...</div>
@@ -1400,6 +1427,9 @@ export default function SalesLegacyPage() {
                     </div>
                     <div className="text-sm text-slate-500 dark:text-slate-400">
                       {invoice.client?.name || invoice.clientInfo?.name || 'Walk-in Customer'} · {invoice.status || 'unknown'} · {formatCurrency(invoice.grandTotal || invoice.totalAmount || 0, invoice.currencyCode)}
+                    </div>
+                    <div className="mt-2">
+                      <EBMStatusBadge ebmStatus={invoice.ebm?.ebmStatus} />
                     </div>
                   </div>
                   <div className="flex gap-2">

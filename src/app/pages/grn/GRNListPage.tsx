@@ -160,6 +160,7 @@ export default function GRNListPage() {
 
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [ebmStatusFilter, setEbmStatusFilter] = useState<string>("all");
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
@@ -190,6 +191,7 @@ export default function GRNListPage() {
     try {
       const params: any = { page, limit: 20 };
       if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+      if (ebmStatusFilter && ebmStatusFilter !== "all") params.ebmStatus = ebmStatusFilter;
       if (supplierFilter && supplierFilter !== "all") params.supplier_id = supplierFilter;
       if (dateFrom) params.date_from = dateFrom;
       if (dateTo) params.date_to = dateTo;
@@ -204,7 +206,7 @@ export default function GRNListPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, supplierFilter, dateFrom, dateTo]);
+  }, [page, statusFilter, ebmStatusFilter, supplierFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     fetchSuppliers();
@@ -287,7 +289,7 @@ export default function GRNListPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-600 dark:text-slate-300">{t("grn.status", "Status")}</label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -298,6 +300,21 @@ export default function GRNListPage() {
                       <SelectItem value="all">{t("grn.allStatuses", "All Statuses")}</SelectItem>
                       <SelectItem value="draft">{t("grn.status.draft", "Draft")}</SelectItem>
                       <SelectItem value="confirmed">{t("grn.status.confirmed", "Confirmed")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-600 dark:text-slate-300">RRA Status</label>
+                  <Select value={ebmStatusFilter} onValueChange={setEbmStatusFilter}>
+                    <SelectTrigger className="h-9 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                      <SelectValue placeholder="All RRA Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All RRA Status</SelectItem>
+                      <SelectItem value="not_submitted">Not Submitted</SelectItem>
+                      <SelectItem value="pending">Pending RRA</SelectItem>
+                      <SelectItem value="submitted">Certified</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -350,7 +367,7 @@ export default function GRNListPage() {
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("grn.supplier", "Supplier")}</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("grn.receivedDate", "Received")}</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("grn.status", "Status")}</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">EBM</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">RRA Status</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("grn.totalAmount", "Amount")}</TableHead>
                       <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("grn.paymentStatus", "Payment")}</TableHead>
                       <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("common.actions", "Actions")}</TableHead>
@@ -371,7 +388,7 @@ export default function GRNListPage() {
                         <TableCell>
                           <StatusBadge status={grn.status} />
                         </TableCell>
-                        <TableCell><EBMStatusBadge status={grn.ebm?.stockStatus || grn.ebm?.ebmStatus} /></TableCell>
+                        <TableCell><EBMStatusBadge ebmStatus={grn.ebm?.stockStatus || grn.ebm?.ebmStatus} /></TableCell>
                         <TableCell className="font-mono font-medium text-slate-900 dark:text-white">{formatCurrency(grn.totalAmount)}</TableCell>
                         <TableCell>
                           <PaymentStatusBadge status={grn.paymentStatus} />
