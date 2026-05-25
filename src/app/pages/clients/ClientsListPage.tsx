@@ -34,6 +34,7 @@ import {
 import { Badge } from '@/app/components/ui/badge';
 import { Skeleton } from '@/app/components/ui/skeleton';
 import { Card, CardContent } from '@/app/components/ui/card';
+import { EmptyState } from '@/app/components/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { useFormatCurrency } from '@/lib/currencyUtils';
 
@@ -381,11 +382,19 @@ export default function ClientsListPage() {
                     <TableBody>
                       {clients.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="py-12 text-center">
-                            <div className="flex flex-col items-center gap-2">
-                              <Users className="h-8 w-8 text-slate-300 dark:text-slate-600" />
-                              <p className="text-sm text-slate-500 dark:text-slate-400">{t('clients.noClients', 'No clients found')}</p>
-                            </div>
+                          <TableCell colSpan={6} className="p-4">
+                            <EmptyState
+                              compact
+                              icon={Users}
+                              title={t('clients.noClients', 'No clients yet')}
+                              description={t('clients.noClientsHint', 'Add your first client to start issuing invoices and tracking receivables.')}
+                              action={
+                                <Button onClick={() => navigate('/clients/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  {t('clients.addFirst', 'Add your first client')}
+                                </Button>
+                              }
+                            />
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -480,10 +489,18 @@ export default function ClientsListPage() {
                 </Card>
               ))
             ) : clients.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-12">
-                <Users className="h-8 w-8 text-slate-300 dark:text-slate-600" />
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t('clients.noClients', 'No clients found')}</p>
-              </div>
+              <EmptyState
+                compact
+                icon={Users}
+                title={t('clients.noClients', 'No clients yet')}
+                description={t('clients.noClientsHint', 'Add your first client to start issuing invoices and tracking receivables.')}
+                action={
+                  <Button onClick={() => navigate('/clients/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('clients.addFirst', 'Add your first client')}
+                  </Button>
+                }
+              />
             ) : (
               clients.map((client) => (
                 <Card

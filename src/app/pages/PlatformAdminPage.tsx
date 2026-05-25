@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+﻿import { useEffect, useMemo, useState, lazy, Suspense, type ReactNode } from "react";
 import { companyService } from "@/services";
 import {
   type PlatformAccessUpdate,
@@ -88,583 +88,43 @@ import {
   XCircle,
 } from "lucide-react";
 
-const featureLabels: Record<PlatformFeatureKey, string> = {
-  inventory: "Inventory",
-  sales: "Sales",
-  purchases: "Purchases",
-  finance: "Finance",
-  payroll: "Payroll",
-  reports: "Reports",
-  projects: "Projects",
-  fixed_assets: "Fixed assets",
-  ai_assistant: "AI assistant",
-  integrations: "Integrations",
-};
+// Shared helpers and presentational components live in ./platform-admin/.
+// Re-importing them keeps this file focused on the data flow and tab layout.
+import {
+  accentFromTone,
+  daysUntil,
+  emptyDashboard,
+  emptyFeatureAccess,
+  featureKeys,
+  featureLabels,
+  formatDate,
+  formatMoney,
+  messageTemplates,
+  normalizeCompany,
+  percent,
+  planStyles,
+  splitPlanList,
+  statusStyles,
+  titleCase,
+} from "./platform-admin/lib";
+import {
+  CompanySummary,
+  EmptyPanel,
+  OpsMetric,
+  SignalBar,
+  StatTile,
+  WorkstreamCard,
+} from "./platform-admin/components";
 
-const featureKeys = Object.keys(featureLabels) as PlatformFeatureKey[];
 
-function planStyles(plan: string): string {
-  const known: Record<string, string> = {
-    starter: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-200 dark:border-cyan-800",
-    professional: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800",
-    enterprise: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-800",
-    core_operations: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-200 dark:border-indigo-800",
-    business_command: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-200 dark:border-violet-800",
-  };
-  return known[plan] || "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700";
-}
+// AccessModal is lazy-loaded - it's a heavy dialog that only renders when a
+// platform admin clicks "Manage access" on a company row.
+const AccessModal = lazy(() => import("./platform-admin/AccessModal"));
 
-const statusStyles: Record<PlatformSubscriptionStatus, string> = {
-  trialing: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:border-sky-800",
-  active: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800",
-  past_due: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-200 dark:border-red-800",
-  suspended: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-200 dark:border-orange-800",
-  cancelled: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700",
-};
+// AnalyticsTab is lazy-loaded - it pulls in recharts (heavy) and only renders
+// when the platform admin opens the Analytics tab.
+const AnalyticsTab = lazy(() => import("./platform-admin/tabs/AnalyticsTab"));
 
-function emptyFeatureAccess(): PlatformFeatureAccess {
-  return featureKeys.reduce((acc, key) => {
-    acc[key] = false;
-    return acc;
-  }, {} as PlatformFeatureAccess);
-}
-
-const messageTemplates = [
-  {
-    key: "feature-release",
-    label: "Feature Release",
-    subject: "New features now live on StockManager",
-    message: "We have released platform improvements that may affect your workspace. Please review your dashboard for the latest updates and feel free to reach out with any questions.",
-  },
-  {
-    key: "maintenance",
-    label: "Scheduled Maintenance",
-    subject: "Scheduled platform maintenance",
-    message: "Our platform will undergo scheduled maintenance to improve performance and reliability. We expect brief downtime during the maintenance window. Thank you for your patience.",
-  },
-  {
-    key: "policy-update",
-    label: "Policy Update",
-    subject: "Important policy update",
-    message: "We are updating our terms of service and privacy policy to reflect new features and compliance requirements. Please review the changes in your account settings.",
-  },
-  {
-    key: "payment-notice",
-    label: "Payment Notice",
-    subject: "Subscription payment reminder",
-    message: "Your subscription payment is coming due. Please arrange payment to keep your access active and avoid any service interruption.",
-  },
-  {
-    key: "security-alert",
-    label: "Security Alert",
-    subject: "Security best practices reminder",
-    message: "As part of our ongoing security efforts, we recommend reviewing your account security settings, enabling two-factor authentication, and ensuring your password is strong and unique.",
-  },
-];
-
-const emptyDashboard: PlatformDashboardData = {
-  stats: {
-    total: 0,
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-    pastDue: 0,
-    upcomingPayments: 0,
-    monthlyRecurringRevenue: 0,
-  },
-  companies: [],
-  packageMatrix: [],
-};
-
-function formatDate(value?: string | null) {
-  if (!value) return "Not scheduled";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value || 0);
-}
-
-function titleCase(value: string) {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function splitPlanList(value: string) {
-  return value
-    .split(/\r?\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function percent(value: number, total: number) {
-  if (!total) return 0;
-  return Math.min(100, Math.round((value / total) * 100));
-}
-
-function daysUntil(value?: string | null) {
-  if (!value) return null;
-  const today = new Date();
-  const target = new Date(value);
-  today.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
-  return Math.ceil((target.getTime() - today.getTime()) / 86400000);
-}
-
-function normalizeCompany(company: PlatformCompany): PlatformCompany {
-  const rawFeatureAccess = company.feature_access || {};
-  const subscriptionModules = company.subscription_modules || [];
-  return {
-    ...company,
-    approvalStatus: company.approvalStatus || company.status || "pending",
-    subscription_plan: company.subscription_plan || "starter",
-    subscription_status: company.subscription_status || "active",
-    billing_cycle: company.billing_cycle || "monthly",
-    billing_amount: company.billing_amount || 0,
-    feature_access: rawFeatureAccess,
-    enabledModules: featureKeys.filter((key) => rawFeatureAccess[key]),
-    enabledModuleCount: featureKeys.filter((key) => rawFeatureAccess[key]).length,
-    subscription_modules: subscriptionModules,
-  };
-}
-
-function accentFromTone(tone: string): string {
-  if (tone.includes("cyan")) return "bg-cyan-500";
-  if (tone.includes("emerald")) return "bg-emerald-500";
-  if (tone.includes("amber")) return "bg-amber-500";
-  if (tone.includes("rose")) return "bg-rose-500";
-  if (tone.includes("red")) return "bg-red-500";
-  if (tone.includes("sky")) return "bg-sky-500";
-  if (tone.includes("violet")) return "bg-violet-500";
-  if (tone.includes("indigo")) return "bg-indigo-500";
-  if (tone.includes("teal")) return "bg-teal-500";
-  return "bg-slate-500";
-}
-
-function StatTile({
-  title,
-  value,
-  detail,
-  icon,
-  tone,
-  barValue,
-}: {
-  title: string;
-  value: string | number;
-  detail: string;
-  icon: ReactNode;
-  tone: string;
-  barValue?: number;
-}) {
-  return (
-    <Card className="group overflow-hidden border-0 bg-white shadow-sm transition-all hover:shadow-md dark:bg-slate-900/70">
-      <div className={`h-1 w-full ${accentFromTone(tone)}`} />
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</p>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950 tabular-nums dark:text-white">{value}</p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{detail}</p>
-          </div>
-          <div className={`rounded-xl p-2.5 shadow-sm ring-1 ring-black/5 transition-transform group-hover:scale-105 ${tone}`}>{icon}</div>
-        </div>
-        {typeof barValue === "number" && (
-          <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-            <div className={`h-full rounded-full ${accentFromTone(tone)}`} style={{ width: `${barValue}%` }} />
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function OpsMetric({
-  label,
-  value,
-  detail,
-  icon,
-}: {
-  label: string;
-  value: string | number;
-  detail: string;
-  icon: ReactNode;
-}) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-white shadow-sm backdrop-blur-sm transition-all hover:bg-white/10">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium uppercase tracking-wider text-white/60">{label}</p>
-        <span className="rounded-lg bg-white/10 p-2 text-cyan-100 ring-1 ring-white/10">{icon}</span>
-      </div>
-      <p className="mt-3 text-2xl font-bold tracking-tight tabular-nums">{value}</p>
-      <p className="mt-1 text-xs text-white/50">{detail}</p>
-    </div>
-  );
-}
-
-function SignalBar({ label, value, tone }: { label: string; value: number; tone: string }) {
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2">
-          <div className={`h-2 w-2 rounded-full ${tone}`} />
-          <span className="font-medium text-slate-700 dark:text-slate-300">{label}</span>
-        </div>
-        <span className="font-semibold text-slate-900 dark:text-white">{value}%</span>
-      </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-        <div className={`h-full rounded-full ${tone}`} style={{ width: `${value}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function WorkstreamCard({
-  title,
-  value,
-  detail,
-  icon,
-  tone,
-}: {
-  title: string;
-  value: string | number;
-  detail: string;
-  icon: ReactNode;
-  tone: string;
-}) {
-  return (
-    <div className="group rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-slate-300 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-slate-700">
-      <div className="flex items-start gap-4">
-        <div className={`rounded-xl p-2.5 shadow-sm ring-1 ring-black/5 transition-transform group-hover:scale-105 ${tone}`}>
-          {icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{title}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight text-slate-950 tabular-nums dark:text-white">{value}</p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{detail}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EmptyPanel({ title, text }: { title: string; text: string }) {
-  return (
-    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center dark:border-slate-800 dark:bg-slate-900/30">
-      <div className="rounded-2xl bg-slate-100 p-4 dark:bg-slate-800">
-        <Building2 className="h-8 w-8 text-slate-400" />
-      </div>
-      <p className="mt-4 text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</p>
-      <p className="mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">{text}</p>
-    </div>
-  );
-}
-
-function CompanySummary({ company }: { company: PlatformCompany }) {
-  const billingDelta = daysUntil(company.next_billing_date);
-  const accessDepth = percent(company.enabledModuleCount, featureKeys.length);
-  const needsAttention = company.subscription_status === "past_due" || company.subscription_status === "suspended";
-  const lifecycleTone = company.approvalStatus === "approved"
-    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
-    : company.approvalStatus === "rejected"
-      ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-200 dark:border-red-800"
-      : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-800";
-
-  return (
-    <div className="min-w-0 flex-1">
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="truncate text-base font-semibold text-slate-950 dark:text-white">{company.name}</h3>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant="outline" className={`rounded-md text-xs font-medium ${lifecycleTone}`}>
-            {titleCase(company.approvalStatus)}
-          </Badge>
-          <Badge variant="outline" className={`rounded-md text-xs font-medium ${planStyles(company.subscription_plan)}`}>
-            {titleCase(company.subscription_plan)}
-          </Badge>
-          <Badge variant="outline" className={`rounded-md text-xs font-medium ${statusStyles[company.subscription_status]}`}>
-            {titleCase(company.subscription_status)}
-          </Badge>
-        </div>
-      </div>
-      <div className="mt-3 grid gap-2 text-xs text-slate-500 dark:text-slate-400 sm:grid-cols-2 xl:grid-cols-4">
-        <span className="flex min-w-0 items-center gap-1.5">
-          <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-          <span className="truncate">{company.email}</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Users className="h-3.5 w-3.5 text-slate-400" />
-          {company.activeUsers || 0}/{company.users || 0} active
-        </span>
-        <span className="flex items-center gap-1.5">
-          <CalendarClock className="h-3.5 w-3.5 text-slate-400" />
-          {billingDelta === null ? "Not scheduled" : billingDelta < 0 ? `${Math.abs(billingDelta)} days overdue` : `Bills in ${billingDelta} days`}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <KeyRound className="h-3.5 w-3.5 text-slate-400" />
-          {accessDepth}% module coverage
-        </span>
-      </div>
-      <div className="mt-4 flex items-center gap-4">
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-          <div
-            className={`h-full rounded-full ${needsAttention ? "bg-gradient-to-r from-red-500 to-amber-400" : "bg-gradient-to-r from-cyan-500 via-emerald-500 to-lime-400"}`}
-            style={{ width: `${accessDepth}%` }}
-          />
-        </div>
-        <p className="shrink-0 text-xs font-semibold text-slate-600 dark:text-slate-300">
-          {formatMoney(company.billing_amount)} / {titleCase(company.billing_cycle)}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function AccessModal({
-  company,
-  packageMatrix,
-  isOpen,
-  onClose,
-  onSave,
-  saving,
-}: {
-  company: PlatformCompany | null;
-  packageMatrix: Array<{ plan: PlatformPlan; name: string; modules: string[]; features: PlatformFeatureKey[] }>;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (companyId: string, data: PlatformAccessUpdate) => Promise<void>;
-  saving: boolean;
-}) {
-  const availablePlans = useMemo(() => packageMatrix.map((pm) => ({ key: pm.plan, name: pm.name })), [packageMatrix]);
-
-  const accessFromMatrix = (plan: PlatformPlan): PlatformFeatureAccess => {
-    const template = packageMatrix.find((pm) => pm.plan === plan);
-    const included = new Set(template?.features || []);
-    return featureKeys.reduce((acc, key) => {
-      acc[key] = included.has(key);
-      return acc;
-    }, {} as PlatformFeatureAccess);
-  };
-
-  const [form, setForm] = useState<Required<Pick<PlatformAccessUpdate, "subscription_plan" | "subscription_status" | "billing_cycle">> & {
-    billing_amount: number;
-    next_billing_date: string;
-    platform_notes: string;
-    feature_access: PlatformFeatureAccess;
-    subscription_modules: string[];
-  }>({
-    subscription_plan: "starter",
-    subscription_status: "active",
-    billing_cycle: "monthly",
-    billing_amount: 0,
-    next_billing_date: "",
-    platform_notes: "",
-    feature_access: emptyFeatureAccess(),
-    subscription_modules: [],
-  });
-
-  useEffect(() => {
-    if (!company) return;
-    const planDefaultModules = packageMatrix.find((pm) => pm.plan === company.subscription_plan)?.modules || [];
-    const companyModules = company.subscription_modules || [];
-    // Clean stale modules: keep only modules that belong to the current plan's defaults.
-    // This removes legacy umbrellas (e.g. 'Financial reports') left over from plan downgrades or old data.
-    const cleaned = companyModules.filter((m) => planDefaultModules.includes(m));
-    const initialModules = cleaned.length > 0 ? cleaned : planDefaultModules;
-
-    setForm({
-      subscription_plan: company.subscription_plan,
-      subscription_status: company.subscription_status,
-      billing_cycle: company.billing_cycle,
-      billing_amount: company.billing_amount,
-      next_billing_date: company.next_billing_date ? company.next_billing_date.slice(0, 10) : "",
-      platform_notes: company.platform_notes || "",
-      feature_access: { ...accessFromMatrix(company.subscription_plan), ...(company.feature_access || {}) },
-      subscription_modules: initialModules,
-    });
-  }, [company, packageMatrix]);
-
-  const visibleFeatureKeys = useMemo(() => {
-    const keys = new Set<PlatformFeatureKey>();
-    // show features included in the currently selected plan
-    const selectedPlanTemplate = packageMatrix.find((pm) => pm.plan === form.subscription_plan);
-    (selectedPlanTemplate?.features || []).forEach((f) => keys.add(f));
-    // also keep any features the company already has enabled so they don't disappear on view
-    if (company?.feature_access) {
-      (Object.keys(company.feature_access) as PlatformFeatureKey[]).forEach((k) => {
-        if (company.feature_access[k]) keys.add(k);
-      });
-    }
-    return Array.from(keys).sort();
-  }, [packageMatrix, company, form.subscription_plan]);
-
-  const selectedPackageModules = useMemo(() => {
-    return packageMatrix.find((pm) => pm.plan === form.subscription_plan)?.modules || [];
-  }, [packageMatrix, form.subscription_plan]);
-
-  const availableModules = useMemo(() => {
-    const all = new Set<string>();
-    packageMatrix.forEach((pm) => {
-      (pm.modules || []).forEach((m) => all.add(m));
-    });
-    return Array.from(all);
-  }, [packageMatrix]);
-
-  const handleSave = async () => {
-    if (!company) return;
-    await onSave(company._id, {
-      ...form,
-      next_billing_date: form.next_billing_date || null,
-    });
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Package and Module Control</DialogTitle>
-          <DialogDescription>
-            Set the subscription package, payment status, next billing date, and exact module access for {company?.name || "this company"}.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <Label>Package</Label>
-            <Select value={form.subscription_plan} onValueChange={(value: PlatformPlan) => setForm((prev) => {
-              const newPlanTemplate = packageMatrix.find((pm) => pm.plan === value);
-              return {
-                ...prev,
-                subscription_plan: value,
-                feature_access: accessFromMatrix(value),
-                subscription_modules: newPlanTemplate?.modules || prev.subscription_modules,
-              };
-            })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {availablePlans.map((p) => (
-                  <SelectItem key={p.key} value={p.key}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Billing status</Label>
-            <Select value={form.subscription_status} onValueChange={(value: PlatformSubscriptionStatus) => setForm((prev) => ({ ...prev, subscription_status: value }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="past_due">Past due</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Billing cycle</Label>
-            <Select value={form.billing_cycle} onValueChange={(value: PlatformBillingCycle) => setForm((prev) => ({ ...prev, billing_cycle: value }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="quarterly">Quarterly</SelectItem>
-                <SelectItem value="annual">Annual</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Billing amount</Label>
-            <Input type="number" min="0" value={form.billing_amount} onChange={(event) => setForm((prev) => ({ ...prev, billing_amount: Number(event.target.value) }))} />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label>Next billing date</Label>
-            <Input type="date" value={form.next_billing_date} onChange={(event) => setForm((prev) => ({ ...prev, next_billing_date: event.target.value }))} />
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Layers3 className="h-4 w-4 text-cyan-600" />
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">Included Package Modules</p>
-            </div>
-            <div className="flex gap-2">
-              <Badge variant="outline" className="rounded-md">{selectedPackageModules.length} modules</Badge>
-            </div>
-          </div>
-
-          {availableModules.length > 0 ? (
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {availableModules.map((module) => (
-                <div key={module} className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 dark:border-slate-800 dark:text-slate-200">
-                  <Checkbox
-                    checked={form.subscription_modules.includes(module)}
-                    onCheckedChange={(checked) => {
-                      setForm((prev) => {
-                        const set = new Set(prev.subscription_modules || []);
-                        if (checked) set.add(module);
-                        else set.delete(module);
-                        return { ...prev, subscription_modules: Array.from(set) };
-                      });
-                    }}
-                  />
-                  <span>{module}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-500 dark:text-slate-400">No display modules are configured for any package.</p>
-          )}
-        </div>
-
-        <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-cyan-600" />
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">Access Gates</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setForm((prev) => ({ ...prev, feature_access: accessFromMatrix(prev.subscription_plan) }))}>Apply package template</Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => setForm((prev) => ({ ...prev, subscription_modules: selectedPackageModules }))}>Apply package modules</Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => setForm((prev) => ({ ...prev, feature_access: featureKeys.reduce((acc, key) => ({ ...acc, [key]: true }), {} as PlatformFeatureAccess) }))}>Enable all</Button>
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleFeatureKeys.map((key) => (
-              <div key={key} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800">
-                <Label className="text-sm">{featureLabels[key] || titleCase(key)}</Label>
-                <Switch
-                  checked={form.feature_access[key]}
-                  onCheckedChange={(checked) => setForm((prev) => ({
-                    ...prev,
-                    feature_access: { ...prev.feature_access, [key]: checked },
-                  }))}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Internal platform notes</Label>
-          <Textarea value={form.platform_notes} onChange={(event) => setForm((prev) => ({ ...prev, platform_notes: event.target.value }))} rows={3} />
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-            Save controls
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 export default function PlatformAdminPage() {
   const [dashboard, setDashboard] = useState<PlatformDashboardData>(emptyDashboard);
@@ -1556,7 +1016,7 @@ export default function PlatformAdminPage() {
                             <p className="truncate font-medium text-slate-900 dark:text-white">{log.action}</p>
                             <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                               {log.user_id?.name || "System"}
-                              {log.company_id ? ` · ${log.company_id.name}` : ""}
+                              {log.company_id ? ` Â· ${log.company_id.name}` : ""}
                             </p>
                           </div>
                           <div className="flex items-center">
@@ -1595,176 +1055,9 @@ export default function PlatformAdminPage() {
           </TabsContent>
 
           <TabsContent value="analytics">
-            {analyticsLoading || !analytics ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-72 rounded-xl" />)}
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-                  <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-slate-900/70">
-                    <div className="h-1 bg-cyan-500" />
-                    <CardContent className="p-5">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">MRR</p>
-                      <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950 tabular-nums dark:text-white">{formatMoney(analytics.mrr)}</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-slate-900/70">
-                    <div className="h-1 bg-emerald-500" />
-                    <CardContent className="p-5">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Tenants</p>
-                      <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950 tabular-nums dark:text-white">{analytics.totalTenants}</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-slate-900/70">
-                    <div className="h-1 bg-amber-500" />
-                    <CardContent className="p-5">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active Tenants</p>
-                      <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950 tabular-nums dark:text-white">{analytics.activeTenants}</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-slate-900/70">
-                    <div className="h-1 bg-rose-500" />
-                    <CardContent className="p-5">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Churn Rate</p>
-                      <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950 tabular-nums dark:text-white">
-                        {analytics.totalTenants ? Math.round((analytics.churnTrend.reduce((s, d) => s + d.count, 0) / analytics.totalTenants) * 100) : 0}%
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="grid gap-4 xl:grid-cols-2">
-                  <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-slate-900/70">
-                    <div className="h-1 bg-sky-500" />
-                    <CardHeader>
-                      <CardTitle className="text-base font-semibold text-slate-950 dark:text-white">Growth Trend (New Signups)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={analytics.growthTrend}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" tick={{ fontSize: 12 }} label={{ value: 'Month', position: 'insideBottom', offset: -2, fontSize: 12 }} />
-                          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} label={{ value: 'New signups', angle: -90, position: 'insideLeft', fontSize: 12 }} />
-                          <Tooltip />
-                          <Bar dataKey="count" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-slate-900/70">
-                    <div className="h-1 bg-red-500" />
-                    <CardHeader>
-                      <CardTitle className="text-base font-semibold text-slate-950 dark:text-white">Churn Trend</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={analytics.churnTrend}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" tick={{ fontSize: 12 }} label={{ value: 'Month', position: 'insideBottom', offset: -2, fontSize: 12 }} />
-                          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} label={{ value: 'Churned tenants', angle: -90, position: 'insideLeft', fontSize: 12 }} />
-                          <Tooltip />
-                          <Bar dataKey="count" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-slate-900/70">
-                    <div className="h-1 bg-emerald-500" />
-                    <CardHeader>
-                      <CardTitle className="text-base font-semibold text-slate-950 dark:text-white">Active Tenant Trend</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <AreaChart data={analytics.activeTenantTrend}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" tick={{ fontSize: 12 }} label={{ value: 'Month', position: 'insideBottom', offset: -2, fontSize: 12 }} />
-                          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} label={{ value: 'Active tenants', angle: -90, position: 'insideLeft', fontSize: 12 }} />
-                          <Tooltip />
-                          <Area type="monotone" dataKey="count" stroke="#10b981" fill="#10b981" fillOpacity={0.2} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-slate-900/70">
-                    <div className="h-1 bg-violet-500" />
-                    <CardHeader>
-                      <CardTitle className="text-base font-semibold text-slate-950 dark:text-white">Plan Distribution</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <PieChart>
-                          <Pie
-                            data={Object.entries(analytics.planDistribution).map(([name, value]) => ({ name: titleCase(name), value }))}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {Object.entries(analytics.planDistribution).map((_, index) => (
-                              <Cell key={`cell-${index}`} fill={["#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6"][index % 4]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-slate-900/70">
-                    <div className="h-1 bg-indigo-500" />
-                    <CardHeader>
-                      <CardTitle className="text-base font-semibold text-slate-950 dark:text-white">MRR by Plan</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={Object.entries(analytics.mrrByPlan).map(([plan, value]) => ({ plan: titleCase(plan), value: Math.round((value || 0) * 100) / 100 }))}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="plan" tick={{ fontSize: 12 }} label={{ value: 'Plan', position: 'insideBottom', offset: -2, fontSize: 12 }} />
-                          <YAxis tick={{ fontSize: 12 }} label={{ value: 'MRR ($)', angle: -90, position: 'insideLeft', fontSize: 12 }} />
-                          <Tooltip formatter={(value: number) => formatMoney(value)} />
-                          <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-slate-900/70">
-                    <div className="h-1 bg-teal-500" />
-                    <CardHeader>
-                      <CardTitle className="text-base font-semibold text-slate-950 dark:text-white">Status Distribution</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={250}>
-                        <PieChart>
-                          <Pie
-                            data={Object.entries(analytics.statusDistribution).map(([name, value]) => ({ name: titleCase(name), value }))}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {Object.entries(analytics.statusDistribution).map((_, index) => (
-                              <Cell key={`cell-${index}`} fill={["#10b981", "#f59e0b", "#ef4444", "#64748b", "#8b5cf6"][index % 5]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            )}
+            <Suspense fallback={<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-72 rounded-xl" />)}</div>}>
+              <AnalyticsTab analytics={analytics} loading={analyticsLoading} />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="plans">
@@ -1818,7 +1111,18 @@ export default function PlatformAdminPage() {
         </Tabs>
       </div>
 
-      <AccessModal company={selectedCompany} packageMatrix={dashboard.packageMatrix} isOpen={!!selectedCompany} onClose={() => setSelectedCompany(null)} onSave={handleSaveAccess} saving={!!selectedCompany && actionLoading === selectedCompany._id} />
+      {selectedCompany && (
+        <Suspense fallback={null}>
+          <AccessModal
+            company={selectedCompany}
+            packageMatrix={dashboard.packageMatrix}
+            isOpen={!!selectedCompany}
+            onClose={() => setSelectedCompany(null)}
+            onSave={handleSaveAccess}
+            saving={actionLoading === selectedCompany._id}
+          />
+        </Suspense>
+      )}
 
       <Dialog open={!!rejectCompany} onOpenChange={(open) => !open && setRejectCompany(null)}>
         <DialogContent>
@@ -1959,7 +1263,7 @@ export default function PlatformAdminPage() {
                         </div>
                       </div>
                       <div className="mt-1 text-slate-500">
-                        Recipients: {((item.changes as unknown) as { recipients?: number })?.recipients ?? 0} · Sent: {((item.changes as unknown) as { sent?: number })?.sent ?? 0} · Failed: {((item.changes as unknown) as { failed?: number })?.failed ?? 0}
+                        Recipients: {((item.changes as unknown) as { recipients?: number })?.recipients ?? 0} Â· Sent: {((item.changes as unknown) as { sent?: number })?.sent ?? 0} Â· Failed: {((item.changes as unknown) as { failed?: number })?.failed ?? 0}
                       </div>
                     </div>
                   ))}

@@ -27,6 +27,7 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Skeleton } from '@/app/components/ui/skeleton';
 import { Card, CardContent } from '@/app/components/ui/card';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Badge } from '@/app/components/ui/badge';
 import {
   Table,
@@ -468,17 +469,18 @@ export default function InvoicesListPage() {
                   ))}
                 </div>
               ) : invoices.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <div className="mb-4 rounded-full bg-slate-100 p-4 dark:bg-slate-800">
-                    <FileText className="h-8 w-8 text-slate-400 dark:text-slate-500" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">No invoices found</h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Create your first invoice to get started</p>
-                  <Button onClick={() => navigate('/invoices/new')} className="mt-4 gap-1.5 bg-blue-600 hover:bg-blue-700">
-                    <Plus className="h-4 w-4" />
-                    New Invoice
-                  </Button>
-                </div>
+                <EmptyState
+                  compact
+                  icon={FileText}
+                  title="No invoices yet"
+                  description="Create your first invoice to bill clients and start tracking receivables."
+                  action={
+                    <Button onClick={() => navigate('/invoices/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New invoice
+                    </Button>
+                  }
+                />
               ) : (
                 <>
                   {/* Desktop Table */}

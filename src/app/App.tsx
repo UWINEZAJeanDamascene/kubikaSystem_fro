@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -32,11 +32,11 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import PlatformAdminSetupPage from './pages/auth/PlatformAdminSetupPage';
 import CompanySelectorPage from './pages/auth/CompanySelectorPage';
-import DashboardPage from './pages/DashboardPage';
-import InventoryDashboardPage from './pages/InventoryDashboardPage';
-import SalesDashboardPage from './pages/SalesDashboardPage';
-import PurchaseDashboardPage from './pages/PurchaseDashboardPage';
-import FinanceDashboardPage from './pages/FinanceDashboardPage';
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const InventoryDashboardPage = lazy(() => import('./pages/InventoryDashboardPage'));
+const SalesDashboardPage = lazy(() => import('./pages/SalesDashboardPage'));
+const PurchaseDashboardPage = lazy(() => import('./pages/PurchaseDashboardPage'));
+const FinanceDashboardPage = lazy(() => import('./pages/FinanceDashboardPage'));
 
 function EnterpriseAIChatBot() {
   const { isAuthenticated, user } = useAuth();
@@ -56,196 +56,193 @@ function EnterpriseAIChatBot() {
 
   return hasEnterpriseAI ? <AIChatBot /> : null;
 }
-import UsersPage from './pages/UsersPage';
-import SecurityPage from './pages/SecurityPage';
-import NotificationsPage from './pages/NotificationsPage';
-import NotificationSettingsPage from './pages/NotificationSettingsPage';
-import BackupPage from './pages/BackupPage';
-import TestimonialsPage from './pages/TestimonialsPage';
-import DepartmentsPage from './pages/DepartmentsPage';
-import BulkDataPage from './pages/BulkDataPage';
-import AuditTrailPage from './pages/AuditTrailPage';
-import PlatformAdminPage from './pages/PlatformAdminPage';
-import TenantsPage from './pages/TenantsPage';
-import CommunicationsPage from './pages/CommunicationsPage';
-import SystemHealthPage from './pages/SystemHealthPage';
-import SecurityAuditPage from './pages/SecurityAuditPage';
+// All page modules below are lazy-loaded for route-level code splitting.
+// Named-export-only modules use the `.then` trick to expose `default`.
 import { PlatformOwnerLayout } from './layout/PlatformOwnerLayout';
-import ProductsListPage from './pages/ProductsListPage';
-import ProductFormPage from './pages/ProductFormPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import CategoriesPage from './pages/CategoriesPage';
-import WarehousesPage from './pages/WarehousesPage';
-import StockLevelsPage from './pages/StockLevelsPage';
-import StockMovementsPage from './pages/StockMovementsPage';
-import TransfersListPage from './pages/TransfersListPage';
-import TransferCreatePage from './pages/TransferCreatePage';
-import TransferDetailPage from './pages/TransferDetailPage';
-import AuditsListPage from './pages/AuditsListPage';
-import AuditDetailPage from './pages/AuditDetailPage';
-import AuditCreatePage from './pages/AuditCreatePage';
-import BatchesPage from './pages/BatchesPage';
-import SerialNumbersPage from './pages/SerialNumbersPage';
-import PurchasesListPage from './pages/purchases/PurchasesListPage';
-import PurchaseDetailPage from './pages/purchases/PurchaseDetailPage';
-import PurchaseFormPage from './pages/purchases/PurchaseFormPage';
-import PurchaseOrdersListPage from './pages/purchases/PurchaseOrdersListPage';
-import PurchaseOrderFormPage from './pages/purchases/PurchaseOrderFormPage';
-import PurchaseOrderDetailPage from './pages/purchases/PurchaseOrderDetailPage';
-import ImportedItemsPage from './pages/purchases/ImportedItemsPage';
-import UnmatchedPurchasesPage from './pages/purchases/UnmatchedPurchasesPage';
-import EBMRetryQueuePage from './pages/ebm/EBMRetryQueuePage';
-import GRNListPage from './pages/grn/GRNListPage';
-import GRNCreatePage from './pages/grn/GRNCreatePage';
-import GRNDetailPage from './pages/grn/GRNDetailPage';
-import GRNEditPage from './pages/grn/GRNEditPage';
-import FreightBillsListPage from './pages/freight/FreightBillsListPage';
-import FreightBillFormPage from './pages/freight/FreightBillFormPage';
-import PurchaseReturnsListPage from './pages/purchase-returns/PurchaseReturnsListPage';
-import PurchaseReturnCreatePage from './pages/purchase-returns/PurchaseReturnCreatePage';
-import PurchaseReturnDetailPage from './pages/purchase-returns/PurchaseReturnDetailPage';
-import ClientsListPage from './pages/clients/ClientsListPage';
-import ClientFormPage from './pages/clients/ClientFormPage';
-import ClientDetailPage from './pages/clients/ClientDetailPage';
-import SuppliersListPage from './pages/suppliers/SuppliersListPage';
-import SupplierFormPage from './pages/suppliers/SupplierFormPage';
-import SupplierDetailPage from './pages/suppliers/SupplierDetailPage';
-import QuotationsListPage from './pages/quotations/QuotationsListPage';
-import QuotationFormPage from './pages/quotations/QuotationFormPage';
-import ClientQuotationViewPage from './pages/quotations/ClientQuotationViewPage';
-import InvoicesListPage from './pages/invoices/InvoicesListPage';
-import InvoiceFormPage from './pages/invoices/InvoiceFormPage';
-import InvoiceDetailPage from './pages/invoices/InvoiceDetailPage';
-import SalesLegacyPage from './pages/sales-legacy/SalesLegacyPage';
-import DeliveryNotesListPage from './pages/delivery-notes/DeliveryNotesListPage';
-import DeliveryNoteCreatePage from './pages/delivery-notes/DeliveryNoteCreatePage';
-import DeliveryNoteDetailPage from './pages/delivery-notes/DeliveryNoteDetailPage';
-import CreditNotesListPage from './pages/credit-notes/CreditNotesListPage';
-import CreditNoteCreatePage from './pages/credit-notes/CreditNoteCreatePage';
-import CreditNoteDetailPage from './pages/credit-notes/CreditNoteDetailPage';
-import RecurringInvoicesListPage from './pages/recurring-invoices/RecurringInvoicesListPage';
-import RecurringInvoiceDetailPage from './pages/recurring-invoices/RecurringInvoiceDetailPage';
-import RecurringInvoiceFormPage from './pages/recurring-invoices/RecurringInvoiceFormPage';
-// Sales Orders & Pick Pack
-import SalesOrdersListPage from './pages/sales-orders/SalesOrdersListPage';
-import SalesOrderCreatePage from './pages/sales-orders/SalesOrderCreatePage';
-import SalesOrderDetailPage from './pages/sales-orders/SalesOrderDetailPage';
-import PickPacksListPage from './pages/pick-packs/PickPacksListPage';
-import PickPackCreatePage from './pages/pick-packs/PickPackCreatePage';
-import PickPackDetailPage from './pages/pick-packs/PickPackDetailPage';
-import PickPackPickPage from './pages/pick-packs/PickPackPickPage';
-import PickPackPackPage from './pages/pick-packs/PickPackPackPage';
-import ARDashboardPage from './pages/ar/ARDashboardPage';
-import APDashboardPage from './pages/ap/APDashboardPage';
-import APAgingReportPage from './pages/ap/APAgingReportPage';
-import APReconciliationPage from './pages/ap/APReconciliationPage';
-import BankAccountsListPage from './pages/bank/BankAccountsListPage';
-import BankAccountDetailPage from './pages/bank/BankAccountDetailPage';
-import BankReconciliationPage from './pages/bank/BankReconciliationPage';
-import PettyCashListPage from './pages/petty-cash/PettyCashListPage';
-import PettyCashTransactionsPage from './pages/petty-cash/PettyCashTransactionsPage';
-import AssetsListPage from './pages/assets/AssetsListPage';
-import AssetCreatePage from './pages/assets/AssetCreatePage';
-import AssetDetailPage from './pages/assets/AssetDetailPage';
-import LiabilitiesListPage from './pages/liabilities/LiabilitiesListPage';
-import LiabilityDetailPage from './pages/liabilities/LiabilityDetailPage';
-import LiabilityFormPage from './pages/liabilities/LiabilityFormPage';
-import BudgetsListPage from './pages/budgets/BudgetsListPage';
-import BudgetFormPage from './pages/budgets/BudgetFormPage';
-import BudgetDetailPage from './pages/budgets/BudgetDetailPage';
-import BudgetSettingsPage from './pages/budgets/BudgetSettingsPage';
-import ProjectsListPage from './pages/projects/ProjectsListPage';
-import ProjectFormPage from './pages/projects/ProjectFormPage';
-import ProjectDetailPage from './pages/projects/ProjectDetailPage';
-import ARAgingPage from './pages/ar/ARAgingPage';
-import ARReconciliationPage from './pages/ar/ARReconciliationPage';
-import ExpensesListPage from './pages/expenses/ExpensesListPage';
-import ExpenseDetailPage from './pages/expenses/ExpenseDetailPage';
-import ChartOfAccountsPage from './pages/settings/ChartOfAccountsPage';
-import EmployeesListPage from './pages/employees/EmployeesListPage';
-import EmployeeFormPage from './pages/employees/EmployeeFormPage';
-import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
-import EmployeeAdvancesListPage from './pages/employee-advances/EmployeeAdvancesListPage';
-import EmployeeAdvanceFormPage from './pages/employee-advances/EmployeeAdvanceFormPage';
-import EmployeeAdvanceDetailPage from './pages/employee-advances/EmployeeAdvanceDetailPage';
-import PayrollListPage from './pages/payroll/PayrollListPage';
-import PayrollRunsListPage from './pages/payroll/PayrollRunsListPage';
-import PayrollDetailPage from './pages/payroll/PayrollDetailPage';
-import PayrollRunDetailPage from './pages/payroll/PayrollRunDetailPage';
-import PayrollGenerationPage from './pages/payroll/PayrollGenerationPage';
-import JournalEntriesPage from './pages/journal/JournalEntriesPage';
-import JournalEntryDetailPage from './pages/journal/JournalEntryDetailPage';
-import JournalEntryFormPage from './pages/journal/JournalEntryFormPage';
-import TrialBalancePage from './pages/journal/TrialBalancePage';
-import GeneralLedgerPage from './pages/journal/GeneralLedgerPage';
-import ProfitLossPage from './pages/reports/ProfitLossPage';
-import BalanceSheetPage from './pages/reports/BalanceSheetPage';
-import CashFlowPage from './pages/reports/CashFlowPage';
-import FinancialRatiosPage from './pages/reports/FinancialRatiosPage';
-import DebtMaturityPage from './pages/reports/DebtMaturityPage';
-import ReportsHubPage from './pages/reports/ReportsHubPage';
-import DailyReportsPage from './pages/reports/DailyReportsPage';
-import DailySalesReportPage from './pages/reports/daily/DailySalesReportPage';
-import DailyPurchasesReportPage from './pages/reports/daily/DailyPurchasesReportPage';
-import DailyCashPositionReportPage from './pages/reports/daily/DailyCashPositionReportPage';
-import DailyStockMovementReportPage from './pages/reports/daily/DailyStockMovementReportPage';
-import DailyARActivityReportPage from './pages/reports/daily/DailyARActivityReportPage';
-import DailyAPActivityReportPage from './pages/reports/daily/DailyAPActivityReportPage';
-import DailyJournalEntriesReportPage from './pages/reports/daily/DailyJournalEntriesReportPage';
-import DailyTaxCollectedReportPage from './pages/reports/daily/DailyTaxCollectedReportPage';
-import WeeklyReportsPage from './pages/reports/WeeklyReportsPage';
-import WeeklySalesPerformanceReportPage from './pages/reports/weekly/WeeklySalesPerformanceReportPage';
-import WeeklyInventoryReorderReportPage from './pages/reports/weekly/WeeklyInventoryReorderReportPage';
-import WeeklySupplierPerformanceReportPage from './pages/reports/weekly/WeeklySupplierPerformanceReportPage';
-import WeeklyReceivablesAgingReportPage from './pages/reports/weekly/WeeklyReceivablesAgingReportPage';
-import WeeklyPayablesAgingReportPage from './pages/reports/weekly/WeeklyPayablesAgingReportPage';
-import WeeklyCashFlowReportPage from './pages/reports/weekly/WeeklyCashFlowReportPage';
-import WeeklyPayrollPreviewReportPage from './pages/reports/weekly/WeeklyPayrollPreviewReportPage';
-// Monthly Reports
-import MonthlyReportsPage from './pages/reports/MonthlyReportsPage';
-import MonthlyPLReportPage from './pages/reports/monthly/MonthlyPLReportPage';
-import MonthlyBalanceSheetPage from './pages/reports/monthly/MonthlyBalanceSheetPage';
-import MonthlyTrialBalancePage from './pages/reports/monthly/MonthlyTrialBalancePage';
-import MonthlyCashFlowPage from './pages/reports/monthly/MonthlyCashFlowPage';
-import MonthlyARAgingPage from './pages/reports/monthly/MonthlyARAgingPage';
-import MonthlyAPAgingPage from './pages/reports/monthly/MonthlyAPAgingPage';
-import MonthlyStockValuationPage from './pages/reports/monthly/MonthlyStockValuationPage';
-import MonthlySalesByCustomerPage from './pages/reports/monthly/MonthlySalesByCustomerPage';
-import MonthlySalesByCategoryPage from './pages/reports/monthly/MonthlySalesByCategoryPage';
-import MonthlyPurchasesBySupplierPage from './pages/reports/monthly/MonthlyPurchasesBySupplierPage';
-import MonthlyPayrollSummaryPage from './pages/reports/monthly/MonthlyPayrollSummaryPage';
-import MonthlyVATReturnPage from './pages/reports/monthly/MonthlyVATReturnPage';
-import MonthlyBankReconciliationPage from './pages/reports/monthly/MonthlyBankReconciliationPage';
-import MonthlyBudgetVsActualPage from './pages/reports/monthly/MonthlyBudgetVsActualPage';
-import MonthlyGeneralLedgerPage from './pages/reports/monthly/MonthlyGeneralLedgerPage';
-// Semi-Annual Reports
-import SemiAnnualPLReportPage from './pages/reports/semi-annual/SemiAnnualPLReportPage';
-import SemiAnnualBalanceSheetTrendPage from './pages/reports/semi-annual/SemiAnnualBalanceSheetTrendPage';
-import SemiAnnualCashFlowSummaryPage from './pages/reports/semi-annual/SemiAnnualCashFlowSummaryPage';
-import SemiAnnualStockTurnoverPage from './pages/reports/semi-annual/SemiAnnualStockTurnoverPage';
-import SemiAnnualReceivablesCollectionPage from './pages/reports/semi-annual/SemiAnnualReceivablesCollectionPage';
-import SemiAnnualPayrollHRCostPage from './pages/reports/semi-annual/SemiAnnualPayrollHRCostPage';
-import SemiAnnualTaxObligationsPage from './pages/reports/semi-annual/SemiAnnualTaxObligationsPage';
-import SemiAnnualReportsPage from './pages/reports/SemiAnnualReportsPage';
-// Annual Reports
-import AnnualReportsPage from './pages/reports/AnnualReportsPage';
-import AnnualFinancialStatementsPage from './pages/reports/annual/AnnualFinancialStatementsPage';
-import AnnualGeneralLedgerPage from './pages/reports/annual/AnnualGeneralLedgerPage';
-import AnnualFixedAssetsPage from './pages/reports/annual/AnnualFixedAssetsPage';
-import AnnualInventoryPage from './pages/reports/annual/AnnualInventoryPage';
-import AnnualAccountsReceivablePage from './pages/reports/annual/AnnualAccountsReceivablePage';
-import AnnualAccountsPayablePage from './pages/reports/annual/AnnualAccountsPayablePage';
-import AnnualPayrollPage from './pages/reports/annual/AnnualPayrollPage';
-import AnnualTaxSummaryPage from './pages/reports/annual/AnnualTaxSummaryPage';
-import AnnualBudgetVsActualPage from './pages/reports/annual/AnnualBudgetVsActualPage';
-import AnnualAuditTrailPage from './pages/reports/annual/AnnualAuditTrailPage';
-// Settings
-import AccountingPeriodsPage from './pages/settings/AccountingPeriodsPage';
-import CompanyProfilePage from './pages/settings/CompanyProfilePage';
-import RolesSettingsPage from './pages/settings/RolesSettingsPage';
-import OnboardingPage from './pages/OnboardingPage';
-import TimesheetFormPage from './pages/timesheets/TimesheetFormPage';
-import TimesheetDetailPage from './pages/timesheets/TimesheetDetailPage';
+const UsersPage = lazy(() => import('./pages/UsersPage'));
+const SecurityPage = lazy(() => import('./pages/SecurityPage'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettingsPage'));
+const BackupPage = lazy(() => import('./pages/BackupPage'));
+const TestimonialsPage = lazy(() => import('./pages/TestimonialsPage'));
+const DepartmentsPage = lazy(() => import('./pages/DepartmentsPage'));
+const BulkDataPage = lazy(() => import('./pages/BulkDataPage'));
+const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage'));
+const PlatformAdminPage = lazy(() => import('./pages/PlatformAdminPage'));
+const TenantsPage = lazy(() => import('./pages/TenantsPage'));
+const CommunicationsPage = lazy(() => import('./pages/CommunicationsPage'));
+const SystemHealthPage = lazy(() => import('./pages/SystemHealthPage'));
+const SecurityAuditPage = lazy(() => import('./pages/SecurityAuditPage'));
+const ProductsListPage = lazy(() => import('./pages/ProductsListPage'));
+const ProductFormPage = lazy(() => import('./pages/ProductFormPage'));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage'));
+const WarehousesPage = lazy(() => import('./pages/WarehousesPage'));
+const StockLevelsPage = lazy(() => import('./pages/StockLevelsPage'));
+const StockMovementsPage = lazy(() => import('./pages/StockMovementsPage'));
+const TransfersListPage = lazy(() => import('./pages/TransfersListPage'));
+const TransferCreatePage = lazy(() => import('./pages/TransferCreatePage'));
+const TransferDetailPage = lazy(() => import('./pages/TransferDetailPage'));
+const AuditsListPage = lazy(() => import('./pages/AuditsListPage'));
+const AuditDetailPage = lazy(() => import('./pages/AuditDetailPage'));
+const AuditCreatePage = lazy(() => import('./pages/AuditCreatePage'));
+const BatchesPage = lazy(() => import('./pages/BatchesPage'));
+const SerialNumbersPage = lazy(() => import('./pages/SerialNumbersPage'));
+const PurchasesListPage = lazy(() => import('./pages/purchases/PurchasesListPage'));
+const PurchaseDetailPage = lazy(() => import('./pages/purchases/PurchaseDetailPage'));
+const PurchaseFormPage = lazy(() => import('./pages/purchases/PurchaseFormPage'));
+const PurchaseOrdersListPage = lazy(() => import('./pages/purchases/PurchaseOrdersListPage'));
+const PurchaseOrderFormPage = lazy(() => import('./pages/purchases/PurchaseOrderFormPage'));
+const PurchaseOrderDetailPage = lazy(() => import('./pages/purchases/PurchaseOrderDetailPage'));
+const ImportedItemsPage = lazy(() => import('./pages/purchases/ImportedItemsPage'));
+const UnmatchedPurchasesPage = lazy(() => import('./pages/purchases/UnmatchedPurchasesPage'));
+const EBMRetryQueuePage = lazy(() => import('./pages/ebm/EBMRetryQueuePage'));
+const GRNListPage = lazy(() => import('./pages/grn/GRNListPage'));
+const GRNCreatePage = lazy(() => import('./pages/grn/GRNCreatePage'));
+const GRNDetailPage = lazy(() => import('./pages/grn/GRNDetailPage'));
+const GRNEditPage = lazy(() => import('./pages/grn/GRNEditPage'));
+const FreightBillsListPage = lazy(() => import('./pages/freight/FreightBillsListPage'));
+const FreightBillFormPage = lazy(() => import('./pages/freight/FreightBillFormPage'));
+const PurchaseReturnsListPage = lazy(() => import('./pages/purchase-returns/PurchaseReturnsListPage'));
+const PurchaseReturnCreatePage = lazy(() => import('./pages/purchase-returns/PurchaseReturnCreatePage'));
+const PurchaseReturnDetailPage = lazy(() => import('./pages/purchase-returns/PurchaseReturnDetailPage'));
+const ClientsListPage = lazy(() => import('./pages/clients/ClientsListPage'));
+const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
+const ClientDetailPage = lazy(() => import('./pages/clients/ClientDetailPage'));
+const SuppliersListPage = lazy(() => import('./pages/suppliers/SuppliersListPage'));
+const SupplierFormPage = lazy(() => import('./pages/suppliers/SupplierFormPage'));
+const SupplierDetailPage = lazy(() => import('./pages/suppliers/SupplierDetailPage'));
+const QuotationsListPage = lazy(() => import('./pages/quotations/QuotationsListPage'));
+const QuotationFormPage = lazy(() => import('./pages/quotations/QuotationFormPage'));
+const ClientQuotationViewPage = lazy(() => import('./pages/quotations/ClientQuotationViewPage'));
+const InvoicesListPage = lazy(() => import('./pages/invoices/InvoicesListPage'));
+const InvoiceFormPage = lazy(() => import('./pages/invoices/InvoiceFormPage'));
+const InvoiceDetailPage = lazy(() => import('./pages/invoices/InvoiceDetailPage'));
+const SalesLegacyPage = lazy(() => import('./pages/sales-legacy/SalesLegacyPage'));
+const DeliveryNotesListPage = lazy(() => import('./pages/delivery-notes/DeliveryNotesListPage'));
+const DeliveryNoteCreatePage = lazy(() => import('./pages/delivery-notes/DeliveryNoteCreatePage'));
+const DeliveryNoteDetailPage = lazy(() => import('./pages/delivery-notes/DeliveryNoteDetailPage'));
+const CreditNotesListPage = lazy(() => import('./pages/credit-notes/CreditNotesListPage'));
+const CreditNoteCreatePage = lazy(() => import('./pages/credit-notes/CreditNoteCreatePage'));
+const CreditNoteDetailPage = lazy(() => import('./pages/credit-notes/CreditNoteDetailPage'));
+const RecurringInvoicesListPage = lazy(() => import('./pages/recurring-invoices/RecurringInvoicesListPage'));
+const RecurringInvoiceDetailPage = lazy(() => import('./pages/recurring-invoices/RecurringInvoiceDetailPage'));
+const RecurringInvoiceFormPage = lazy(() => import('./pages/recurring-invoices/RecurringInvoiceFormPage'));
+const SalesOrdersListPage = lazy(() => import('./pages/sales-orders/SalesOrdersListPage'));
+const SalesOrderCreatePage = lazy(() => import('./pages/sales-orders/SalesOrderCreatePage'));
+const SalesOrderDetailPage = lazy(() => import('./pages/sales-orders/SalesOrderDetailPage'));
+const PickPacksListPage = lazy(() => import('./pages/pick-packs/PickPacksListPage'));
+const PickPackCreatePage = lazy(() => import('./pages/pick-packs/PickPackCreatePage'));
+const PickPackDetailPage = lazy(() => import('./pages/pick-packs/PickPackDetailPage'));
+const PickPackPickPage = lazy(() => import('./pages/pick-packs/PickPackPickPage'));
+const PickPackPackPage = lazy(() => import('./pages/pick-packs/PickPackPackPage'));
+const ARDashboardPage = lazy(() => import('./pages/ar/ARDashboardPage'));
+const APDashboardPage = lazy(() => import('./pages/ap/APDashboardPage'));
+const APAgingReportPage = lazy(() => import('./pages/ap/APAgingReportPage'));
+const APReconciliationPage = lazy(() => import('./pages/ap/APReconciliationPage'));
+const BankAccountsListPage = lazy(() => import('./pages/bank/BankAccountsListPage'));
+const BankAccountDetailPage = lazy(() => import('./pages/bank/BankAccountDetailPage'));
+const BankReconciliationPage = lazy(() => import('./pages/bank/BankReconciliationPage'));
+const PettyCashListPage = lazy(() => import('./pages/petty-cash/PettyCashListPage'));
+const PettyCashTransactionsPage = lazy(() => import('./pages/petty-cash/PettyCashTransactionsPage'));
+const AssetsListPage = lazy(() => import('./pages/assets/AssetsListPage'));
+const AssetCreatePage = lazy(() => import('./pages/assets/AssetCreatePage'));
+const AssetDetailPage = lazy(() => import('./pages/assets/AssetDetailPage'));
+const LiabilitiesListPage = lazy(() => import('./pages/liabilities/LiabilitiesListPage'));
+const LiabilityDetailPage = lazy(() => import('./pages/liabilities/LiabilityDetailPage'));
+const LiabilityFormPage = lazy(() => import('./pages/liabilities/LiabilityFormPage'));
+const BudgetsListPage = lazy(() => import('./pages/budgets/BudgetsListPage'));
+const BudgetFormPage = lazy(() => import('./pages/budgets/BudgetFormPage'));
+const BudgetDetailPage = lazy(() => import('./pages/budgets/BudgetDetailPage'));
+const BudgetSettingsPage = lazy(() => import('./pages/budgets/BudgetSettingsPage'));
+const ProjectsListPage = lazy(() => import('./pages/projects/ProjectsListPage'));
+const ProjectFormPage = lazy(() => import('./pages/projects/ProjectFormPage'));
+const ProjectDetailPage = lazy(() => import('./pages/projects/ProjectDetailPage'));
+const ARAgingPage = lazy(() => import('./pages/ar/ARAgingPage'));
+const ARReconciliationPage = lazy(() => import('./pages/ar/ARReconciliationPage'));
+const ExpensesListPage = lazy(() => import('./pages/expenses/ExpensesListPage'));
+const ExpenseDetailPage = lazy(() => import('./pages/expenses/ExpenseDetailPage'));
+const ChartOfAccountsPage = lazy(() => import('./pages/settings/ChartOfAccountsPage'));
+const EmployeesListPage = lazy(() => import('./pages/employees/EmployeesListPage'));
+const EmployeeFormPage = lazy(() => import('./pages/employees/EmployeeFormPage'));
+const EmployeeDetailPage = lazy(() => import('./pages/employees/EmployeeDetailPage'));
+const EmployeeAdvancesListPage = lazy(() => import('./pages/employee-advances/EmployeeAdvancesListPage'));
+const EmployeeAdvanceFormPage = lazy(() => import('./pages/employee-advances/EmployeeAdvanceFormPage'));
+const EmployeeAdvanceDetailPage = lazy(() => import('./pages/employee-advances/EmployeeAdvanceDetailPage'));
+const PayrollListPage = lazy(() => import('./pages/payroll/PayrollListPage'));
+const PayrollRunsListPage = lazy(() => import('./pages/payroll/PayrollRunsListPage'));
+const PayrollDetailPage = lazy(() => import('./pages/payroll/PayrollDetailPage'));
+const PayrollRunDetailPage = lazy(() => import('./pages/payroll/PayrollRunDetailPage'));
+const PayrollGenerationPage = lazy(() => import('./pages/payroll/PayrollGenerationPage'));
+const JournalEntriesPage = lazy(() => import('./pages/journal/JournalEntriesPage'));
+const JournalEntryDetailPage = lazy(() => import('./pages/journal/JournalEntryDetailPage'));
+const JournalEntryFormPage = lazy(() => import('./pages/journal/JournalEntryFormPage'));
+const TrialBalancePage = lazy(() => import('./pages/journal/TrialBalancePage'));
+const GeneralLedgerPage = lazy(() => import('./pages/journal/GeneralLedgerPage'));
+const ProfitLossPage = lazy(() => import('./pages/reports/ProfitLossPage'));
+const BalanceSheetPage = lazy(() => import('./pages/reports/BalanceSheetPage'));
+const CashFlowPage = lazy(() => import('./pages/reports/CashFlowPage'));
+const FinancialRatiosPage = lazy(() => import('./pages/reports/FinancialRatiosPage'));
+const DebtMaturityPage = lazy(() => import('./pages/reports/DebtMaturityPage'));
+const ReportsHubPage = lazy(() => import('./pages/reports/ReportsHubPage'));
+const DailyReportsPage = lazy(() => import('./pages/reports/DailyReportsPage'));
+const DailySalesReportPage = lazy(() => import('./pages/reports/daily/DailySalesReportPage'));
+const DailyPurchasesReportPage = lazy(() => import('./pages/reports/daily/DailyPurchasesReportPage'));
+const DailyCashPositionReportPage = lazy(() => import('./pages/reports/daily/DailyCashPositionReportPage'));
+const DailyStockMovementReportPage = lazy(() => import('./pages/reports/daily/DailyStockMovementReportPage'));
+const DailyARActivityReportPage = lazy(() => import('./pages/reports/daily/DailyARActivityReportPage'));
+const DailyAPActivityReportPage = lazy(() => import('./pages/reports/daily/DailyAPActivityReportPage'));
+const DailyJournalEntriesReportPage = lazy(() => import('./pages/reports/daily/DailyJournalEntriesReportPage'));
+const DailyTaxCollectedReportPage = lazy(() => import('./pages/reports/daily/DailyTaxCollectedReportPage'));
+const WeeklyReportsPage = lazy(() => import('./pages/reports/WeeklyReportsPage'));
+const WeeklySalesPerformanceReportPage = lazy(() => import('./pages/reports/weekly/WeeklySalesPerformanceReportPage'));
+const WeeklyInventoryReorderReportPage = lazy(() => import('./pages/reports/weekly/WeeklyInventoryReorderReportPage'));
+const WeeklySupplierPerformanceReportPage = lazy(() => import('./pages/reports/weekly/WeeklySupplierPerformanceReportPage'));
+const WeeklyReceivablesAgingReportPage = lazy(() => import('./pages/reports/weekly/WeeklyReceivablesAgingReportPage'));
+const WeeklyPayablesAgingReportPage = lazy(() => import('./pages/reports/weekly/WeeklyPayablesAgingReportPage'));
+const WeeklyCashFlowReportPage = lazy(() => import('./pages/reports/weekly/WeeklyCashFlowReportPage'));
+const WeeklyPayrollPreviewReportPage = lazy(() => import('./pages/reports/weekly/WeeklyPayrollPreviewReportPage'));
+const MonthlyReportsPage = lazy(() => import('./pages/reports/MonthlyReportsPage'));
+const MonthlyPLReportPage = lazy(() => import('./pages/reports/monthly/MonthlyPLReportPage'));
+const MonthlyBalanceSheetPage = lazy(() => import('./pages/reports/monthly/MonthlyBalanceSheetPage'));
+const MonthlyTrialBalancePage = lazy(() => import('./pages/reports/monthly/MonthlyTrialBalancePage'));
+const MonthlyCashFlowPage = lazy(() => import('./pages/reports/monthly/MonthlyCashFlowPage'));
+const MonthlyARAgingPage = lazy(() => import('./pages/reports/monthly/MonthlyARAgingPage'));
+const MonthlyAPAgingPage = lazy(() => import('./pages/reports/monthly/MonthlyAPAgingPage'));
+const MonthlyStockValuationPage = lazy(() => import('./pages/reports/monthly/MonthlyStockValuationPage'));
+const MonthlySalesByCustomerPage = lazy(() => import('./pages/reports/monthly/MonthlySalesByCustomerPage'));
+const MonthlySalesByCategoryPage = lazy(() => import('./pages/reports/monthly/MonthlySalesByCategoryPage'));
+const MonthlyPurchasesBySupplierPage = lazy(() => import('./pages/reports/monthly/MonthlyPurchasesBySupplierPage'));
+const MonthlyPayrollSummaryPage = lazy(() => import('./pages/reports/monthly/MonthlyPayrollSummaryPage'));
+const MonthlyVATReturnPage = lazy(() => import('./pages/reports/monthly/MonthlyVATReturnPage'));
+const MonthlyBankReconciliationPage = lazy(() => import('./pages/reports/monthly/MonthlyBankReconciliationPage'));
+const MonthlyBudgetVsActualPage = lazy(() => import('./pages/reports/monthly/MonthlyBudgetVsActualPage'));
+const MonthlyGeneralLedgerPage = lazy(() => import('./pages/reports/monthly/MonthlyGeneralLedgerPage'));
+const SemiAnnualPLReportPage = lazy(() => import('./pages/reports/semi-annual/SemiAnnualPLReportPage'));
+const SemiAnnualBalanceSheetTrendPage = lazy(() => import('./pages/reports/semi-annual/SemiAnnualBalanceSheetTrendPage'));
+const SemiAnnualCashFlowSummaryPage = lazy(() => import('./pages/reports/semi-annual/SemiAnnualCashFlowSummaryPage'));
+const SemiAnnualStockTurnoverPage = lazy(() => import('./pages/reports/semi-annual/SemiAnnualStockTurnoverPage'));
+const SemiAnnualReceivablesCollectionPage = lazy(() => import('./pages/reports/semi-annual/SemiAnnualReceivablesCollectionPage'));
+const SemiAnnualPayrollHRCostPage = lazy(() => import('./pages/reports/semi-annual/SemiAnnualPayrollHRCostPage'));
+const SemiAnnualTaxObligationsPage = lazy(() => import('./pages/reports/semi-annual/SemiAnnualTaxObligationsPage'));
+const SemiAnnualReportsPage = lazy(() => import('./pages/reports/SemiAnnualReportsPage'));
+const AnnualReportsPage = lazy(() => import('./pages/reports/AnnualReportsPage'));
+const AnnualFinancialStatementsPage = lazy(() => import('./pages/reports/annual/AnnualFinancialStatementsPage'));
+const AnnualGeneralLedgerPage = lazy(() => import('./pages/reports/annual/AnnualGeneralLedgerPage'));
+const AnnualFixedAssetsPage = lazy(() => import('./pages/reports/annual/AnnualFixedAssetsPage'));
+const AnnualInventoryPage = lazy(() => import('./pages/reports/annual/AnnualInventoryPage'));
+const AnnualAccountsReceivablePage = lazy(() => import('./pages/reports/annual/AnnualAccountsReceivablePage'));
+const AnnualAccountsPayablePage = lazy(() => import('./pages/reports/annual/AnnualAccountsPayablePage'));
+const AnnualPayrollPage = lazy(() => import('./pages/reports/annual/AnnualPayrollPage'));
+const AnnualTaxSummaryPage = lazy(() => import('./pages/reports/annual/AnnualTaxSummaryPage'));
+const AnnualBudgetVsActualPage = lazy(() => import('./pages/reports/annual/AnnualBudgetVsActualPage'));
+const AnnualAuditTrailPage = lazy(() => import('./pages/reports/annual/AnnualAuditTrailPage'));
+const AccountingPeriodsPage = lazy(() => import('./pages/settings/AccountingPeriodsPage'));
+const CompanyProfilePage = lazy(() => import('./pages/settings/CompanyProfilePage'));
+const RolesSettingsPage = lazy(() => import('./pages/settings/RolesSettingsPage'));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
+const TimesheetFormPage = lazy(() => import('./pages/timesheets/TimesheetFormPage'));
+const TimesheetDetailPage = lazy(() => import('./pages/timesheets/TimesheetDetailPage'));
 import { LanguageProvider } from '../contexts/LanguageContext';
 // AI chat widget intentionally removed per user request
 import OfflineSyncBanner from './components/OfflineSyncBanner';
@@ -343,11 +340,26 @@ function GRNListPageWrapper() {
   }
 }
 
+// Route-level Suspense fallback — minimal and theme-aware.
+function RouteLoadingFallback() {
+  return (
+    <div className="flex h-full min-h-[40vh] w-full items-center justify-center p-8">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+        <div className="text-xs font-medium uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+          Loading...
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // TOP-LEVEL DEBUG - should always show in console
 function AppRoutes() {
   return (
     <>
       <OfflineSyncBanner />
+      <Suspense fallback={<RouteLoadingFallback />}>
       <Routes>
         {/* Public routes - landing page and auth */}
         <Route path="/" element={<HomePage />} />
@@ -1017,6 +1029,7 @@ function AppRoutes() {
         {/* 404 fallback */}
         <Route path="*" element={<HomePage />} />
       </Routes>
+      </Suspense>
     </>
   );
 }

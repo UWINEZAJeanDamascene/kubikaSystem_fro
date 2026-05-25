@@ -52,6 +52,8 @@ import {
   DialogFooter,
 } from '@/app/components/ui/dialog';
 import { Badge } from '@/app/components/ui/badge';
+import { EmptyState } from '@/app/components/EmptyState';
+import { ResponsiveTable, MobileCardRow } from '@/app/components/ResponsiveTable';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
@@ -570,16 +572,62 @@ export default function ProductsListPage() {
               <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
             </div>
           ) : products.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12">
-              <Package className="h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
-              <p className="text-slate-500 dark:text-slate-400">{t('products.noProducts') || 'No products found'}</p>
-              <Button onClick={() => navigate('/products/new')} variant="outline" className="mt-4">
-                <Plus className="h-4 w-4 mr-2" />
-                {t('products.addFirstProduct') || 'Add your first product'}
-              </Button>
-            </div>
+            <EmptyState
+              icon={Package}
+              title={t('products.noProducts') || 'No products yet'}
+              description={t('products.noProductsHint') || 'Add your first product to start tracking stock, pricing, and EBM registration.'}
+              action={
+                <Button onClick={() => navigate('/products/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t('products.addFirstProduct') || 'Add your first product'}
+                </Button>
+              }
+              className="m-4"
+            />
           ) : (
-            <div className="overflow-x-auto">
+            <ResponsiveTable
+              className="p-2"
+              mobile={products.map((product) => {
+                const stockStatus = getStockStatus(product);
+                const stock = typeof product.currentStock === 'string'
+                  ? parseFloat(product.currentStock)
+                  : product.currentStock;
+                const avgCost = typeof product.averageCost === 'string' ? parseFloat(product.averageCost) : product.averageCost || 0;
+                const costP = typeof product.costPrice === 'string' ? parseFloat(product.costPrice) : product.costPrice || 0;
+                const effectiveCost = avgCost > 0 ? avgCost : costP;
+                return (
+                  <MobileCardRow
+                    key={product._id}
+                    title={product.name}
+                    subtitle={[product.sku, product.barcode].filter(Boolean).join(' • ')}
+                    badge={
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${stockStatus.color}`}>
+                        {stockStatus.label}
+                      </span>
+                    }
+                    fields={[
+                      { label: t('products.category') || 'Category', value: product.category?.name || '-' },
+                      { label: t('products.stock') || 'Stock', value: `${stock.toFixed(0)} ${product.unit}` },
+                      { label: t('products.sellingPrice') || 'Price', value: formatCurrency(product.sellingPrice) },
+                      { label: t('products.stockValue') || 'Value', value: formatCurrency(stock * effectiveCost) },
+                    ]}
+                    actions={
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(product)} title={t('common.edit') || 'Edit'}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleViewStock(product)} title={t('products.viewStock') || 'View'}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(product)} disabled={actionLoading} title={t('common.delete') || 'Delete'}>
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </>
+                    }
+                  />
+                );
+              })}
+              table={
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-100/80 dark:bg-slate-800/80">
@@ -720,7 +768,8 @@ export default function ProductsListPage() {
                   })}
                 </TableBody>
               </Table>
-            </div>
+              }
+            />
           )}
           
           {/* Pagination */}

@@ -2,11 +2,14 @@ import { ReactNode, useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Sheet, SheetContent } from '@/app/components/ui/sheet';
 import { useIsMobile } from '@/app/components/ui/use-mobile';
-import { Menu, Sun, Moon, Home, PanelLeft, Sparkles } from 'lucide-react';
+import { Menu, Sun, Moon, Home, Sparkles, Search } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigate } from 'react-router';
 import NotificationBell from '@/app/components/NotificationBell';
+import { GlobalSearch, GlobalSearchTrigger, useGlobalSearchShortcut } from '@/app/components/GlobalSearch';
+import { Breadcrumbs } from '@/app/components/Breadcrumbs';
+import { QuickCreateMenu } from '@/app/components/QuickCreateMenu';
 import { useChatPanelStore } from '@/store/chatPanelStore';
 import { useCompanyStore } from '@/store/companyStore';
 
@@ -18,6 +21,8 @@ interface LayoutProps {
 export function Layout({ children, title }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  useGlobalSearchShortcut(setSearchOpen);
   const { theme, toggleTheme } = useTheme();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -103,6 +108,17 @@ export function Layout({ children, title }: LayoutProps) {
             <span className="text-lg font-semibold text-slate-800 dark:text-white">StockManager</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSearchOpen(true)}
+              className="h-10 w-10 flex-shrink-0 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600"
+              title="Search (Ctrl+K)"
+              aria-label="Open global search"
+            >
+              <Search className="h-5 w-5 text-slate-700 dark:text-slate-200" />
+            </Button>
+            <QuickCreateMenu compact />
             <NotificationBell />
             <Button
               variant="ghost"
@@ -128,28 +144,18 @@ export function Layout({ children, title }: LayoutProps) {
         {/* Desktop Top Bar */}
         {!isMobile && (
           <header className="hidden lg:flex h-20 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white/92 px-6 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-[#0d1626]/92">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="h-10 w-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-200 dark:hover:bg-white/10"
-                title="Toggle sidebar"
-              >
-                <PanelLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-300">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Operating workspace
-                </div>
-                <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="min-w-0">
+                <Breadcrumbs className="mb-1" />
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
                   {title || 'Command Center'}
                 </h1>
               </div>
             </div>
 
             <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+              <GlobalSearchTrigger onClick={() => setSearchOpen(true)} />
+              <QuickCreateMenu />
               <NotificationBell />
               {hasEnterpriseAI && (
                 <Button
@@ -194,11 +200,19 @@ export function Layout({ children, title }: LayoutProps) {
           </header>
         )}
 
+        {/* Mobile breadcrumbs */}
+        <div className="lg:hidden border-b border-slate-200 bg-white/70 px-3 py-2 dark:border-white/10 dark:bg-[#0d1626]/70">
+          <Breadcrumbs />
+        </div>
+
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-4 md:p-6">
+        <div className="flex-1 overflow-auto px-2 py-3 sm:px-3 md:px-5 md:py-5">
           {children}
         </div>
       </main>
+
+      {/* Global command palette */}
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   );
 }

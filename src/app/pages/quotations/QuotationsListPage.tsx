@@ -44,6 +44,7 @@ import {
 } from '@/app/components/ui/select';
 import { Badge } from '@/app/components/ui/badge';
 import { Skeleton } from '@/app/components/ui/skeleton';
+import { EmptyState } from '@/app/components/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
@@ -542,12 +543,19 @@ export default function QuotationsListPage() {
                       </>
                     ) : quotations.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8}>
-                          <div className="flex min-h-[140px] flex-col items-center justify-center text-slate-500 dark:text-slate-400">
-                            <Receipt className="mb-2 h-10 w-10 opacity-40" />
-                            <p className="text-sm font-medium">{t('quotation.noQuotations', 'No quotations found')}</p>
-                            <p className="text-xs">Try adjusting your filters or create a new quotation.</p>
-                          </div>
+                        <TableCell colSpan={8} className="p-4">
+                          <EmptyState
+                            compact
+                            icon={Receipt}
+                            title={t('quotation.noQuotations', 'No quotations yet')}
+                            description={t('quotation.noQuotationsHint', 'Create your first quotation to send to a client and convert it into an invoice when accepted.')}
+                            action={
+                              <Button onClick={() => navigate('/quotations/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                                <Plus className="h-4 w-4 mr-2" />
+                                {t('quotation.newQuotation', 'New quotation')}
+                              </Button>
+                            }
+                          />
                         </TableCell>
                       </TableRow>
                     ) : (

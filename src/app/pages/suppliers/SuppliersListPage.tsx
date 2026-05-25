@@ -32,6 +32,7 @@ import {
 import { Badge } from '@/app/components/ui/badge';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { Skeleton } from '@/app/components/ui/skeleton';
+import { EmptyState } from '@/app/components/EmptyState';
 import { toast } from 'sonner';
 
 interface Supplier {
@@ -199,7 +200,7 @@ export default function SuppliersListPage() {
     );
   }
 
-  function EmptyState({ icon, message }: { icon: ReactNode; message: string }) {
+  function LocalEmptyPanel({ icon, message }: { icon: ReactNode; message: string }) {
     return (
       <div className="flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/70 text-slate-500 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-400">
         <div className="mb-2 text-slate-400 dark:text-slate-500">{icon}</div>
@@ -337,8 +338,16 @@ export default function SuppliersListPage() {
               </div>
             ) : suppliers.length === 0 ? (
               <EmptyState
-                icon={<Building2 className="h-8 w-8" />}
-                message={t('suppliers.noSuppliers', 'No suppliers found')}
+                compact
+                icon={Building2}
+                title={t('suppliers.noSuppliers', 'No suppliers yet')}
+                description={t('suppliers.noSuppliersHint', 'Add your first supplier to start creating purchase orders and tracking payables.')}
+                action={
+                  <Button onClick={() => navigate('/suppliers/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('suppliers.addFirst', 'Add your first supplier')}
+                  </Button>
+                }
               />
             ) : (
               <div className="overflow-x-auto">
