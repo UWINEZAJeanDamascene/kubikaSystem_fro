@@ -882,6 +882,9 @@ export default function ExpensesListPage() {
             </CardContent>
           </Card>
         </div>
+          )}
+
+          {activeTab === 'prepaid' && <PrepaidExpensesTab />}
       </div>
 
       {/* Create Expense Dialog */}
@@ -1254,9 +1257,6 @@ export default function ExpensesListPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-          {activeTab === 'prepaid' && <PrepaidExpensesTab />}
-        </div>
       </div>
     </Layout>
   );
