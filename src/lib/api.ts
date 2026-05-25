@@ -8335,11 +8335,22 @@ export const bankAccountsApi = {
     request<{ success: boolean }>(`/bank-accounts/${id}`, { method: "DELETE" }),
   getTransactions: (
     id: string,
-    params?: { startDate?: string; endDate?: string; type?: string },
+    params?: { startDate?: string; endDate?: string; type?: string; reconciliationStatus?: string; page?: number; limit?: number },
   ) => {
     const query = buildQuery(params as Record<string, any>);
     return request<{ success: boolean; data: BankTransaction[] }>(
       `/bank-accounts/${id}/transactions${query ? `?${query}` : ""}`,
+    );
+  },
+  getBalance: (id: string) =>
+    request<{ success: boolean; data: any }>(`/bank-accounts/${id}/balance`),
+  getStatement: (
+    id: string,
+    params?: { startDate?: string; endDate?: string },
+  ) => {
+    const query = buildQuery(params as Record<string, any>);
+    return request<{ success: boolean; data: any }>(
+      `/bank-accounts/${id}/statement${query ? `?${query}` : ""}`,
     );
   },
   addTransaction: (id: string, data: Partial<BankTransaction>) =>
@@ -9382,6 +9393,84 @@ export const bankAccountsApi = {
       };
     }>(`/bank-accounts/${id}/reconciliation/report${query ? `?${query}` : ""}`);
   },
+};
+
+export const bankReconciliationApi = {
+  createSession: (data: {
+    bankAccountId: string;
+    periodStart: string;
+    periodEnd: string;
+    openingStatementBalance: number;
+    closingStatementBalance: number;
+    notes?: string;
+  }) =>
+    request<{ success: boolean; data: any }>("/bank-reconciliation/sessions", {
+      method: "POST",
+      body: data,
+    }),
+  listSessions: (params?: { bankAccountId?: string; status?: string }) => {
+    const query = buildQuery(params as Record<string, any>);
+    return request<{ success: boolean; data: any[] }>(
+      `/bank-reconciliation/sessions${query ? `?${query}` : ""}`,
+    );
+  },
+  getSession: (id: string) =>
+    request<{ success: boolean; data: { session: any; summary: any } }>(
+      `/bank-reconciliation/sessions/${id}`,
+    ),
+  completeSession: (id: string) =>
+    request<{ success: boolean; data: any }>(
+      `/bank-reconciliation/sessions/${id}/complete`,
+      { method: "PUT" },
+    ),
+  lockSession: (id: string) =>
+    request<{ success: boolean; data: any }>(
+      `/bank-reconciliation/sessions/${id}/lock`,
+      { method: "PUT" },
+    ),
+  importTransactions: (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<{ success: boolean; data: { imported: number; errors: any[] } }>(
+      `/bank-reconciliation/sessions/${id}/import`,
+      { method: "POST", body: formData as any },
+    );
+  },
+  addTransaction: (id: string, data: any) =>
+    request<{ success: boolean; data: any }>(
+      `/bank-reconciliation/sessions/${id}/transactions`,
+      { method: "POST", body: data },
+    ),
+  listTransactions: (id: string, params?: { matchStatus?: string }) => {
+    const query = buildQuery(params as Record<string, any>);
+    return request<{ success: boolean; data: any[] }>(
+      `/bank-reconciliation/sessions/${id}/transactions${query ? `?${query}` : ""}`,
+    );
+  },
+  listBookTransactions: (id: string, params?: { matchStatus?: string }) => {
+    const query = buildQuery(params as Record<string, any>);
+    return request<{ success: boolean; data: any[] }>(
+      `/bank-reconciliation/sessions/${id}/book-transactions${query ? `?${query}` : ""}`,
+    );
+  },
+  match: (id: string, data: { bookTransactionId: string; statementTransactionId: string }) =>
+    request<{ success: boolean; data: any }>(
+      `/bank-reconciliation/sessions/${id}/match`,
+      { method: "POST", body: data },
+    ),
+  autoMatch: (id: string, toleranceDays = 2) =>
+    request<{ success: boolean; data: { matched: number } }>(
+      `/bank-reconciliation/sessions/${id}/auto-match`,
+      { method: "POST", body: { toleranceDays } },
+    ),
+  unmatch: (matchId: string) =>
+    request<{ success: boolean }>(`/bank-reconciliation/matches/${matchId}`, {
+      method: "DELETE",
+    }),
+  summary: (id: string) =>
+    request<{ success: boolean; data: any }>(
+      `/bank-reconciliation/sessions/${id}/summary`,
+    ),
 };
 
 // Fixed Assets API

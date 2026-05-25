@@ -593,6 +593,11 @@ function AppRoutes() {
             <BankReconciliationPage />
           </ErrorBoundary>
         } />
+        <Route path="/bank-reconciliation" element={
+          <ErrorBoundary>
+            <BankReconciliationPage />
+          </ErrorBoundary>
+        } />
         {/* Petty Cash */}
         <Route path="/petty-cash" element={
           <ErrorBoundary>
