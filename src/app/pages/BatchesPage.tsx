@@ -72,7 +72,7 @@ export default function BatchesPage() {
     const loadProducts = async () => {
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || 'https://stock-tenancy-system.onrender.com/api'}/products?limit=1000`,
+          `${import.meta.env.VITE_API_URL || 'https://kubikasystem-bnd.onrender.com/api'}/products?limit=1000`,
           { credentials: 'include' }
         );
         const data = await response.json();

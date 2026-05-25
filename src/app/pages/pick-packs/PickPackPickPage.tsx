@@ -126,7 +126,7 @@ export default function PickPackPickPage() {
         if (qtyToRecord > currentPicked) {
           // Call API for each line individually with direct properties
           // Backend expects: { lineId, qtyPicked, notes } not { items: [...] }
-          await fetch(`${import.meta.env.VITE_API_URL || 'https://stock-tenancy-system.onrender.com/api'}/pick-packs/${id}/pick-items`, {
+          await fetch(`${import.meta.env.VITE_API_URL || 'https://kubikasystem-bnd.onrender.com/api'}/pick-packs/${id}/pick-items`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "https://stockmanagementbackend-ikuq.onrender.com/api";
+  "https://kubikasystem-bnd.onrender.com/api";
 
 // Bank Account Types
 export interface BankAccount {

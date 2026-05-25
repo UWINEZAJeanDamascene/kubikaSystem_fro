@@ -187,7 +187,7 @@ export default function CompanyProfilePage() {
     if (!settings) return;
     setSaving(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://stock-tenancy-system.onrender.com/api'}/settings`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://kubikasystem-bnd.onrender.com/api'}/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
