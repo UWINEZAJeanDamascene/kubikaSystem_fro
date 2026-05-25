@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { salesOrdersApi, clientsApi } from '@/lib/api';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Layout } from '../../layout/Layout';
 import {
   Plus,
@@ -539,12 +540,19 @@ export default function SalesOrdersListPage() {
                       </>
                     ) : salesOrders.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7}>
-                          <div className="flex min-h-[140px] flex-col items-center justify-center text-slate-500 dark:text-slate-400">
-                            <Layers className="mb-2 h-10 w-10 opacity-40" />
-                            <p className="text-sm font-medium">No sales orders found</p>
-                            <p className="text-xs">Try adjusting your filters or create a new order.</p>
-                          </div>
+                        <TableCell colSpan={7} className="border-0 py-2">
+                          <EmptyState
+                            compact
+                            icon={Layers}
+                            title="No sales orders yet"
+                            description="Create a sales order to start managing customer orders and fulfilment."
+                            action={
+                              <Button onClick={() => navigate('/sales-orders/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                                <Plus className="h-4 w-4 mr-2" />
+                                New Sales Order
+                              </Button>
+                            }
+                          />
                         </TableCell>
                       </TableRow>
                     ) : (

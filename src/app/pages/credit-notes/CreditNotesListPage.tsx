@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { creditNotesApi, clientsApi, invoicesApi, ebmApi } from '@/lib/api';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Layout } from '../../layout/Layout';
 import { useCompany } from '@/hooks/useCompany';
 import {
@@ -23,7 +24,6 @@ import { Skeleton } from '@/app/components/ui/skeleton';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Card, CardContent } from '@/app/components/ui/card';
-import { Badge } from '@/app/components/ui/badge';
 import { 
   Table, 
   TableBody, 
@@ -32,12 +32,6 @@ import {
   TableHeader, 
   TableRow 
 } from '@/app/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/app/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -247,30 +241,6 @@ export default function CreditNotesListPage() {
     setDateTo(value);
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { variant: 'default' | 'secondary' | 'outline' | 'destructive'; label: string; className?: string }> = {
-      draft: { variant: 'secondary', label: t('creditNotes.statusList.draft', 'Draft'), className: 'dark:bg-slate-700 dark:text-gray-200' },
-      confirmed: { variant: 'default', label: t('creditNotes.statusList.confirmed', 'Confirmed'), className: 'dark:bg-blue-900 dark:text-blue-200' },
-      issued: { variant: 'default', label: t('creditNotes.statusList.issued', 'Issued'), className: 'dark:bg-green-900 dark:text-green-200' },
-      applied: { variant: 'outline', label: t('creditNotes.statusList.applied', 'Applied'), className: 'dark:text-yellow-300 dark:border-yellow-600' },
-      refunded: { variant: 'outline', label: t('creditNotes.statusList.refunded', 'Refunded'), className: 'dark:text-purple-300 dark:border-purple-600' },
-      cancelled: { variant: 'destructive', label: t('creditNotes.statusList.cancelled', 'Cancelled'), className: 'dark:bg-red-900 dark:text-red-200' },
-    };
-    
-    const config = statusConfig[status] || { variant: 'outline', label: status, className: 'dark:text-gray-300 dark:border-gray-600' };
-    return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
-  };
-
-  const getTypeBadge = (type: string) => {
-    const typeConfig: Record<string, { variant: 'default' | 'secondary' | 'outline'; label: string; className?: string }> = {
-      goods_return: { variant: 'outline', label: t('creditNotes.typeList.goods_return', 'Goods Return'), className: 'dark:text-gray-300 dark:border-gray-600' },
-      price_adjustment: { variant: 'secondary', label: t('creditNotes.typeList.price_adjustment', 'Price Adjustment'), className: 'dark:bg-slate-700 dark:text-gray-200' },
-      cancelled_order: { variant: 'outline', label: t('creditNotes.typeList.cancelled_order', 'Cancelled Order'), className: 'dark:text-gray-300 dark:border-gray-600' },
-    };
-    
-    const config = typeConfig[type] || { variant: 'outline', label: type, className: 'dark:text-gray-300 dark:border-gray-600' };
-    return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
-  };
 
   const formatCurrency = (amount: number, currency?: string) => {
     const curr = currency || companyCurrency || 'FRW';
@@ -605,17 +575,18 @@ export default function CreditNotesListPage() {
               ))}
             </div>
           ) : filteredCreditNotes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white py-16 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                <Receipt className="h-8 w-8 text-slate-400 dark:text-slate-500" />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">No Credit Notes Found</h3>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Create your first credit note to get started</p>
-              <Button onClick={() => setShowCreateModal(true)} className="mt-4 gap-1.5 bg-violet-600 hover:bg-violet-700">
-                <Plus className="h-4 w-4" />
-                New Credit Note
-              </Button>
-            </div>
+            <EmptyState
+              icon={Receipt}
+              title="No credit notes yet"
+              description="Create a credit note to issue refunds or adjustments against customer invoices."
+              action={
+                <Button onClick={() => setShowCreateModal(true)} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Credit Note
+                </Button>
+              }
+              className="py-8"
+            />
           ) : (
             <>
               {/* Desktop Table */}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { recurringInvoicesApi, clientsApi } from '@/lib/api';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Layout } from '../../layout/Layout';
 import {
   Plus,
@@ -474,15 +475,18 @@ export default function RecurringInvoicesListPage() {
                   ))}
                 </div>
               ) : filteredRecurringInvoices.length === 0 ? (
-                <div className="flex min-h-[240px] flex-col items-center justify-center p-8">
-                  <Repeat className="mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('recurringInvoices.noRecurring', 'No recurring invoices found')}</h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t('recurringInvoices.noRecurringDescription', 'Create your first recurring invoice to get started')}</p>
-                  <Button onClick={() => navigate('/recurring-invoices/new')} className="mt-4 gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500">
-                    <Plus className="h-4 w-4" />
-                    {t('recurringInvoices.newRecurring', 'New Recurring Invoice')}
-                  </Button>
-                </div>
+                <EmptyState
+                  icon={Repeat}
+                  title={t('recurringInvoices.noRecurring', 'No recurring invoices yet')}
+                  description={t('recurringInvoices.noRecurringDescription', 'Set up a recurring invoice to automatically bill customers on a regular schedule.')}
+                  action={
+                    <Button onClick={() => navigate('/recurring-invoices/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t('recurringInvoices.newRecurring', 'New Recurring Invoice')}
+                    </Button>
+                  }
+                  className="m-4"
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <Table>

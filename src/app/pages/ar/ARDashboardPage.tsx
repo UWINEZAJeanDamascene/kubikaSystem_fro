@@ -5,7 +5,6 @@ import { Layout } from '../../layout/Layout';
 import {
   FileText,
   Calendar,
-  RefreshCw,
   CheckCircle,
   AlertTriangle,
   TrendingUp,
@@ -19,8 +18,6 @@ import {
   PiggyBank,
   ArrowUpRight,
   ArrowDownRight,
-  X,
-  Eye,
   RotateCcw,
 } from 'lucide-react';
 import { useFormatCurrency } from '@/lib/currencyUtils';

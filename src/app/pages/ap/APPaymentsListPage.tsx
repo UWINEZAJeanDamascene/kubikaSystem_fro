@@ -1,16 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { apPaymentsApi, suppliersApi, apReconciliationApi } from '@/lib/api';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Layout } from '../../layout/Layout';
 import {
-  Plus,
   Eye,
   Send,
   Undo2,
   Loader2,
   FileText,
   Download,
-  Search,
   Calendar,
   RefreshCw,
   CheckCircle,
@@ -20,7 +19,6 @@ import {
   TrendingUp,
   Clock,
   ChevronRight,
-  CheckSquare,
   Wallet
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
@@ -586,8 +584,13 @@ export default function APPaymentsListPage() {
               <TableBody className="dark:bg-slate-800">
                 {paymentList.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground dark:text-slate-400">
-                      {t('apPayment.noPayments', 'No payments found')}
+                    <TableCell colSpan={7} className="border-0 py-2">
+                      <EmptyState
+                        compact
+                        icon={Wallet}
+                        title={t('apPayment.noPayments', 'No payments yet')}
+                        description={t('apPayment.noPaymentsHint', 'Supplier payment records will appear here once payments are made against purchase orders.')}
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (

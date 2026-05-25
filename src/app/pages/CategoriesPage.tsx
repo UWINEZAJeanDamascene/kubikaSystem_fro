@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Layout } from '@/app/layout/Layout';
 import { Button } from '@/app/components/ui/button';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
@@ -320,18 +321,17 @@ export default function CategoriesPage() {
   const renderCategories = () => {
     if (categories.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <Folder className="h-12 w-12 mb-4 opacity-50 text-slate-500 dark:text-slate-400" />
-          <p>{t('pages.categories.noCategories')}</p>
-          <Button 
-            variant="outline" 
-            className="mt-4"
-            onClick={() => handleAdd()}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {t('pages.categories.addCategory')}
-          </Button>
-        </div>
+        <EmptyState
+          icon={Folder}
+          title={t('pages.categories.noCategories', 'No categories yet')}
+          description={t('pages.categories.noCategoriesHint', 'Create categories to organize your products into a structured catalog.')}
+          action={
+            <Button onClick={() => handleAdd()} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+              <Plus className="h-4 w-4 mr-2" />
+              {t('pages.categories.addCategory', 'Add category')}
+            </Button>
+          }
+        />
       );
     }
 

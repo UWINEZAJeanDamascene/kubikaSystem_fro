@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { purchaseReturnsApi, suppliersApi } from "@/lib/api";
+import { EmptyState } from "@/app/components/EmptyState";
 import { Layout } from "../../layout/Layout";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import {
@@ -15,9 +16,7 @@ import {
   ArrowLeftRight,
   TrendingDown,
   Box,
-  Building2,
   CheckCircle,
-  XCircle,
 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
@@ -323,8 +322,13 @@ export default function PurchaseReturnsListPage() {
                     <TableBody>
                       {returnList.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                            {t("purchaseReturn.noReturns", "No purchase returns found")}
+                          <TableCell colSpan={7} className="border-0 py-2">
+                            <EmptyState
+                              compact
+                              icon={ArrowLeftRight}
+                              title={t("purchaseReturn.noReturns", "No purchase returns yet")}
+                              description={t("purchaseReturn.noReturnsHint", "Purchase returns will appear here once goods are returned to suppliers.")}
+                            />
                           </TableCell>
                         </TableRow>
                       ) : (

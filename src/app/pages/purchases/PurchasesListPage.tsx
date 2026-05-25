@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { purchasesApi, suppliersApi } from '@/lib/api';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Layout } from '../../layout/Layout';
 import {
   Plus,
@@ -9,7 +10,6 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
-  CheckCircle,
   XCircle,
   Truck,
   ShoppingCart,
@@ -17,7 +17,6 @@ import {
   TrendingUp,
   PackageCheck,
   Clock,
-  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -354,9 +353,13 @@ export default function PurchasesListPage() {
                   <TableBody>
                     {purchaseList.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="py-10 text-center text-slate-500 dark:text-slate-400">
-                          <AlertCircle className="mx-auto mb-2 h-6 w-6 text-slate-400" />
-                          {t('purchases.noPurchases', 'No purchases found')}
+                        <TableCell colSpan={8} className="border-0 py-2">
+                          <EmptyState
+                            compact
+                            icon={ShoppingCart}
+                            title={t('purchases.noPurchases', 'No purchases yet')}
+                            description={t('purchases.noPurchasesHint', 'Purchase transactions will appear here once goods are received from suppliers.')}
+                          />
                         </TableCell>
                       </TableRow>
                     ) : (

@@ -1,17 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { arReceiptsApi, clientsApi, arReconciliationApi, ARTransaction, ARDashboardData } from '@/lib/api';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Layout } from '../../layout/Layout';
 import {
-  Plus,
   Eye,
   Send,
   Undo2,
   Loader2,
   FileText,
   Download,
-  Search,
-  Calendar,
   ChevronRight,
   ArrowLeft,
   RefreshCw,
@@ -19,9 +17,6 @@ import {
   AlertTriangle,
   Activity,
   TrendingUp,
-  Clock,
-  Building2,
-  User,
   Wallet
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
@@ -95,16 +90,6 @@ interface AgingBucket {
   '90+': number;
 }
 
-interface InvoiceDetail {
-  _id: string;
-  invoiceNumber: string;
-  referenceNo: string;
-  invoiceDate: string;
-  dueDate: string;
-  balance: string;
-  amountOutstanding: string;
-  status: string;
-}
 
 interface Client {
   _id: string;
@@ -158,7 +143,6 @@ export default function ARReceiptsListPage() {
   const [dashboardData, setDashboardData] = useState<ARDashboardData | null>(null);
   const [transactions, setTransactions] = useState<ARTransaction[]>([]);
   const [currentReceivables, setCurrentReceivables] = useState<any[]>([]);
-  const [receivablesSummary, setReceivablesSummary] = useState<any>(null);
   const [recFilters, setRecFilters] = useState({
     transactionType: '',
     reconciliationStatus: '',
@@ -368,7 +352,6 @@ export default function ARReceiptsListPage() {
       const response = await arReconciliationApi.getCurrentReceivables({ limit: 100 });
       if (response.success) {
         setCurrentReceivables(response.data?.invoices || []);
-        setReceivablesSummary(response.data?.summary || null);
       }
     } catch (error) {
       console.error('Failed to fetch receivables:', error);
@@ -493,12 +476,6 @@ export default function ARReceiptsListPage() {
     return <Badge variant={c.variant} className={c.className}>{c.label}</Badge>;
   };
 
-  const getAgingBadge = (amount: number) => {
-    if (amount === 0) return <Badge variant="outline">{formatCurrency(0)}</Badge>;
-    if (amount > 10000) return <Badge variant="destructive">{formatCurrency(amount)}</Badge>;
-    if (amount > 5000) return <Badge variant="secondary">{formatCurrency(amount)}</Badge>;
-    return <Badge variant="default">{formatCurrency(amount)}</Badge>;
-  };
 
   const exportAgingToCSV = () => {
     const headers = ['Client', 'Current', '1-30 Days', '31-60 Days', '61-90 Days', '90+ Days', 'Total'];
@@ -657,8 +634,13 @@ export default function ARReceiptsListPage() {
                   <TableBody>
                     {receiptList.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground dark:text-slate-400">
-                          {t('arReceipt.noReceipts', 'No receipts found')}
+                        <TableCell colSpan={7} className="border-0 py-2">
+                          <EmptyState
+                            compact
+                            icon={Wallet}
+                            title={t('arReceipt.noReceipts', 'No receipts yet')}
+                            description={t('arReceipt.noReceiptsHint', 'Customer payments and receipt records will appear here once created.')}
+                          />
                         </TableCell>
                       </TableRow>
                     ) : (

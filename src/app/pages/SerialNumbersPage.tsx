@@ -29,6 +29,7 @@ import {
   RefreshCw as RefreshIcon,
   Package as PackageIcon,
 } from 'lucide-react';
+import { EmptyState } from '@/app/components/EmptyState';
 import { serialNumberApi, productsApi, warehousesApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
 import { useFormatCurrency } from '@/lib/currencyUtils';
@@ -387,15 +388,12 @@ export default function SerialNumbersPage() {
                   <CircularProgress />
                 </Box>
               ) : serials.length === 0 ? (
-                <Box sx={{ py: 8, textAlign: 'center' }}>
-                  <PackageIcon size={34} className="mx-auto mb-3 text-slate-400" />
-                  <Typography variant="subtitle2" sx={{ color: dark ? '#e2e8f0' : '#334155', fontWeight: 800 }}>
-                    {t('serialNumbers.noSerials', 'No serial numbers found')}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: dark ? '#94a3b8' : '#64748b' }}>
-                    Serialized products will appear here once they are received or created.
-                  </Typography>
-                </Box>
+                <EmptyState
+                  compact
+                  icon={PackageIcon}
+                  title={t('serialNumbers.noSerials', 'No serial numbers yet')}
+                  description={t('serialNumbers.noSerialsHint', 'Serialized products will appear here once they are received or created.')}
+                />
               ) : (
                 <div className="grid gap-3">
                   {serials.map((item) => (

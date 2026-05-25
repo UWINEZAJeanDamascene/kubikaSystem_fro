@@ -21,7 +21,9 @@ import {
   ShieldAlert as QuarantineIcon,
   ShieldCheck as UnquarantineIcon,
   RefreshCw as RefreshIcon,
+  Boxes,
 } from 'lucide-react';
+import { EmptyState } from '@/app/components/EmptyState';
 import { stockBatchApi, StockBatch, warehousesApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
 
@@ -392,14 +394,12 @@ export default function BatchesPage() {
                   <CircularProgress />
                 </Box>
               ) : batches.length === 0 ? (
-                <Box sx={{ py: 8, textAlign: 'center' }}>
-                  <Typography variant="subtitle2" sx={{ color: dark ? '#e2e8f0' : '#334155', fontWeight: 800 }}>
-                    {t('common.batches.noBatches', 'No batches found')}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: dark ? '#94a3b8' : '#64748b' }}>
-                    Received batch lots will appear here with expiry and quarantine controls.
-                  </Typography>
-                </Box>
+                <EmptyState
+                  compact
+                  icon={Boxes}
+                  title={t('common.batches.noBatches', 'No batches yet')}
+                  description={t('common.batches.noBatchesHint', 'Received batch lots will appear here with expiry tracking and quarantine controls.')}
+                />
               ) : (
                 <div className="grid gap-3">
                   {batches.map((batch) => {

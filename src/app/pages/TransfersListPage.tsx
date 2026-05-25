@@ -16,7 +16,6 @@ import {
   InputAdornment,
   Alert,
   CircularProgress,
-  IconButton
 } from '@mui/material';
 import { 
   Search as SearchIcon,
@@ -27,6 +26,7 @@ import {
   XCircle as XCircleIcon,
   Truck as TruckIcon
 } from 'lucide-react';
+import { EmptyState } from '@/app/components/EmptyState';
 import { stockApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
 import { useFormatCurrency } from '@/lib/currencyUtils';
@@ -485,15 +485,12 @@ export default function TransfersListPage() {
                   <CircularProgress />
                 </Box>
               ) : transfers.length === 0 ? (
-                <Box sx={{ py: 8, textAlign: 'center', color: dark ? '#94a3b8' : '#64748b' }}>
-                  <TruckIcon className="mx-auto mb-3" size={34} />
-                  <Typography variant="body2" sx={{ color: dark ? '#cbd5e1' : '#475569', fontWeight: 800 }}>
-                    {t('transfers.noData', 'No transfers found')}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: dark ? '#94a3b8' : '#64748b' }}>
-                    Warehouse transfer activity will appear here after you create a transfer.
-                  </Typography>
-                </Box>
+                <EmptyState
+                  compact
+                  icon={TruckIcon}
+                  title={t('transfers.noData', 'No transfers yet')}
+                  description={t('transfers.noDataHint', 'Warehouse transfer activity will appear here after you create a transfer.')}
+                />
               ) : (
                 <div className="grid gap-3">
                   {transfers.map((item) => {

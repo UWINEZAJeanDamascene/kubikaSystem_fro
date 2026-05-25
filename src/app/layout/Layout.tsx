@@ -15,12 +15,17 @@ import { useCompanyStore } from '@/store/companyStore';
 
 interface LayoutProps {
   children: ReactNode;
-  title?: string;
 }
 
-export function Layout({ children, title }: LayoutProps) {
+export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('sidebar-collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [searchOpen, setSearchOpen] = useState(false);
   useGlobalSearchShortcut(setSearchOpen);
   const { theme, toggleTheme } = useTheme();
@@ -45,6 +50,12 @@ export function Layout({ children, title }: LayoutProps) {
       setChatOpen(false);
     }
   }, [hasEnterpriseAI, setChatOpen]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sidebar-collapsed', String(sidebarCollapsed));
+    } catch (e) {}
+  }, [sidebarCollapsed]);
 
   // When the app layout is mounted, lock document scrolling so the app's
   // internal scroll container is the only vertical scroll. Remove the lock
@@ -105,7 +116,7 @@ export function Layout({ children, title }: LayoutProps) {
                 <path d="M12 22V12"/>
               </svg>
             </div>
-            <span className="text-lg font-semibold text-slate-800 dark:text-white">StockManager</span>
+            <span className="hidden md:inline text-lg font-semibold text-slate-800 dark:text-white">StockManager</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Button
@@ -143,14 +154,9 @@ export function Layout({ children, title }: LayoutProps) {
 
         {/* Desktop Top Bar */}
         {!isMobile && (
-          <header className="hidden lg:flex h-20 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white/92 px-6 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-[#0d1626]/92">
+          <header className="hidden lg:flex h-14 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white/92 px-6 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-[#0d1626]/92">
             <div className="flex items-center gap-4 min-w-0">
-              <div className="min-w-0">
-                <Breadcrumbs className="mb-1" />
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
-                  {title || 'Command Center'}
-                </h1>
-              </div>
+              <Breadcrumbs />
             </div>
 
             <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 dark:border-white/10 dark:bg-white/[0.04]">

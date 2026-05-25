@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { deliveryNotesApi, clientsApi, invoicesApi } from '@/lib/api';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Layout } from '../../layout/Layout';
 import {
   Plus,
   Search,
   Download,
-  FileText,
   Eye,
   Edit,
   Trash2,
@@ -20,8 +20,6 @@ import {
   Filter,
   RefreshCw,
   Package,
-  Clock,
-  CalendarDays,
   User,
   ArrowRight,
   ChevronLeft,
@@ -204,11 +202,6 @@ export default function DeliveryNotesListPage() {
 
   const handleClientFilter = (value: string) => {
     setClientFilter(value);
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  const handleQuotationFilter = (value: string) => {
-    setQuotationFilter(value);
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -395,7 +388,6 @@ export default function DeliveryNotesListPage() {
 
   const totalValue = filteredDeliveryNotes.reduce((sum, dn) => sum + toNumber(dn.grandTotal), 0);
   const dispatchedCount = filteredDeliveryNotes.filter((dn) => dn.status === 'dispatched').length;
-  const draftCount = filteredDeliveryNotes.filter((dn) => dn.status === 'draft').length;
   const deliveredCount = filteredDeliveryNotes.filter((dn) => dn.status === 'delivered').length;
 
   return (
@@ -657,20 +649,18 @@ export default function DeliveryNotesListPage() {
                   ))}
                 </div>
               ) : filteredDeliveryNotes.length === 0 ? (
-                <div className="flex min-h-[300px] flex-col items-center justify-center p-8">
-                  <Truck className="mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" />
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">No delivery notes found</h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    Create your first delivery note to get started.
-                  </p>
-                  <Button
-                    onClick={() => navigate('/delivery-notes/new')}
-                    className="mt-4 gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
-                  >
-                    <Plus className="h-4 w-4" />
-                    New Delivery Note
-                  </Button>
-                </div>
+                <EmptyState
+                  icon={Truck}
+                  title="No delivery notes yet"
+                  description="Create a delivery note to record and track shipments sent to customers."
+                  action={
+                    <Button onClick={() => navigate('/delivery-notes/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Delivery Note
+                    </Button>
+                  }
+                  className="m-4"
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <Table>

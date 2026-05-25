@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { pickPackApi, salesOrdersApi } from '@/lib/api';
+import { pickPackApi } from '@/lib/api';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Layout } from '../../layout/Layout';
 import {
   Plus,
@@ -203,18 +204,6 @@ export default function PickPacksListPage() {
     }
   };
 
-  const handleCompletePicking = async (id: string) => {
-    try {
-      const response = await pickPackApi.completePicking(id);
-      if (response.success) {
-        toast.success('Picking completed');
-        fetchPickPacks();
-      }
-    } catch (error) {
-      toast.error('Failed to complete picking');
-    }
-  };
-
   const handleStartPacking = async (id: string) => {
     try {
       const response = await pickPackApi.startPacking(id);
@@ -224,18 +213,6 @@ export default function PickPacksListPage() {
       }
     } catch (error) {
       toast.error('Failed to start packing');
-    }
-  };
-
-  const handleCompletePacking = async (id: string) => {
-    try {
-      const response = await pickPackApi.completePacking(id);
-      if (response.success) {
-        toast.success('Packing completed - Delivery Note created');
-        fetchPickPacks();
-      }
-    } catch (error) {
-      toast.error('Failed to complete packing');
     }
   };
 
@@ -251,11 +228,6 @@ export default function PickPacksListPage() {
     } catch (error) {
       toast.error('Failed to cancel pick pack');
     }
-  };
-
-  const formatDate = (date: string) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString();
   };
 
   const getProgress = (task: PickPack) => {
@@ -437,18 +409,13 @@ export default function PickPacksListPage() {
                       ))
                     ) : pickPacks.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="py-12 text-center">
-                          <div className="flex flex-col items-center gap-3">
-                            <div className="rounded-full bg-slate-100 p-4 dark:bg-slate-800">
-                              <Package className="h-8 w-8 text-slate-400 dark:text-slate-500" />
-                            </div>
-                            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                              No pick pack tasks found
-                            </p>
-                            <p className="text-xs text-slate-500 dark:text-slate-500">
-                              Try adjusting your filters or create a new task
-                            </p>
-                          </div>
+                        <TableCell colSpan={8} className="border-0 py-2">
+                          <EmptyState
+                            compact
+                            icon={Package}
+                            title="No pick pack tasks yet"
+                            description="Pick pack tasks will appear here once sales orders are ready for fulfilment."
+                          />
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -592,16 +559,13 @@ export default function PickPacksListPage() {
                   ))}
                 </div>
               ) : pickPacks.length === 0 ? (
-                <div className="py-12 text-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="rounded-full bg-slate-100 p-4 dark:bg-slate-800">
-                      <Package className="h-8 w-8 text-slate-400 dark:text-slate-500" />
-                    </div>
-                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                      No pick pack tasks found
-                    </p>
-                  </div>
-                </div>
+                <EmptyState
+                  compact
+                  icon={Package}
+                  title="No pick pack tasks yet"
+                  description="Pick pack tasks will appear here once sales orders are ready for fulfilment."
+                  className="m-4"
+                />
               ) : (
                 <div className="space-y-3 p-3">
                   {pickPacks.map((task) => {

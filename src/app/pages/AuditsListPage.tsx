@@ -28,6 +28,7 @@ import {
   ClipboardList as ClipboardListIcon,
   FilterX as FilterXIcon,
 } from 'lucide-react';
+import { EmptyState } from '@/app/components/EmptyState';
 import { stockAuditApi, StockAudit, warehousesApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
 
@@ -360,15 +361,12 @@ export default function AuditsListPage() {
                   <CircularProgress />
                 </Box>
               ) : audits.length === 0 ? (
-                <Box sx={{ py: 8, textAlign: 'center' }}>
-                  <ClipboardListIcon className="mx-auto mb-3 text-slate-400" size={34} />
-                  <Typography sx={{ color: dark ? '#cbd5e1' : '#475569', fontWeight: 800 }}>
-                    {t('common.stockAudits.noAudits')}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: dark ? '#94a3b8' : '#64748b' }}>
-                    Create an audit to compare system stock with physical count.
-                  </Typography>
-                </Box>
+                <EmptyState
+                  compact
+                  icon={ClipboardListIcon}
+                  title={t('common.stockAudits.noAudits', 'No stock audits yet')}
+                  description={t('common.stockAudits.noAuditsHint', 'Create an audit to compare system stock with physical count and track variances.')}
+                />
               ) : (
                 <div className="grid gap-3">
                   {audits.map((audit) => {

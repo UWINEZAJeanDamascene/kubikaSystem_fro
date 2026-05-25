@@ -15,9 +15,6 @@ import {
   InputAdornment,
   Alert,
   CircularProgress,
-  FormControlLabel,
-  Radio,
-  RadioGroup
 } from '@mui/material';
 import { 
   Search as SearchIcon,
@@ -28,6 +25,8 @@ import {
   Balance as BalanceIcon,
   Add as AddIcon
 } from '@mui/icons-material';
+import { ArrowRightLeft } from 'lucide-react';
+import { EmptyState } from '@/app/components/EmptyState';
 import { stockApi, warehousesApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
 import { StockAdjustmentDialog } from '@/app/components/StockAdjustmentDialog';
@@ -99,7 +98,6 @@ export default function StockMovementsPage() {
   // Filters
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [warehouseFilter, setWarehouseFilter] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -555,15 +553,12 @@ export default function StockMovementsPage() {
                   <CircularProgress />
                 </Box>
               ) : movements.length === 0 ? (
-                <Box sx={{ py: 8, textAlign: 'center', color: dark ? '#94a3b8' : '#64748b' }}>
-                  <SwapVertIcon className="mx-auto mb-3" />
-                  <Typography variant="body2" sx={{ color: dark ? '#cbd5e1' : '#475569', fontWeight: 700 }}>
-                    {t('stockMovements.noData', 'No stock movements found')}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: dark ? '#94a3b8' : '#64748b' }}>
-                    Receipts, issues, transfers, and adjustments will appear in this ledger.
-                  </Typography>
-                </Box>
+                <EmptyState
+                  compact
+                  icon={ArrowRightLeft}
+                  title={t('stockMovements.noData', 'No stock movements yet')}
+                  description={t('stockMovements.noDataHint', 'Receipts, issues, transfers, and adjustments will appear in this ledger once stock transactions occur.')}
+                />
               ) : (
                 <div className="grid gap-3">
                   {movements.map((item) => {

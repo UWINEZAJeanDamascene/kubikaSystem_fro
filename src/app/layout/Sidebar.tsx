@@ -51,6 +51,8 @@ import {
   Clock,
   HelpCircle,
   DownloadCloud,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -69,6 +71,15 @@ import {
 import authService from "@/services/authService";
 import { usersApi } from "@/lib/api";
 import { useCompanyStore } from "@/store/companyStore";
+import { useAuthStore } from "@/store/authStore";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -792,8 +803,13 @@ export function Sidebar({
   const [loggingOut, setLoggingOut] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [companyProfileOpen, setCompanyProfileOpen] = useState(false);
+  const [companyOptions, setCompanyOptions] = useState<Record<string, { name: string; logo_url?: string }>>({});
   const company = useCompanyStore((state) => state.company);
   const setCompany = useCompanyStore((state) => state.setCompany);
+  const companies = useAuthStore((state) => state.companies);
+  const activeCompanyId = useAuthStore((state) => state.activeCompanyId);
+  const activeRole = useAuthStore((state) => state.activeRole);
+  const setActiveCompany = useAuthStore((state) => state.setActiveCompany);
 
   // Fetch company data on mount
   useEffect(() => {
@@ -842,6 +858,63 @@ export function Sidebar({
       // Ignore profile fetch errors
     });
   }, []);
+
+  useEffect(() => {
+    if (!companies?.length) return;
+
+    Promise.all(
+      companies.map(async (membership) => {
+        try {
+          const response = await companyApi.getById(membership.companyId);
+          if (response.success && response.data) {
+            const data = response.data as any;
+            return [membership.companyId, { name: data.name || 'Company', logo_url: data.logo_url }] as const;
+          }
+        } catch (error) {
+          return [membership.companyId, { name: 'Company' }] as const;
+        }
+        return [membership.companyId, { name: 'Company' }] as const;
+      }),
+    ).then((entries) => {
+      setCompanyOptions(Object.fromEntries(entries));
+    });
+  }, [companies]);
+
+  const handleCompanySwitch = async (companyId: string, role: string) => {
+    if (companyId === activeCompanyId) return;
+
+    setActiveCompany(companyId, role);
+    localStorage.setItem('companyId', companyId);
+
+    try {
+      const response = await companyApi.getById(companyId);
+      if (response.success && response.data) {
+        const companyData = response.data as any;
+        setCompany({
+          _id: companyData._id || companyData.id || companyId,
+          name: companyData.name || 'My Company',
+          legal_name: companyData.legal_name,
+          email: companyData.email,
+          phone: companyData.phone,
+          website: companyData.website,
+          registration_number: companyData.registration_number,
+          tax_identification_number: companyData.tax_identification_number,
+          industry: companyData.industry,
+          logo_url: companyData.logo_url,
+          address: companyData.address,
+          base_currency: companyData.base_currency,
+          subscription_plan: companyData.subscription_plan,
+          subscription_status: companyData.subscription_status,
+          feature_access: companyData.feature_access,
+          enabledModules: companyData.enabledModules,
+          subscription_modules: companyData.subscription_modules,
+        });
+      }
+    } finally {
+      navigate('/dashboard');
+      onNavigate?.();
+    }
+  };
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -1042,45 +1115,95 @@ export function Sidebar({
           collapsed ? "px-2 justify-center flex-col py-3" : "px-3",
         )}
       >
-        {/* ── Company Profile Section ── */}
-        {collapsed ? (
-          <button
-            onClick={() => setCompanyProfileOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-slate-950 flex-shrink-0 hover:ring-2 hover:ring-cyan-200/60 transition-all"
-            title={company?.name || "Company"}
-          >
-            {company?.logo_url ? (
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={company.logo_url} alt={company.name} />
-                <AvatarFallback className="bg-cyan-300 text-slate-950 text-sm">
-                  {company?.name?.charAt(0).toUpperCase() || "C"}
-                </AvatarFallback>
-              </Avatar>
+        {/* ── Company Switcher / Profile Section ── */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {collapsed ? (
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-300 to-emerald-300 text-slate-950 flex-shrink-0 hover:ring-2 hover:ring-cyan-200/60 transition-all"
+                title={company?.name || "Company"}
+              >
+                {company?.logo_url ? (
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={company.logo_url} alt={company.name} />
+                    <AvatarFallback className="bg-cyan-300 text-slate-950 text-sm">
+                      {company?.name?.charAt(0).toUpperCase() || "C"}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <Building2 className="h-5 w-5" />
+                )}
+              </button>
             ) : (
-              <Building2 className="h-5 w-5" />
+              <button className="group flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.045] p-2 text-left transition-colors hover:bg-white/[0.08]">
+                <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-cyan-300/30">
+                  <AvatarImage src={company?.logo_url} alt={company?.name || "Company"} />
+                  <AvatarFallback className="bg-gradient-to-br from-cyan-300 to-emerald-300 text-slate-950 text-sm font-bold">
+                    {company?.name?.charAt(0).toUpperCase() || "C"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="truncate text-sm font-bold text-white tracking-tight">
+                    {company?.name || "My Company"}
+                  </p>
+                  <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                    {companies.length > 1 ? `${companies.length} companies` : activeRole || "Operating atlas"}
+                  </p>
+                </div>
+                <ChevronDown className="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform group-data-[state=open]:rotate-180" />
+              </button>
             )}
-          </button>
-        ) : (
-          <button
-            onClick={() => setCompanyProfileOpen(true)}
-            className="group flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.045] p-2 text-left transition-colors hover:bg-white/[0.08]"
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            side={collapsed ? "right" : "bottom"}
+            className="w-64 border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white"
           >
-            <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-cyan-300/30">
-              <AvatarImage src={company?.logo_url} alt={company?.name || "Company"} />
-              <AvatarFallback className="bg-gradient-to-br from-cyan-300 to-emerald-300 text-slate-950 text-sm font-bold">
-                {company?.name?.charAt(0).toUpperCase() || "C"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <p className="truncate text-sm font-bold text-white tracking-tight">
-                {company?.name || "My Company"}
-              </p>
-              <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
-                Operating atlas
-              </p>
-            </div>
-          </button>
-        )}
+            <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              Company
+            </DropdownMenuLabel>
+            {companies.length > 1 ? (
+              companies.map((membership) => {
+                const option = companyOptions[membership.companyId];
+                const isActive = membership.companyId === activeCompanyId;
+
+                return (
+                  <DropdownMenuItem
+                    key={membership.companyId}
+                    onClick={() => handleCompanySwitch(membership.companyId, membership.role)}
+                    className="cursor-pointer"
+                  >
+                    <Avatar className="h-7 w-7">
+                      <AvatarImage src={option?.logo_url} alt={option?.name || "Company"} />
+                      <AvatarFallback className="bg-cyan-100 text-xs font-semibold text-cyan-900">
+                        {(option?.name || "C").charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{option?.name || "Company"}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{membership.role}</p>
+                    </div>
+                    {isActive && <Check className="h-4 w-4 text-emerald-500" />}
+                  </DropdownMenuItem>
+                );
+              })
+            ) : (
+              <DropdownMenuItem onClick={() => setCompanyProfileOpen(true)} className="cursor-pointer">
+                <Building2 className="h-4 w-4" />
+                Manage company profile
+              </DropdownMenuItem>
+            )}
+            {companies.length > 1 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setCompanyProfileOpen(true)} className="cursor-pointer">
+                  <Building2 className="h-4 w-4" />
+                  Manage current company
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <div className={cn("flex items-center gap-1", collapsed && "mt-2")}>
           {onToggleCollapse && (

@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router';
+import { Home } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -130,16 +131,22 @@ export function Breadcrumbs({ className }: BreadcrumbsProps) {
   return (
     <Breadcrumb className={className}>
       <BreadcrumbList className="text-xs">
+        {/* Home root */}
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link to="/" className="text-slate-400 hover:text-cyan-700 dark:text-slate-500 dark:hover:text-cyan-300">
+              <Home className="h-3.5 w-3.5" />
+            </Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
         {crumbs.map((c, i) => {
           const isLast = i === crumbs.length - 1;
           return (
             <span key={c.href} className="flex items-center gap-1.5 sm:gap-2.5">
-              {i > 0 && (
-                <BreadcrumbSeparator className="text-slate-300 dark:text-slate-600" />
-              )}
+              <BreadcrumbSeparator className="text-slate-300 dark:text-slate-600" />
               <BreadcrumbItem>
                 {isLast ? (
-                  <BreadcrumbPage className="font-medium text-slate-700 dark:text-slate-200">
+                  <BreadcrumbPage className="font-semibold text-sm text-slate-800 dark:text-white">
                     {c.label}
                   </BreadcrumbPage>
                 ) : (

@@ -53,6 +53,7 @@ import { formatDocumentCurrency } from '@/lib/currencyUtils';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { EBMPurchaseStatusBadge } from '@/app/components/EBMStatusBadge';
+import { EmptyState } from '@/app/components/EmptyState';
 
 interface PurchaseOrder {
   _id: string;
@@ -350,14 +351,6 @@ export default function PurchaseOrdersListPage() {
     );
   }
 
-  function EmptyState({ icon, message }: { icon: ReactNode; message: string }) {
-    return (
-      <div className="flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/70 text-slate-500 dark:border-slate-800 dark:bg-slate-900/30 dark:text-slate-400">
-        <div className="mb-2 text-slate-400 dark:text-slate-500">{icon}</div>
-        <p className="text-sm">{message}</p>
-      </div>
-    );
-  }
 
   const formatCurrency = (amount: number | string, currency: string = 'USD') => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -621,12 +614,19 @@ export default function PurchaseOrdersListPage() {
                 ))}
               </div>
             ) : poList.length === 0 ? (
-              <CardContent className="p-5">
-                <EmptyState
-                  icon={<ClipboardList className="h-6 w-6" />}
-                  message={t('purchase.orders.noOrders', 'No purchase orders found')}
-                />
-              </CardContent>
+              <EmptyState
+                compact
+                icon={ClipboardList}
+                title={t('purchase.orders.noOrders', 'No purchase orders yet')}
+                description={t('purchase.orders.noOrdersHint', 'Create a purchase order to start the procurement process with your suppliers.')}
+                action={
+                  <Button onClick={() => navigate('/purchase-orders/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('purchase.orders.new', 'New Purchase Order')}
+                  </Button>
+                }
+                className="m-4"
+              />
             ) : (
               <div className="overflow-x-auto">
                 <Table>

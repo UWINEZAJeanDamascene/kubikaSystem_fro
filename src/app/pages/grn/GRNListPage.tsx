@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { grnApi, suppliersApi } from "@/lib/api";
+import { EmptyState } from "@/app/components/EmptyState";
 import { Layout } from "../../layout/Layout";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import {
@@ -42,7 +43,6 @@ import {
   PaginationItem,
   PaginationLink,
 } from "@/app/components/ui/pagination";
-import { Badge } from "@/app/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { useTranslation } from "react-i18next";
 import { EBMStatusBadge } from "@/app/components/EBMStatusBadge";
@@ -353,10 +353,19 @@ export default function GRNListPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
               </div>
             ) : grnList.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-3 py-12 text-slate-500 dark:text-slate-400">
-                <Box className="h-10 w-10 text-slate-300 dark:text-slate-600" />
-                <p className="text-sm">{t("grn.noGRNs", "No GRNs found")}</p>
-              </div>
+              <EmptyState
+                compact
+                icon={PackageCheck}
+                title={t("grn.noGRNs", "No GRNs yet")}
+                description={t("grn.noGRNsHint", "Goods receipt notes will appear here once stock is received against a purchase order.")}
+                action={
+                  <Button onClick={() => navigate("/grn/new")} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t("grn.new", "New GRN")}
+                  </Button>
+                }
+                className="m-4"
+              />
             ) : (
               <div className="overflow-x-auto">
                 <Table>

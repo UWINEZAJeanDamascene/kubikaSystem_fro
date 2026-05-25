@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { DownloadCloud, Loader2, RefreshCw } from "lucide-react";
+import { EmptyState } from "@/app/components/EmptyState";
 import { toast } from "sonner";
 import { ebmApi, productsApi, warehousesApi, suppliersApi } from "@/lib/api";
 import { Layout } from "../../layout/Layout";
@@ -281,7 +282,14 @@ export default function ImportedItemsPage() {
                     ))}
                     {items.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center text-slate-500">No imported items found.</TableCell>
+                        <TableCell colSpan={7} className="border-0 py-2">
+                          <EmptyState
+                            compact
+                            icon={DownloadCloud}
+                            title="No imported items yet"
+                            description="EBM-imported stock items will appear here once goods are received via the EBM system."
+                          />
+                        </TableCell>
                       </TableRow>
                     )}
                   </TableBody>

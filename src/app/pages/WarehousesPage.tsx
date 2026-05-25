@@ -17,10 +17,11 @@ import {
 } from 'lucide-react';
 import { Layout } from '@/app/layout/Layout';
 import { Button } from '@/app/components/ui/button';
+import { EmptyState } from '@/app/components/EmptyState';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card, CardContent } from '@/app/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -398,18 +399,19 @@ export default function WarehousesPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : warehouses.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-8 text-center">
-                <WarehouseIcon className="h-12 w-12 mb-4 opacity-50 text-slate-500 dark:text-slate-400" />
-                <p className="text-slate-500 dark:text-slate-400">{t('pages.warehouses.noWarehouses')}</p>
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => handleOpenDialog()}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t('pages.warehouses.addWarehouse')}
-                </Button>
-              </div>
+              <EmptyState
+                compact
+                icon={WarehouseIcon}
+                title={t('pages.warehouses.noWarehouses', 'No warehouses yet')}
+                description={t('pages.warehouses.noWarehousesHint', 'Add warehouses to track stock across multiple locations and manage transfers.')}
+                action={
+                  <Button onClick={() => handleOpenDialog()} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('pages.warehouses.addWarehouse', 'Add warehouse')}
+                  </Button>
+                }
+                className="m-4"
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">

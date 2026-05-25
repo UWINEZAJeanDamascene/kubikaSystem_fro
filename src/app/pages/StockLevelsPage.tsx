@@ -31,6 +31,8 @@ import {
 } from '@mui/icons-material';
 import { productsApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
+import { EmptyState } from '@/app/components/EmptyState';
+import { Package } from 'lucide-react';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface ProductStock {
@@ -480,8 +482,13 @@ export default function StockLevelsPage() {
                 </TableRow>
               ) : products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 4 }} className="text-slate-500 dark:text-slate-400">
-                    {t('stockLevels.noData', 'No stock levels found')}
+                  <TableCell colSpan={9} sx={{ py: 2, border: 0 }}>
+                    <EmptyState
+                      compact
+                      icon={Package}
+                      title={t('stockLevels.noData', 'No stock levels yet')}
+                      description={t('stockLevels.noDataHint', 'Stock levels will appear here once products are added and received into inventory.')}
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
