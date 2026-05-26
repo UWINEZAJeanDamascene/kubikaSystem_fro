@@ -189,23 +189,23 @@ export default function BankReconciliationPage({ embedded = false, accountId, ac
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Bank Reconciliation</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">Bank Reconciliation</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
             {account?.name || "Bank account"} {account?.accountNumber ? `- ${account.accountNumber}` : ""}
           </p>
         </div>
         {loading && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
       </div>
 
-      <Card>
+      <Card className="border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50">
         <CardHeader>
           <CardTitle className="text-base">Create Session</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-5">
-          <Input type="date" value={form.periodStart} onChange={(e) => setForm({ ...form, periodStart: e.target.value })} />
-          <Input type="date" value={form.periodEnd} onChange={(e) => setForm({ ...form, periodEnd: e.target.value })} />
-          <Input type="number" placeholder="Opening statement balance" value={form.openingStatementBalance} onChange={(e) => setForm({ ...form, openingStatementBalance: e.target.value })} />
-          <Input type="number" placeholder="Closing statement balance" value={form.closingStatementBalance} onChange={(e) => setForm({ ...form, closingStatementBalance: e.target.value })} />
+          <Input className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-50" type="date" value={form.periodStart} onChange={(e) => setForm({ ...form, periodStart: e.target.value })} />
+          <Input className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-50" type="date" value={form.periodEnd} onChange={(e) => setForm({ ...form, periodEnd: e.target.value })} />
+          <Input className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-50" type="number" placeholder="Opening statement balance" value={form.openingStatementBalance} onChange={(e) => setForm({ ...form, openingStatementBalance: e.target.value })} />
+          <Input className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-50" type="number" placeholder="Closing statement balance" value={form.closingStatementBalance} onChange={(e) => setForm({ ...form, closingStatementBalance: e.target.value })} />
           <Button onClick={createSession} disabled={creating || !bankAccountId}>
             {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             New Session
@@ -214,7 +214,7 @@ export default function BankReconciliationPage({ embedded = false, accountId, ac
       </Card>
 
       <div className="grid gap-4 xl:grid-cols-[260px_1fr_320px]">
-        <Card>
+        <Card className="border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50">
           <CardHeader>
             <CardTitle className="text-base">Sessions</CardTitle>
           </CardHeader>
@@ -223,7 +223,7 @@ export default function BankReconciliationPage({ embedded = false, accountId, ac
               <button
                 key={session._id}
                 onClick={() => setActiveSessionId(session._id)}
-                className={`w-full rounded border p-3 text-left text-sm ${activeSessionId === session._id ? "border-blue-500 bg-blue-50" : "border-slate-200 bg-white"}`}
+                className={`w-full rounded border p-3 text-left text-sm ${activeSessionId === session._id ? "border-blue-500 bg-blue-50 text-blue-950 dark:bg-blue-950/50 dark:text-blue-50" : "border-slate-200 bg-white text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"}`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span>{new Date(session.periodStart).toLocaleDateString()} - {new Date(session.periodEnd).toLocaleDateString()}</span>
@@ -280,7 +280,7 @@ export default function BankReconciliationPage({ embedded = false, accountId, ac
           </div>
         </div>
 
-        <Card>
+        <Card className="border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50">
           <CardHeader>
             <CardTitle className="text-base">Summary</CardTitle>
           </CardHeader>
@@ -338,7 +338,7 @@ function TransactionPanel({
   side: "statement" | "book";
 }) {
   return (
-    <Card>
+    <Card className="border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50">
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
