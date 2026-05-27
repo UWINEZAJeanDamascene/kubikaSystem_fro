@@ -141,8 +141,8 @@ export default function OperationsLandingPage() {
               <Layers3 className="h-5 w-5" />
             </span>
             <span className="flex flex-col leading-none">
-              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">STOCKMANAGER</span>
-              <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-300">Operating OS</span>
+              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">KUBIKA SYSTEM</span>
+              <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-300">best choice for your business</span>
             </span>
           </Link>
 
@@ -486,7 +486,7 @@ export default function OperationsLandingPage() {
               <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950">
                 <Layers3 className="h-5 w-5" />
               </span>
-              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">STOCKMANAGER</span>
+              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">KUBIKA system</span>
             </Link>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
               Stock, sales, purchasing, accounting, payroll and reporting — built for Rwandan businesses and compliant with RRA requirements.

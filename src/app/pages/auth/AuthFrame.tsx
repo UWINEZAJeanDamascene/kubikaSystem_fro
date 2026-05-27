@@ -35,7 +35,7 @@ export function AuthFrame({
               <Layers3 className="h-5 w-5" />
             </span>
             <span>
-              <span className="block text-sm font-semibold tracking-[0.2em]">STOCKMANAGER</span>
+              <span className="block text-sm font-semibold tracking-[0.2em]">KUBIKA SYSTEM</span>
               <span className="block text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-700 dark:text-cyan-300">Access Console</span>
             </span>
           </Link>

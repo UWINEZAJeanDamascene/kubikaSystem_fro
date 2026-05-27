@@ -12,15 +12,23 @@ import {
   CircleDollarSign,
   ClipboardCheck,
   Factory,
+  Facebook,
   FileText,
+  Github,
   Globe2,
+  Instagram,
   Languages,
   Layers3,
+  Linkedin,
   LineChart,
   LockKeyhole,
+  Mail,
+  MapPin,
   Menu,
+  MessageCircle,
   Moon,
   PackageCheck,
+  Phone,
   Radar,
   ReceiptText,
   ShieldCheck,
@@ -68,6 +76,14 @@ const signalRows = [
 ];
 
 const worldNodes = ['Kigali', 'Musanze', 'Rubavu', 'Huye', 'Nyagatare', 'Muhanga'];
+
+const socialLinks = [
+  { label: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/kubikasystem' },
+  { label: 'Facebook', icon: Facebook, href: 'https://www.facebook.com/kubikasystem' },
+  { label: 'X', icon: X, href: 'https://x.com/kubikasystem' },
+  { label: 'GitHub', icon: Github, href: 'https://github.com/kubikasystem' },
+  { label: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/company/kubikasystem' },
+];
 
 export default function HomePage() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -572,40 +588,71 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+  
       </main>
 
       <footer className="border-t border-slate-200 bg-white px-4 py-10 dark:border-white/10 dark:bg-[#080b12] sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_auto] lg:items-start">
           <div>
             <Link to="/" className="inline-flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950">
                 <Layers3 className="h-5 w-5" />
               </span>
-              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">STOCKMANAGER</span>
+              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">KUBIKA SYSTEM</span>
             </Link>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
               Stock, sales, purchasing, accounting, payroll and reporting — built for Rwandan businesses and compliant with RRA requirements.
             </p>
+            <div className="mt-5 grid gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
+              <a href="mailto:hello@kubika.rw" className="inline-flex items-center gap-2 hover:text-slate-950 dark:hover:text-white">
+                <Mail className="h-4 w-4" />
+                jayfcode@gmail.com
+              </a>
+              <a href="tel:+250780936645" className="inline-flex items-center gap-2 hover:text-slate-950 dark:hover:text-white">
+                <Phone className="h-4 w-4" />
+                +250 780 936 645
+              </a>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3 text-sm font-medium text-slate-600 dark:text-slate-300">
-            {navItems.map((item) => (
-              item.href.startsWith('#') ? (
-                <a key={item.href} href={item.href} className="rounded-lg px-3 py-2 hover:bg-slate-100 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white">
-                  {item.label}
-                </a>
-              ) : (
-                <Link key={item.href} to={item.href} className="rounded-lg px-3 py-2 hover:bg-slate-100 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white">
-                  {item.label}
-                </Link>
-              )
-            ))}
-            <Link to="/login" className="rounded-lg px-3 py-2 hover:bg-slate-100 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white">
-              Login
-            </Link>
+          <div className="grid gap-4">
+            <div className="flex flex-wrap gap-3 text-sm font-medium text-slate-600 dark:text-slate-300 lg:justify-end">
+              {navItems.map((item) => (
+                item.href.startsWith('#') ? (
+                  <a key={item.href} href={item.href} className="rounded-lg px-3 py-2 hover:bg-slate-100 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white">
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link key={item.href} to={item.href} className="rounded-lg px-3 py-2 hover:bg-slate-100 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white">
+                    {item.label}
+                  </Link>
+                )
+              ))}
+              <Link to="/login" className="rounded-lg px-3 py-2 hover:bg-slate-100 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white">
+                Login
+              </Link>
+            </div>
+            <div className="flex flex-wrap gap-2 lg:justify-end">
+              {socialLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={link.label}
+                    className="grid h-10 w-10 place-items-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-cyan-300 hover:text-cyan-700 dark:border-white/10 dark:text-slate-300 dark:hover:border-cyan-300/40 dark:hover:text-cyan-300"
+                  >
+                    <Icon className="h-4 w-4" />
+                  </a>
+                );
+              })}
+            </div>
           </div>
         </div>
         <div className="mx-auto mt-8 flex max-w-7xl flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} KUBIKA system. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} KUBIKA SYSTEM. All rights reserved.</span>
           <span className="flex items-center gap-2">
             <TrendingUp className="h-3.5 w-3.5" />
             Proudly built in Rwanda.

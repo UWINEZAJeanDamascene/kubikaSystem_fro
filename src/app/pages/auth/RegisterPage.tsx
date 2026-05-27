@@ -132,7 +132,7 @@ export default function RegisterPage() {
               <span className="grid h-10 w-10 place-items-center rounded-lg bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
                 <Building2 className="h-5 w-5" />
               </span>
-              STOCKMANAGER
+              KUBIKA SYSTEM
             </Link>
             <h1 className="mt-20 max-w-xl text-6xl font-semibold leading-[0.98] tracking-tight">
               Open a new operating workspace.
@@ -264,7 +264,7 @@ export default function RegisterPage() {
                       <p className="text-sm font-bold text-slate-900 dark:text-white">{plan.name}</p>
                       <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{plan.description}</p>
                       <p className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        {plan.default_billing_amount > 0 ? `$${plan.default_billing_amount.toLocaleString()}` : 'Free'} / {plan.default_billing_cycle}
+                        {plan.default_billing_amount > 0 ? `RWF ${plan.default_billing_amount.toLocaleString()}` : 'Free'} / {plan.default_billing_cycle}
                       </p>
                       {plan.modules && plan.modules.length > 0 && (
                         <p className="mt-1.5 text-[11px] text-slate-400 dark:text-slate-500">
