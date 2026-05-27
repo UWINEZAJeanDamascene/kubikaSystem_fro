@@ -5,6 +5,7 @@ import { notificationsApi, Notification } from '../../lib/api';
 import { Button } from './ui/button';
 import { cn } from './ui/utils';
 import { io, Socket } from 'socket.io-client';
+import { API_ORIGIN } from '@/lib/apiBase';
 
 const typeIcons: Record<string, React.ElementType> = {
   low_stock: Package,
@@ -81,10 +82,7 @@ export function NotificationBell() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
-      const socketUrl = configuredApiUrl
-        ? configuredApiUrl.replace('/api', '')
-        : window.location.origin;
+      const socketUrl = API_ORIGIN || window.location.origin;
 
       const socket = io(socketUrl, { auth: { token } });
       socketRef.current = socket as Socket;

@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/store/authStore';
+import { API_BASE_URL } from '@/lib/apiBase';
 
 // API Error codes
 export const ERROR_CODES = {
@@ -29,11 +30,6 @@ interface BackendErrorResponse {
   };
   message?: string;
 }
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  'https://kubikasystem-bnd.onrender.com/api';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -147,7 +143,7 @@ api.interceptors.response.use(
           // Call refresh token endpoint
           const response = await axios.post(
             `${API_BASE_URL}/auth/refresh`,
-            { refreshToken },
+            { refresh_token: refreshToken },
             { withCredentials: true }
           );
           
