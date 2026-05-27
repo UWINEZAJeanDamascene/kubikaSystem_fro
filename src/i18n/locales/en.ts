@@ -347,7 +347,7 @@ const en = {
         desc: "Automate invoicing, reports, and workflows",
       },
     },
-    howItWorksTitle: "How StockManager Works",
+    howItWorksTitle: "How KUBIKA system Works",
     steps: {
       step1: {
         title: "Register Your Company",
@@ -454,7 +454,7 @@ const en = {
     faq: {
       badge: "Got Questions?",
       title: "Frequently Asked Questions",
-      subtitle: "Everything you need to know about StockManager. Can't find what you're looking for? Contact our support team.",
+      subtitle: "Everything you need to know about KUBIKA system. Can't find what you're looking for? Contact our support team.",
       q1: "How does the 14-day free trial work?",
       a1: "Start your free trial with full access to all features. No credit card required. At the end of 14 days, choose a plan that fits your business or continue with our free tier.",
       q2: "Can I import my existing stock data?",
@@ -463,8 +463,8 @@ const en = {
       a3: "Absolutely. We use 256-bit SSL encryption, daily automated backups, and your data is stored on secure servers in Kigali. We're GDPR compliant and working towards ISO 27001 certification.",
       q4: "Do you offer training and support?",
       a4: "Yes! All plans include access to our video tutorial library and documentation. Business and Pro plans include onboarding training. Our support team is available via email, WhatsApp, and live chat.",
-      q5: "Can I use StockManager on mobile?",
-      a5: "StockManager is fully responsive and works on all devices. Access your dashboard, check stock levels, and create invoices from your phone or tablet.",
+      q5: "Can I use KUBIKA system on mobile?",
+      a5: "KUBIKA system is fully responsive and works on all devices. Access your dashboard, check stock levels, and create invoices from your phone or tablet.",
       q6: "What payment methods do you accept?",
       a6: "We accept MTN Mobile Money, Airtel Money, bank transfers, Visa, and Mastercard. Enterprise customers can also pay via invoice.",
       q7: "Can I cancel my subscription anytime?",
@@ -532,7 +532,7 @@ const en = {
       placeholder: "Enter your email address",
       subscribe: "Subscribe",
     },
-    signIn: "Sign in to StockManager",
+    signIn: "Sign in to KUBIKA system",
     email: "Email",
     password: "Password",
     signingIn: "Signing in\u2026",

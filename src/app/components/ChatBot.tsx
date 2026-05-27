@@ -181,7 +181,7 @@ function formatTime(date: Date): string {
 // ─── Initial message ─────────────────────────────────────────────────────────
 const makeInitialMessage = (): Message => ({
   role: 'assistant',
-  content: `Hi there! 👋 I'm **Stacy**, your StockManager AI assistant.\n\nI have full knowledge of the system and can help you with:\n\n- 📦 Products, stock, purchases & suppliers\n- 🧾 Invoices, quotations & credit notes\n- 📊 Reports: P&L, Balance Sheet, VAT, Cash Flow\n- 🔧 Troubleshooting any issues\n- 🇷🇼 Rwanda accounting & tax rules\n- 💬 Just chatting — I'm here!\n\nWhat can I help you with today?`,
+  content: `Hi there! 👋 I'm **Stacy**, your KUBIKA system AI assistant.\n\nI have full knowledge of the system and can help you with:\n\n- 📦 Products, stock, purchases & suppliers\n- 🧾 Invoices, quotations & credit notes\n- 📊 Reports: P&L, Balance Sheet, VAT, Cash Flow\n- 🔧 Troubleshooting any issues\n- 🇷🇼 Rwanda accounting & tax rules\n- 💬 Just chatting — I'm here!\n\nWhat can I help you with today?`,
   timestamp: new Date(),
 });
 

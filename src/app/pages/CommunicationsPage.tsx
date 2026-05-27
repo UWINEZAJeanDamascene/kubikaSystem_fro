@@ -33,7 +33,7 @@ const messageTemplates = [
   {
     key: 'feature-release',
     label: 'Feature Release',
-    subject: 'New features now live on StockManager',
+    subject: 'New features now live on KUBIKA system',
     message:
       'We have released platform improvements that may affect your workspace. Please review your dashboard for the latest updates and feel free to reach out with any questions.',
     accent: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-200 dark:border-indigo-800',
@@ -105,7 +105,7 @@ function EmailPreview({ subject, message }: { subject: string; message: string }
                 <Megaphone className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">StockManager Platform</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">KUBIKA system Platform</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">no-reply@stockmanager.rw</p>
               </div>
             </div>
@@ -116,7 +116,7 @@ function EmailPreview({ subject, message }: { subject: string; message: string }
             </div>
             <div className="rounded-lg bg-gradient-to-br from-indigo-50 to-violet-50 p-4 text-center dark:from-indigo-950/30 dark:to-violet-950/20">
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                You are receiving this because you are a registered tenant on StockManager.
+                You are receiving this because you are a registered tenant on KUBIKA system.
               </p>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function CommunicationsPage() {
   // Composer state
   const [broadcastAudience, setBroadcastAudience] = useState<'all' | 'selected'>('all');
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
-  const [broadcastSubject, setBroadcastSubject] = useState('Platform update from StockManager');
+  const [broadcastSubject, setBroadcastSubject] = useState('Platform update from KUBIKA system');
   const [broadcastMessage, setBroadcastMessage] = useState(
     'We have released platform improvements that may affect your workspace. Please review your dashboard for the latest updates.'
   );

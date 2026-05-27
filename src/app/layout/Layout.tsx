@@ -113,7 +113,7 @@ export function Layout({ children }: LayoutProps) {
                 <path d="M12 22V12"/>
               </svg>
             </div>
-            <span className="hidden md:inline text-lg font-semibold text-slate-800 dark:text-white">StockManager</span>
+            <span className="hidden md:inline text-lg font-semibold text-slate-800 dark:text-white">KUBIKA system</span>
           </div>
           <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
             <Button

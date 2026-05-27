@@ -136,7 +136,7 @@ export default function OperationsLandingPage() {
         }`}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
-          <Link to="/" className="flex items-center gap-3" aria-label="StockManager home">
+          <Link to="/" className="flex items-center gap-3" aria-label="KUBIKA system home">
             <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white shadow-lg shadow-cyan-500/10 dark:bg-white dark:text-slate-950">
               <Layers3 className="h-5 w-5" />
             </span>
@@ -374,7 +374,7 @@ export default function OperationsLandingPage() {
                 </h2>
               </div>
               <p className="text-lg leading-8 text-slate-600 dark:text-slate-300">
-                This is not a marketing funnel. It is the actual path your stock, money and paperwork follow inside StockManager. Each step feeds the next automatically.
+                This is not a marketing funnel. It is the actual path your stock, money and paperwork follow inside KUBIKA system. Each step feeds the next automatically.
               </p>
             </div>
 
@@ -462,7 +462,7 @@ export default function OperationsLandingPage() {
               <LineChart className="h-8 w-8 text-cyan-700 dark:text-cyan-300" />
               <h3 className="mt-5 text-2xl font-semibold text-slate-950 dark:text-white">What users actually say</h3>
               <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                "Before StockManager I had stock in a spreadsheet, invoices in WhatsApp, and payroll in another tool. Now I log in once and see everything."
+                "Before KUBIKA system I had stock in a spreadsheet, invoices in WhatsApp, and payroll in another tool. Now I log in once and see everything."
               </p>
               <p className="mt-4 text-sm font-semibold text-slate-700 dark:text-slate-200">— Retail shop owner, Kigali</p>
               <div className="mt-6 space-y-3">
@@ -510,7 +510,7 @@ export default function OperationsLandingPage() {
           </div>
         </div>
         <div className="mx-auto mt-8 flex max-w-7xl flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} StockManager. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} KUBIKA system. All rights reserved.</span>
           <span className="flex items-center gap-2">
             <Package className="h-3.5 w-3.5" />
             Proudly built in Rwanda.

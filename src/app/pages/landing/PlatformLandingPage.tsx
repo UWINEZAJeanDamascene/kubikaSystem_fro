@@ -134,12 +134,12 @@ export default function PlatformLandingPage() {
         }`}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
-          <Link to="/" className="flex items-center gap-3" aria-label="StockManager home">
+          <Link to="/" className="flex items-center gap-3" aria-label="KUBIKA system home">
             <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white shadow-lg shadow-cyan-500/10 dark:bg-white dark:text-slate-950">
               <Layers3 className="h-5 w-5" />
             </span>
             <span className="flex flex-col leading-none">
-              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">STOCKMANAGER</span>
+              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">KUBIKA system</span>
               <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-300">Operating OS</span>
             </span>
           </Link>
@@ -272,7 +272,7 @@ export default function PlatformLandingPage() {
                 A modern stack powering real business operations.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-                StockManager is a single-page application built on React and Vite, backed by a Node.js API and tenant-isolated MongoDB databases. It is fast, responsive, and designed to work even when your connection does not.
+                KUBIKA system is a single-page application built on React and Vite, backed by a Node.js API and tenant-isolated MongoDB databases. It is fast, responsive, and designed to work even when your connection does not.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link to={isAuthenticated ? systemHref : '/register'}>
@@ -383,7 +383,7 @@ export default function PlatformLandingPage() {
                 </h2>
               </div>
               <p className="text-lg leading-8 text-slate-600 dark:text-slate-300">
-                No jargon. Just the real layers that make StockManager work: the frontend you interact with, the API that handles logic, and the database that stores your records.
+                No jargon. Just the real layers that make KUBIKA system work: the frontend you interact with, the API that handles logic, and the database that stores your records.
               </p>
             </div>
 
@@ -491,7 +491,7 @@ export default function PlatformLandingPage() {
               <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950">
                 <Layers3 className="h-5 w-5" />
               </span>
-              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">STOCKMANAGER</span>
+              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">KUBIKA system</span>
             </Link>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
               Stock, sales, purchasing, accounting, payroll and reporting — built for Rwandan businesses and compliant with RRA requirements.
@@ -515,7 +515,7 @@ export default function PlatformLandingPage() {
           </div>
         </div>
         <div className="mx-auto mt-8 flex max-w-7xl flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} StockManager. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} KUBIKA system. All rights reserved.</span>
           <span className="flex items-center gap-2">
             <Cpu className="h-3.5 w-3.5" />
             Proudly built in Rwanda.

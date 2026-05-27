@@ -232,7 +232,7 @@ export default function PricingPage() {
               <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950">
                 <Layers3 className="h-5 w-5" />
               </span>
-              <span className="text-sm font-semibold tracking-[0.18em]">STOCKMANAGER</span>
+              <span className="text-sm font-semibold tracking-[0.18em]">KUBIKA SYSTEM</span>
             </Link>
             <nav className="hidden items-center gap-5 lg:flex">
               <Link to="/" className="text-sm font-medium text-slate-600 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white">Home</Link>

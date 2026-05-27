@@ -475,7 +475,7 @@ export default function OnboardingPage() {
               </h1>
 
               <p className="anim-slow mt-5 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300" style={{ animation: 'slowFadeInUp 2.5s ease-out 0.6s forwards', opacity: 0 }}>
-                StockManager is organized into seven areas that mirror how a business actually runs. This guide shows what each area does, where to find it, and how to get started.
+                KUBIKA system is organized into seven areas that mirror how a business actually runs. This guide shows what each area does, where to find it, and how to get started.
               </p>
 
               <div className="anim-slow mt-8 flex flex-wrap items-center justify-center gap-3" style={{ animation: 'slowFadeInUp 2.5s ease-out 0.9s forwards', opacity: 0 }}>

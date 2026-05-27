@@ -372,7 +372,7 @@ self.addEventListener('push', (event) => {
     data = { body: event.data?.text() || 'New notification' };
   }
 
-  const title = data.title || 'Stock Management';
+  const title = data.title || 'KUBIKA SYSTEM';
   const options = {
     body: data.body || 'You have a new notification',
     icon: '/favicon.svg',

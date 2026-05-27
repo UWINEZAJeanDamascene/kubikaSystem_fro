@@ -141,7 +141,7 @@ export default function PlatformAdminPage() {
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [broadcastAudience, setBroadcastAudience] = useState<"all" | "selected">("all");
   const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
-  const [broadcastSubject, setBroadcastSubject] = useState("Platform update from StockManager");
+  const [broadcastSubject, setBroadcastSubject] = useState("Platform update from KUBIKA system");
   const [broadcastMessage, setBroadcastMessage] = useState("We have released platform improvements that may affect your workspace. Please review your dashboard for the latest updates.");
   const [broadcastHistory, setBroadcastHistory] = useState<{ _id: string; action: string; changes?: unknown; createdAt: string }[]>([]);
 

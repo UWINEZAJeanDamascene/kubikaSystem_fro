@@ -123,13 +123,13 @@ export default function HomePage() {
         }`}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
-          <Link to="/" className="flex items-center gap-3" aria-label="StockManager home">
+          <Link to="/" className="flex items-center gap-3" aria-label="KUBIKA system home">
             <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white shadow-lg shadow-cyan-500/10 dark:bg-white dark:text-slate-950">
               <Layers3 className="h-5 w-5" />
             </span>
             <span className="flex flex-col leading-none">
-              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">STOCKMANAGER</span>
-              <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-300">Operating OS</span>
+              <span className="text-base font-semibold tracking-[0.18em] text-slate-950 dark:text-white">KUBIKA SYSTEM</span>
+              <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-300">best choice of your company</span>
             </span>
           </Link>
 
@@ -281,7 +281,7 @@ export default function HomePage() {
                 Run your entire business from one system.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-                StockManager handles stock, sales, purchasing, accounting, payroll and reporting in one place. Designed for teams with multiple branches, warehouses or companies.
+                KUBIKA system handles stock, sales, purchasing, accounting, payroll and reporting in one place. Designed for teams with multiple branches, warehouses or companies.
               </p>
               {isAuthenticated && (
                 <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
@@ -416,7 +416,7 @@ export default function HomePage() {
                 </h2>
               </div>
               <p className="text-lg leading-8 text-slate-600 dark:text-slate-300">
-                Stop switching between spreadsheets and apps. StockManager connects inventory, sales, purchases, finance and payroll so your team works from one source of truth.
+                Stop switching between spreadsheets and apps. KUBIKA system connects inventory, sales, purchases, finance and payroll so your team works from one source of truth.
               </p>
             </div>
 
@@ -605,7 +605,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="mx-auto mt-8 flex max-w-7xl flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} StockManager. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} KUBIKA system. All rights reserved.</span>
           <span className="flex items-center gap-2">
             <TrendingUp className="h-3.5 w-3.5" />
             Proudly built in Rwanda.

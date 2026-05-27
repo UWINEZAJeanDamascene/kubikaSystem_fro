@@ -34,7 +34,7 @@ export function LandingFooter() {
               <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 shadow-lg group-hover:shadow-purple-500/25 transition-shadow">
                 <Package className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-slate-100">StockManager</span>
+              <span className="text-xl font-bold text-slate-100">KUBIKA system</span>
             </Link>
             <p className="text-slate-400 leading-relaxed">
               {t('landing.footer.tagline')}
@@ -102,7 +102,7 @@ export function LandingFooter() {
         <div className="mt-12 pt-8 border-t border-slate-800">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-slate-500">
-              © {new Date().getFullYear()} StockManager. {t('landing.footer.allRightsReserved')}
+              © {new Date().getFullYear()} KUBIKA system. {t('landing.footer.allRightsReserved')}
             </p>
             <div className="flex items-center gap-4 text-sm">
               <a href="#" className="text-slate-500 hover:text-purple-400 transition-colors">

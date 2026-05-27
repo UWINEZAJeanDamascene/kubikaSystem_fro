@@ -343,7 +343,7 @@ const fr = {
         desc: "Automatisez la facturation, les rapports et les workflows",
       },
     },
-    howItWorksTitle: "Comment fonctionne StockManager",
+    howItWorksTitle: "Comment fonctionne KUBIKA system",
     steps: {
       step1: {
         title: "Inscrivez votre entreprise",
@@ -450,7 +450,7 @@ const fr = {
     faq: {
       badge: "Des questions ?",
       title: "Questions fréquemment posées",
-      subtitle: "Tout ce que vous devez savoir sur StockManager. Vous ne trouvez pas ce que vous cherchez ? Contactez notre équipe de support.",
+      subtitle: "Tout ce que vous devez savoir sur KUBIKA system. Vous ne trouvez pas ce que vous cherchez ? Contactez notre équipe de support.",
       q1: "Comment fonctionne l'essai gratuit de 14 jours ?",
       a1: "Commencez votre essai gratuit avec un accès complet à toutes les fonctionnalités. Aucune carte de crédit requise. À la fin des 14 jours, choisissez un forfait adapté à votre entreprise ou continuez avec notre forfait gratuit.",
       q2: "Puis-je importer mes données de stock existantes ?",
@@ -459,8 +459,8 @@ const fr = {
       a3: "Absolument. Nous utilisons un chiffrement SSL 256 bits, des sauvegardes automatisées quotidiennes, et vos données sont stockées sur des serveurs sécurisés à Kigali. Nous sommes conformes au RGPD et travaillons vers la certification ISO 27001.",
       q4: "Offrez-vous une formation et un support ?",
       a4: "Oui ! Tous les forfaits incluent l'accès à notre bibliothèque de tutoriels vidéo et à la documentation. Les forfaits Business et Pro incluent une formation d'intégration. Notre équipe de support est disponible par email, WhatsApp et chat en direct.",
-      q5: "Puis-je utiliser StockManager sur mobile ?",
-      a5: "StockManager est entièrement responsive et fonctionne sur tous les appareils. Accédez à votre tableau de bord, vérifiez les niveaux de stock et créez des factures depuis votre téléphone ou tablette.",
+      q5: "Puis-je utiliser KUBIKA system sur mobile ?",
+      a5: "KUBIKA system est entièrement responsive et fonctionne sur tous les appareils. Accédez à votre tableau de bord, vérifiez les niveaux de stock et créez des factures depuis votre téléphone ou tablette.",
       q6: "Quels moyens de paiement acceptez-vous ?",
       a6: "Nous acceptons MTN Mobile Money, Airtel Money, les virements bancaires, Visa et Mastercard. Les clients Enterprise peuvent également payer par facture.",
       q7: "Puis-je annuler mon abonnement à tout moment ?",
@@ -528,7 +528,7 @@ const fr = {
       placeholder: "Entrez votre adresse email",
       subscribe: "S'abonner",
     },
-    signIn: "Connexion à StockManager",
+    signIn: "Connexion à KUBIKA system",
     email: "E-mail",
     password: "Mot de passe",
     signingIn: "Connexion en cours\u2026",

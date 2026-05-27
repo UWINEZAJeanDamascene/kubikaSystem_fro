@@ -1371,7 +1371,7 @@ function formatTime(date: Date): string {
 // ─── Initial message ─────────────────────────────────────────────────────────
 const makeInitialMessage = (): Message => ({
   role: 'assistant',
-  content: `Hi there! 👋 I'm **Stacy**, your StockManager AI assistant.
+  content: `Hi there! 👋 I'm **Stacy**, your KUBIKA SYSTEM AI assistant.
 
 I have full knowledge of the system and can help you with:
 

@@ -70,7 +70,7 @@ export const messageTemplates = [
   {
     key: 'feature-release',
     label: 'Feature Release',
-    subject: 'New features now live on StockManager',
+    subject: 'New features now live on KUBIKA system',
     message:
       'We have released platform improvements that may affect your workspace. Please review your dashboard for the latest updates and feel free to reach out with any questions.',
   },

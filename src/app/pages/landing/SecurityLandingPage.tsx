@@ -150,7 +150,7 @@ export default function SecurityLandingPage() {
         }`}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
-          <Link to="/" className="flex items-center gap-3" aria-label="StockManager home">
+          <Link to="/" className="flex items-center gap-3" aria-label="KUBIKA system home">
             <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white shadow-lg shadow-cyan-500/10 dark:bg-white dark:text-slate-950">
               <Layers3 className="h-5 w-5" />
             </span>
@@ -289,7 +289,7 @@ export default function SecurityLandingPage() {
                 Your business data stays safe, local, and under your control.
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-                StockManager protects stock records, financials, payroll and customer data with encryption, role-based access, audit trails and daily backups — all stored in Rwanda.
+                KUBIKA system protects stock records, financials, payroll and customer data with encryption, role-based access, audit trails and daily backups — all stored in Rwanda.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link to={isAuthenticated ? systemHref : '/register'}>
@@ -513,7 +513,7 @@ export default function SecurityLandingPage() {
                 </div>
                 <h2 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 dark:text-white">Built to pass an audit.</h2>
                 <p className="mt-4 text-lg leading-8 text-slate-600 dark:text-slate-300">
-                  Whether it is an RRA tax review, a bank loan check, or an internal board report, StockManager produces the records and controls auditors expect.
+                  Whether it is an RRA tax review, a bank loan check, or an internal board report, KUBIKA system produces the records and controls auditors expect.
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -607,7 +607,7 @@ export default function SecurityLandingPage() {
           </div>
         </div>
         <div className="mx-auto mt-8 flex max-w-7xl flex-col gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} StockManager. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} KUBIKA system. All rights reserved.</span>
           <span className="flex items-center gap-2">
             <Shield className="h-3.5 w-3.5" />
             Proudly built in Rwanda.

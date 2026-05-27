@@ -1,7 +1,7 @@
 {
-  "name": "Stock Management System",
-  "short_name": "StockMgt",
-  "description": "Complete Inventory and Stock Management System — manage products, invoices, suppliers, and clients",
+  "name": "KUBIKA SYSTEM",
+  "short_name": "KUBIKA SYSTEM",
+  "description": "KUBIKA SYSTEM — manage inventory, invoices, suppliers, clients, finance, payroll, and reports",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
