@@ -81,8 +81,9 @@ export function NotificationBell() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const socketUrl = import.meta.env.VITE_API_URL
-        ? import.meta.env.VITE_API_URL.replace('/api', '')
+      const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+      const socketUrl = configuredApiUrl
+        ? configuredApiUrl.replace('/api', '')
         : window.location.origin;
 
       const socket = io(socketUrl, { auth: { token } });

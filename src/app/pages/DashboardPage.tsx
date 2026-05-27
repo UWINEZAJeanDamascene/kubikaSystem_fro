@@ -2,6 +2,12 @@ import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Layout } from "../layout/Layout";
 import { dashboardApi, type ExecutiveDashboardData } from "@/lib/api";
 import { useLiveRefresh } from "@/lib/hooks/useLiveRefresh";
+import {
+  clampPercent,
+  formatDashboardDelta,
+  formatDashboardPercent,
+  percentBarWidth,
+} from "@/lib/dashboardMetrics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Skeleton } from "@/app/components/ui/skeleton";
@@ -33,7 +39,6 @@ import {
   Calendar,
   Clock,
   CreditCard,
-  DollarSign,
   FileText,
   Landmark,
   PlusCircle,
@@ -63,9 +68,7 @@ function formatCompactCurrency(value: number): string {
 }
 
 function formatPercentage(value: number | null): string {
-  if (value === null || value === undefined) return "N/A";
-  const sign = value >= 0 ? "+" : "";
-  return `${sign}${value.toFixed(1)}%`;
+  return formatDashboardDelta(value);
 }
 
 function getSourceTypeLabel(sourceType?: string): string {
@@ -80,8 +83,7 @@ function previousFromChange(current: number, change: number | null): number {
 }
 
 function clampPct(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(100, value));
+  return clampPercent(value);
 }
 
 interface MetricTileProps {
@@ -348,19 +350,19 @@ export default function DashboardPage() {
   const boardSignals = [
     {
       label: "Profitability",
-      value: `${margin.toFixed(1)}%`,
+      value: formatDashboardPercent(margin, { decimals: 1 }),
       width: clampPct(margin),
       tone: profit >= 0 ? "bg-emerald-500" : "bg-red-500",
     },
     {
       label: "Collection quality",
-      value: `${arCurrentPct.toFixed(0)}% current`,
+      value: `${formatDashboardPercent(arCurrentPct)} current`,
       width: clampPct(arCurrentPct),
       tone: arOverdue > 0 ? "bg-amber-500" : "bg-emerald-500",
     },
     {
       label: "Debt coverage",
-      value: `${debtCoverage.toFixed(0)}%`,
+      value: formatDashboardPercent(debtCoverage),
       width: clampPct(debtCoverage),
       tone: debtCoverage >= 100 ? "bg-emerald-500" : "bg-red-500",
     },
@@ -368,9 +370,9 @@ export default function DashboardPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-slate-50 px-4 py-5 dark:bg-slate-950 sm:px-6 lg:px-8">
+      <div className="erp-dashboard min-h-screen bg-slate-50 px-4 py-5 dark:bg-slate-950 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1700px] w-full space-y-6 2xl:max-w-[2200px]">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white">
+          <div className="dashboard-hero overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-white">
             <div className="grid gap-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] 2xl:grid-cols-[1fr_0.75fr]">
               <div className="p-6 lg:p-7">
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
@@ -420,7 +422,6 @@ export default function DashboardPage() {
                     )}
                     <Button
                       size="sm"
-                      className="bg-violet-600 text-white hover:bg-violet-700"
                       onClick={() => {
                         window.location.href = "/invoices/new";
                       }}
@@ -460,13 +461,13 @@ export default function DashboardPage() {
                       Executive score
                     </p>
                     <div className="mt-3 flex items-end justify-between gap-3">
-                      <p className="text-4xl font-bold">{score.toFixed(0)}</p>
+                      <p className="dashboard-kpi-value">{score.toFixed(0)}</p>
                       <Target className="h-6 w-6 text-emerald-300" />
                     </div>
                     <div className="mt-3 h-2 rounded-full bg-white/10">
                       <div
                         className="h-2 rounded-full bg-emerald-400"
-                        style={{ width: `${score}%` }}
+                        style={{ width: percentBarWidth(score) }}
                       />
                     </div>
                   </div>
@@ -474,7 +475,7 @@ export default function DashboardPage() {
                     <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Profit margin
                     </p>
-                    <p className="mt-3 text-3xl font-bold">{margin.toFixed(1)}%</p>
+                    <p className="dashboard-kpi-value">{formatDashboardPercent(margin, { decimals: 1 })}</p>
                     <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                       {formatCurrency(profit)} profit on {formatCurrency(revenue)} revenue
                     </p>
@@ -483,7 +484,7 @@ export default function DashboardPage() {
                     <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Cash to revenue
                     </p>
-                    <p className="mt-3 text-3xl font-bold">{cashToRevenue.toFixed(0)}%</p>
+                    <p className="dashboard-kpi-value">{formatDashboardPercent(cashToRevenue)}</p>
                     <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                       {formatCurrency(cashBalance)} available liquidity
                     </p>
@@ -633,7 +634,7 @@ export default function DashboardPage() {
               title="Net Profit"
               value={profit}
               change={metrics?.net_profit.vs_last_month ?? null}
-              icon={<DollarSign className="h-5 w-5" />}
+              icon={<CreditCard className="h-5 w-5" />}
               tone="blue"
               loading={loading}
             />
@@ -694,7 +695,7 @@ export default function DashboardPage() {
                       <ChartTooltip
                         content={
                           <ChartTooltipContent
-                            formatter={(value) => `${Number(value).toFixed(1)}%`}
+                            formatter={(value) => formatDashboardPercent(Number(value), { decimals: 1 })}
                           />
                         }
                       />
@@ -719,7 +720,7 @@ export default function DashboardPage() {
                         <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                           <div
                             className={`h-2 rounded-full ${item.tone}`}
-                            style={{ width: `${item.width}%` }}
+                            style={{ width: percentBarWidth(item.width) }}
                           />
                         </div>
                       </div>
@@ -808,13 +809,13 @@ export default function DashboardPage() {
                             Expense load
                           </span>
                           <span className="font-semibold text-slate-950 dark:text-white">
-                            {expenseLoad.toFixed(0)}%
+                            {formatDashboardPercent(expenseLoad)}
                           </span>
                         </div>
                         <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                           <div
                             className="h-2 rounded-full bg-red-500"
-                            style={{ width: `${clampPct(expenseLoad)}%` }}
+                            style={{ width: percentBarWidth(expenseLoad) }}
                           />
                         </div>
                       </div>
@@ -824,13 +825,13 @@ export default function DashboardPage() {
                             Profit margin
                           </span>
                           <span className="font-semibold text-slate-950 dark:text-white">
-                            {margin.toFixed(1)}%
+                            {formatDashboardPercent(margin, { decimals: 1 })}
                           </span>
                         </div>
                         <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                           <div
                             className="h-2 rounded-full bg-emerald-500"
-                            style={{ width: `${clampPct(margin)}%` }}
+                            style={{ width: percentBarWidth(margin) }}
                           />
                         </div>
                       </div>
@@ -928,7 +929,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {arCurrentPct.toFixed(0)}% current collection status
+                        {formatDashboardPercent(arCurrentPct)} current collection status
                       </p>
                     </div>
                   </div>
@@ -969,7 +970,7 @@ export default function DashboardPage() {
                         {formatCurrency(upcomingDebt.totalAmount)}
                       </p>
                       <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-                        Cash coverage {debtCoverage.toFixed(0)}%
+                        Cash coverage {formatDashboardPercent(debtCoverage)}
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -1118,7 +1119,7 @@ export default function DashboardPage() {
                       AR current
                     </p>
                     <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                      {arCurrentPct.toFixed(0)}%
+                      {formatDashboardPercent(arCurrentPct)}
                     </p>
                   </div>
                   <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
@@ -1126,7 +1127,7 @@ export default function DashboardPage() {
                       Debt coverage
                     </p>
                     <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                      {debtCoverage.toFixed(0)}%
+                      {formatDashboardPercent(debtCoverage)}
                     </p>
                   </div>
                   <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">

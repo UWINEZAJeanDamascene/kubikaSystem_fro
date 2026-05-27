@@ -238,7 +238,7 @@ export default function JournalEntriesPage() {
                   </Badge>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="mobile-action-row grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
                 <Button variant="outline" size="sm" onClick={() => navigate('/journal/trial-balance')} className="h-9 dark:border-slate-700 dark:text-slate-200">
                   Trial Balance
                 </Button>
@@ -314,7 +314,7 @@ export default function JournalEntriesPage() {
           </div>
 
           {/* Filters */}
-          <form onSubmit={handleSearch} className="flex flex-wrap items-end gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <form onSubmit={handleSearch} className="grid grid-cols-1 items-end gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:flex sm:flex-wrap">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
               <Input
@@ -376,7 +376,7 @@ export default function JournalEntriesPage() {
             <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <Table>
+                  <Table className="min-w-[960px]">
                     <TableHeader>
                       <TableRow className="bg-slate-50 hover:bg-slate-50 dark:bg-slate-900/50 dark:hover:bg-slate-900/50">
                         <TableHead className="text-xs font-semibold text-slate-600 dark:text-slate-400">Entry #</TableHead>

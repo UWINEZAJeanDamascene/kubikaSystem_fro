@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Layout } from "../layout/Layout";
 import { dashboardApi, type SalesDashboardData } from "@/lib/api";
 import { useLiveRefresh } from "@/lib/hooks/useLiveRefresh";
+import { formatDashboardPercent, percentBarWidth } from "@/lib/dashboardMetrics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Skeleton } from "@/app/components/ui/skeleton";
@@ -141,7 +142,7 @@ function MetricCard({
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {title}
             </p>
-            <div className="mt-3 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+            <div className="dashboard-kpi-value mt-3">
               {value}
             </div>
           </div>
@@ -301,19 +302,19 @@ export default function SalesDashboardPage() {
   const conversionSummary = [
     {
       label: "Cash conversion",
-      value: `${collectionRate.toFixed(1)}%`,
+      value: formatDashboardPercent(collectionRate, { decimals: 1 }),
       width: Math.min(collectionRate, 100),
       tone: "bg-emerald-500",
     },
     {
       label: "AR overdue exposure",
-      value: `${overdueRate}%`,
+      value: formatDashboardPercent(overdueRate),
       width: Math.min(overdueRate, 100),
       tone: overdueRate > 25 ? "bg-red-500" : "bg-amber-500",
     },
     {
       label: "Credit note ratio",
-      value: `${creditNoteRate.toFixed(1)}%`,
+      value: formatDashboardPercent(creditNoteRate, { decimals: 1 }),
       width: Math.min(creditNoteRate, 100),
       tone: "bg-violet-500",
     },
@@ -321,9 +322,9 @@ export default function SalesDashboardPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-slate-50 px-4 py-5 dark:bg-slate-950 sm:px-6 lg:px-8">
+      <div className="erp-dashboard min-h-screen bg-slate-50 px-4 py-5 dark:bg-slate-950 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1600px] 2xl:max-w-[2200px] space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+          <div className="dashboard-hero rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -355,7 +356,7 @@ export default function SalesDashboardPage() {
                       AR overdue
                     </p>
                     <p className="mt-0.5 font-semibold text-slate-950 dark:text-white">
-                      {loading ? "-" : `${overdueRate}%`}
+                      {loading ? "-" : formatDashboardPercent(overdueRate)}
                     </p>
                   </div>
                   <div className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800">
@@ -429,7 +430,7 @@ export default function SalesDashboardPage() {
             />
             <MetricCard
               title="Collection Rate"
-              value={`${collectionRate.toFixed(1)}%`}
+              value={formatDashboardPercent(collectionRate, { decimals: 1 })}
               subtitle="Collected vs billed MTD"
               icon={<Percent className="h-5 w-5" />}
               tone="amber"
@@ -509,7 +510,7 @@ export default function SalesDashboardPage() {
                         <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                           <div
                             className={`h-2 rounded-full ${item.tone}`}
-                            style={{ width: `${item.width}%` }}
+                            style={{ width: percentBarWidth(item.width) }}
                           />
                         </div>
                       </div>
@@ -651,7 +652,7 @@ export default function SalesDashboardPage() {
                               {formatCurrency(value)}
                             </p>
                             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                              {pct.toFixed(0)}% of AR
+                              {formatDashboardPercent(pct)} of AR
                             </p>
                           </div>
                         );
@@ -683,13 +684,13 @@ export default function SalesDashboardPage() {
                           Collection rate
                         </span>
                         <span className="font-semibold text-slate-950 dark:text-white">
-                          {collectionRate.toFixed(1)}%
+                          {formatDashboardPercent(collectionRate, { decimals: 1 })}
                         </span>
                       </div>
                       <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                           className="h-2 rounded-full bg-emerald-500"
-                          style={{ width: `${Math.min(collectionRate, 100)}%` }}
+                          style={{ width: percentBarWidth(collectionRate) }}
                         />
                       </div>
                     </div>
@@ -705,7 +706,7 @@ export default function SalesDashboardPage() {
                       <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                           className="h-2 rounded-full bg-red-500"
-                          style={{ width: `${Math.min(overdueRate, 100)}%` }}
+                          style={{ width: percentBarWidth(overdueRate) }}
                         />
                       </div>
                     </div>
@@ -715,13 +716,13 @@ export default function SalesDashboardPage() {
                           Credit-note ratio
                         </span>
                         <span className="font-semibold text-slate-950 dark:text-white">
-                          {creditNoteRate.toFixed(1)}%
+                          {formatDashboardPercent(creditNoteRate, { decimals: 1 })}
                         </span>
                       </div>
                       <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                           className="h-2 rounded-full bg-amber-500"
-                          style={{ width: `${Math.min(creditNoteRate, 100)}%` }}
+                          style={{ width: percentBarWidth(creditNoteRate) }}
                         />
                       </div>
                     </div>
@@ -908,7 +909,7 @@ export default function SalesDashboardPage() {
                               <div
                                 className="h-2 rounded-full"
                                 style={{
-                                  width: `${Math.min(pct, 100)}%`,
+                                  width: percentBarWidth(pct),
                                   backgroundColor:
                                     STATUS_COLORS[index % STATUS_COLORS.length],
                                 }}
@@ -964,7 +965,7 @@ export default function SalesDashboardPage() {
                       Percent of invoiced
                     </p>
                     <p className="mt-2 text-3xl font-bold text-slate-950 dark:text-white">
-                      {creditNoteRate.toFixed(1)}%
+                      {formatDashboardPercent(creditNoteRate, { decimals: 1 })}
                     </p>
                   </div>
                 </div>

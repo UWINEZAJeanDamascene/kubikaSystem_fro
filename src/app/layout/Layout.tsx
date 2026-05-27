@@ -209,7 +209,7 @@ export function Layout({ children }: LayoutProps) {
         </div>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto px-3 py-3 sm:px-4 md:px-5 md:py-5 xl:px-6">
+        <div className="flex-1 overflow-auto px-3 py-3 pb-24 sm:px-4 md:px-5 md:py-5 md:pb-8 xl:px-6">
           {children}
         </div>
       </main>

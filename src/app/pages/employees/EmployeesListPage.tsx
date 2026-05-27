@@ -248,7 +248,7 @@ export default function EmployeesListPage() {
               Manage your employee roster, salary structures, and organizational details
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="mobile-action-row grid grid-cols-1 gap-2 sm:flex sm:items-center">
             <Button
               variant="outline"
               size="sm"
@@ -322,7 +322,7 @@ export default function EmployeesListPage() {
                   className="pl-9"
                 />
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="mobile-filter-row grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
                 <Select
                   value={statusFilter}
                   onValueChange={(v) => {
@@ -330,7 +330,7 @@ export default function EmployeesListPage() {
                     setCurrentPage(1);
                   }}
                 >
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-full sm:w-[140px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -348,7 +348,7 @@ export default function EmployeesListPage() {
                     setCurrentPage(1);
                   }}
                 >
-                  <SelectTrigger className="w-[160px]">
+                  <SelectTrigger className="w-full sm:w-[160px]">
                     <SelectValue placeholder="Department" />
                   </SelectTrigger>
                   <SelectContent>
@@ -375,7 +375,7 @@ export default function EmployeesListPage() {
         <Card className="border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-950">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="min-w-[940px]">
                 <TableHeader>
                   <TableRow className="bg-slate-50/50 dark:bg-slate-900/50">
                     <TableHead className="w-[100px] font-semibold">ID</TableHead>

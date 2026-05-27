@@ -293,7 +293,7 @@ export default function ProductsListPage() {
   const handleExport = async () => {
     try {
       const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://kubikasystem-bnd.onrender.com/api';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://kubikasystem-bnd.onrender.com/api';
       const blob = await fetch(`${API_BASE_URL}/bulk/export/products`, {
         headers: {
           'Authorization': `Bearer ${token}`

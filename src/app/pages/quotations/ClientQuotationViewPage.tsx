@@ -175,7 +175,7 @@ export default function ClientQuotationViewPage() {
   const sendNotification = async (action: 'accepted' | 'rejected', reason?: string) => {
     try {
       // This will call the backend notification endpoint
-      await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://kubikasystem-bnd.onrender.com/api'}/notifications/quotation-action`, {
+      await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://kubikasystem-bnd.onrender.com/api'}/notifications/quotation-action`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

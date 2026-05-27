@@ -209,7 +209,7 @@ const authService = {
     message?: string;
   }> {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://kubikasystem-bnd.onrender.com/api'}/auth/forgot-password`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://kubikasystem-bnd.onrender.com/api'}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -291,7 +291,7 @@ const authService = {
     message?: string;
   }> {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://kubikasystem-bnd.onrender.com/api'}/auth/reset-password`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://kubikasystem-bnd.onrender.com/api'}/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password: newPassword }),

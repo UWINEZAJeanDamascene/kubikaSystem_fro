@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Layout } from "../layout/Layout";
 import { dashboardApi, type InventoryDashboardData } from "@/lib/api";
 import { useLiveRefresh } from "@/lib/hooks/useLiveRefresh";
+import { formatDashboardPercent, percentBarWidth } from "@/lib/dashboardMetrics";
 import {
   Card,
   CardContent,
@@ -129,7 +130,7 @@ function SummaryCard({
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {title}
             </p>
-            <div className="mt-3 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+            <div className="dashboard-kpi-value mt-3">
               {value}
             </div>
           </div>
@@ -293,19 +294,19 @@ export default function InventoryDashboardPage() {
   const stockRiskSignals = [
     {
       label: "Available stock",
-      value: `${availableRate}%`,
+      value: formatDashboardPercent(availableRate),
       width: Math.min(availableRate, 100),
       tone: "bg-emerald-500",
     },
     {
       label: "Reserved stock",
-      value: `${reservedRate}%`,
+      value: formatDashboardPercent(reservedRate),
       width: Math.min(reservedRate, 100),
       tone: "bg-blue-500",
     },
     {
       label: "SKU risk",
-      value: `${atRiskRate}%`,
+      value: formatDashboardPercent(atRiskRate),
       width: Math.min(atRiskRate, 100),
       tone: atRiskRate > 20 ? "bg-red-500" : "bg-amber-500",
     },
@@ -313,9 +314,9 @@ export default function InventoryDashboardPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-slate-50 px-4 py-5 dark:bg-slate-950 sm:px-6 lg:px-8">
+      <div className="erp-dashboard min-h-screen bg-slate-50 px-4 py-5 dark:bg-slate-950 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1600px] 2xl:max-w-[2200px] space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+          <div className="dashboard-hero rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -347,7 +348,7 @@ export default function InventoryDashboardPage() {
                       Coverage
                     </p>
                     <p className="mt-0.5 font-semibold text-slate-950 dark:text-white">
-                      {loading ? "-" : `${stockCoverage}%`}
+                      {loading ? "-" : formatDashboardPercent(stockCoverage)}
                     </p>
                   </div>
                   <div className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800">
@@ -492,7 +493,7 @@ export default function InventoryDashboardPage() {
                         <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                           <div
                             className={`h-2 rounded-full ${item.tone}`}
-                            style={{ width: `${item.width}%` }}
+                            style={{ width: percentBarWidth(item.width) }}
                           />
                         </div>
                       </div>
@@ -659,7 +660,7 @@ export default function InventoryDashboardPage() {
                       <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                           className="h-2 rounded-full bg-emerald-500"
-                          style={{ width: `${Math.min(availableRate, 100)}%` }}
+                          style={{ width: percentBarWidth(availableRate) }}
                         />
                       </div>
                     </div>
@@ -675,7 +676,7 @@ export default function InventoryDashboardPage() {
                       <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                           className="h-2 rounded-full bg-blue-500"
-                          style={{ width: `${Math.min(reservedRate, 100)}%` }}
+                          style={{ width: percentBarWidth(reservedRate) }}
                         />
                       </div>
                     </div>
@@ -691,7 +692,7 @@ export default function InventoryDashboardPage() {
                       <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                           className="h-2 rounded-full bg-amber-500"
-                          style={{ width: `${Math.min(atRiskRate, 100)}%` }}
+                          style={{ width: percentBarWidth(atRiskRate) }}
                         />
                       </div>
                     </div>
@@ -863,7 +864,7 @@ export default function InventoryDashboardPage() {
                               <div
                                 className="h-2 rounded-full"
                                 style={{
-                                  width: `${Math.min(barPct, 100)}%`,
+                                  width: percentBarWidth(barPct),
                                   backgroundColor:
                                     PIE_COLORS[index % PIE_COLORS.length],
                                 }}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Layout } from "../layout/Layout";
 import { dashboardApi, type PurchaseDashboardData } from "@/lib/api";
 import { useLiveRefresh } from "@/lib/hooks/useLiveRefresh";
+import { formatDashboardPercent, percentBarWidth } from "@/lib/dashboardMetrics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { Skeleton } from "@/app/components/ui/skeleton";
@@ -147,7 +148,7 @@ function MetricCard({
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {title}
             </p>
-            <div className="mt-3 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+            <div className="dashboard-kpi-value mt-3">
               {value}
             </div>
           </div>
@@ -331,19 +332,19 @@ export default function PurchaseDashboardPage() {
   const procurementSignals = [
     {
       label: "Open PO rate",
-      value: `${openPoRate}%`,
+      value: formatDashboardPercent(openPoRate),
       width: Math.min(openPoRate, 100),
       tone: "bg-violet-500",
     },
     {
       label: "Receiving backlog",
-      value: `${receivingBacklogRate}%`,
+      value: formatDashboardPercent(receivingBacklogRate),
       width: Math.min(receivingBacklogRate, 100),
       tone: receivingBacklogRate > 50 ? "bg-red-500" : "bg-amber-500",
     },
     {
       label: "Supplier concentration",
-      value: `${supplierConcentration}%`,
+      value: formatDashboardPercent(supplierConcentration),
       width: Math.min(supplierConcentration, 100),
       tone: supplierConcentration > 40 ? "bg-amber-500" : "bg-emerald-500",
     },
@@ -351,9 +352,9 @@ export default function PurchaseDashboardPage() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-slate-50 px-4 py-5 dark:bg-slate-950 sm:px-6 lg:px-8">
+      <div className="erp-dashboard min-h-screen bg-slate-50 px-4 py-5 dark:bg-slate-950 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1600px] 2xl:max-w-[2200px] space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+          <div className="dashboard-hero rounded-lg border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -385,7 +386,7 @@ export default function PurchaseDashboardPage() {
                       AP overdue
                     </p>
                     <p className="mt-0.5 font-semibold text-slate-950 dark:text-white">
-                      {loading ? "-" : `${overdueRate}%`}
+                      {loading ? "-" : formatDashboardPercent(overdueRate)}
                     </p>
                   </div>
                   <div className="rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800">
@@ -539,7 +540,7 @@ export default function PurchaseDashboardPage() {
                         <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                           <div
                             className={`h-2 rounded-full ${item.tone}`}
-                            style={{ width: `${item.width}%` }}
+                            style={{ width: percentBarWidth(item.width) }}
                           />
                         </div>
                       </div>
@@ -550,7 +551,7 @@ export default function PurchaseDashboardPage() {
                           Return ratio
                         </p>
                         <p className="mt-1 text-sm font-semibold text-slate-950 dark:text-white">
-                          {returnRate.toFixed(1)}%
+                          {formatDashboardPercent(returnRate, { decimals: 1 })}
                         </p>
                       </div>
                       <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
@@ -681,7 +682,7 @@ export default function PurchaseDashboardPage() {
                               {formatCurrency(value)}
                             </p>
                             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                              {pct.toFixed(0)}% of AP
+                              {formatDashboardPercent(pct)} of AP
                             </p>
                           </div>
                         );
@@ -720,7 +721,7 @@ export default function PurchaseDashboardPage() {
                         <div
                           className="h-2 rounded-full bg-amber-500"
                           style={{
-                            width: `${Math.min(receivingBacklogRate, 100)}%`,
+                            width: percentBarWidth(receivingBacklogRate),
                           }}
                         />
                       </div>
@@ -737,7 +738,7 @@ export default function PurchaseDashboardPage() {
                       <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                           className="h-2 rounded-full bg-red-500"
-                          style={{ width: `${Math.min(overdueRate, 100)}%` }}
+                          style={{ width: percentBarWidth(overdueRate) }}
                         />
                       </div>
                     </div>
@@ -754,7 +755,7 @@ export default function PurchaseDashboardPage() {
                         <div
                           className="h-2 rounded-full bg-blue-500"
                           style={{
-                            width: `${Math.min(supplierConcentration, 100)}%`,
+                            width: percentBarWidth(supplierConcentration),
                           }}
                         />
                       </div>
@@ -773,7 +774,7 @@ export default function PurchaseDashboardPage() {
                           Returns
                         </p>
                         <p className="mt-1 text-lg font-bold text-slate-950 dark:text-white">
-                          {returnRate.toFixed(1)}%
+                          {formatDashboardPercent(returnRate, { decimals: 1 })}
                         </p>
                       </div>
                     </div>
@@ -933,7 +934,7 @@ export default function PurchaseDashboardPage() {
                               <div
                                 className="h-2 rounded-full"
                                 style={{
-                                  width: `${Math.min(pct, 100)}%`,
+                                  width: percentBarWidth(pct),
                                   backgroundColor:
                                     STATUS_COLORS[index % STATUS_COLORS.length],
                                 }}
@@ -1107,7 +1108,7 @@ export default function PurchaseDashboardPage() {
                       <p className="text-sm">Return ratio</p>
                     </div>
                     <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                      {returnRate.toFixed(1)}%
+                      {formatDashboardPercent(returnRate, { decimals: 1 })}
                     </p>
                   </div>
                 </div>

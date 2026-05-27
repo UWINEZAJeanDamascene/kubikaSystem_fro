@@ -224,14 +224,14 @@ export default function PrepaidExpensesTab() {
             </Button>
           ))}
         </div>
-        <div className="flex gap-2">
-          <div className="relative">
+        <div className="mobile-action-row grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:items-center">
+          <div className="relative min-w-0 sm:w-48">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-48 pl-9"
+              className="w-full pl-9"
             />
           </div>
           <Button variant="outline" size="sm" onClick={fetchPrepaids} disabled={loading}>
@@ -259,7 +259,7 @@ export default function PrepaidExpensesTab() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="min-w-[980px]">
                 <TableHeader>
                   <TableRow className="bg-muted/40">
                     <TableHead className="text-xs font-semibold w-8"></TableHead>
@@ -329,7 +329,7 @@ export default function PrepaidExpensesTab() {
                                 </div>
                               </div>
                               <div className="rounded-md border overflow-hidden">
-                                <Table>
+                                <Table className="min-w-[760px]">
                                   <TableHeader>
                                     <TableRow className="bg-muted/40">
                                       <TableHead className="text-xs">#</TableHead>

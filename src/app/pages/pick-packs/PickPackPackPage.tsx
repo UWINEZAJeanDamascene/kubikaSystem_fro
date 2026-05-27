@@ -125,7 +125,7 @@ export default function PickPackPackPage() {
         
         if (qtyToRecord > currentPacked) {
           // Call API for each line individually
-          await fetch(`${import.meta.env.VITE_API_URL || 'https://kubikasystem-bnd.onrender.com/api'}/pick-packs/${id}/pack-items`, {
+          await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://kubikasystem-bnd.onrender.com/api'}/pick-packs/${id}/pack-items`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

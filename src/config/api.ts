@@ -30,9 +30,14 @@ interface BackendErrorResponse {
   message?: string;
 }
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://kubikasystem-bnd.onrender.com/api';
+
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -141,7 +146,7 @@ api.interceptors.response.use(
         try {
           // Call refresh token endpoint
           const response = await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/auth/refresh`,
+            `${API_BASE_URL}/auth/refresh`,
             { refreshToken },
             { withCredentials: true }
           );

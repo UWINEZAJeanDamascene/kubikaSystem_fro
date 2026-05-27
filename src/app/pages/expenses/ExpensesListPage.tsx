@@ -515,7 +515,7 @@ export default function ExpensesListPage() {
                   <p className="text-sm text-indigo-200">Manage business expenses</p>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="mobile-action-row grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto">
                 <Button variant="outline" onClick={handleExport} className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/20">
                   <Download className="mr-2 h-4 w-4" />
                   Export
@@ -531,7 +531,7 @@ export default function ExpensesListPage() {
 
         <div className="mx-auto max-w-7xl 2xl:max-w-[2200px] px-4 py-6 sm:px-6 lg:px-8">
           {/* Tab Navigation */}
-          <div className="mb-6 flex gap-1 border-b border-slate-200 dark:border-slate-800">
+          <div className="mobile-scroll-tabs mb-6 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setActiveTab('expenses')}
               className={`px-4 py-2.5 text-sm font-medium transition-colors ${
@@ -708,7 +708,7 @@ export default function ExpensesListPage() {
               ) : (
                 <>
                   <div className="overflow-x-auto">
-                    <Table>
+                    <Table className="min-w-[1120px]">
                       <TableHeader>
                         <TableRow className="border-b border-slate-200 bg-slate-50/50 hover:bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-900/50">
                           <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Reference</TableHead>

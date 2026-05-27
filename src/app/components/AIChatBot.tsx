@@ -1652,7 +1652,7 @@ export default function AIChatBot() {
         <button
           onClick={toggle}
           aria-label={open ? 'Close assistant' : 'Open assistant'}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-500/30 transition-all duration-300 hover:scale-110 hover:shadow-indigo-500/50 active:scale-95"
+          className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-[9999] flex h-10 w-10 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:scale-105 active:scale-95"
         >
           {open ? <X className="h-5 w-5" /> : <Sparkles className="h-6 w-6" />}
         </button>

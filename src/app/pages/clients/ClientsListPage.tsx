@@ -140,7 +140,7 @@ export default function ClientsListPage() {
 
   const handleStatement = (clientId: string) => {
     const token = localStorage.getItem('token');
-    const baseUrl = import.meta.env.VITE_API_URL || 'https://kubikasystem-bnd.onrender.com/api';
+    const baseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://kubikasystem-bnd.onrender.com/api';
     fetch(`${baseUrl}/clients/${clientId}/statement`, {
       headers: { 'Authorization': `Bearer ${token}` },
     })

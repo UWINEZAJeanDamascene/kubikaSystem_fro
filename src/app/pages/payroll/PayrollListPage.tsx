@@ -848,7 +848,7 @@ export default function PayrollListPage() {
                   {t("payroll.subtitle")}
                 </p>
 
-                <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mobile-action-row mt-5 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
                   <Button
                     onClick={() => navigate("/payroll/generate")}
                     className="h-10 gap-2 bg-blue-600 hover:bg-blue-700"
@@ -916,7 +916,7 @@ export default function PayrollListPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-0">
+          <div className="mobile-scroll-tabs flex gap-2 border-b border-slate-200 pb-0 dark:border-slate-800">
             <button
               onClick={() => setActiveTab('payroll')}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
@@ -1320,7 +1320,7 @@ export default function PayrollListPage() {
               </div>
             ) : (
               <>
-                <Table>
+                <Table className="min-w-[1180px]">
                   <TableHeader>
                     <TableRow className="bg-slate-50 hover:bg-slate-50 dark:bg-slate-900/70 dark:hover:bg-slate-900/70">
                       <TableHead className="w-10 dark:text-slate-200">

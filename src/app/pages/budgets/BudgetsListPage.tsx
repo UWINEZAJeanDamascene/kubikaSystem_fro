@@ -499,7 +499,7 @@ export default function BudgetsListPage() {
                   <p className="mt-0.5 text-sm text-indigo-200">{t("budgets.subtitle", "Manage budgets and track spending")}</p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="mobile-action-row grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
                 <Button variant="outline" onClick={() => setShowImportDialog(true)} className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white dark:border-white/20">
                   <Upload className="mr-2 h-4 w-4" />
                   {t("common.import", "Import")}
@@ -746,7 +746,7 @@ export default function BudgetsListPage() {
                 </div>
               ) : (
                 <>
-                  <Table>
+                  <Table className="min-w-[920px]">
                     <TableHeader>
                       <TableRow className="border-b border-slate-100 bg-slate-50/50 hover:bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50 dark:hover:bg-slate-900/50">
                         <TableHead className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("budgets.name", "Name")}</TableHead>
