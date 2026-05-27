@@ -42,18 +42,14 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'relative flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-gradient-to-br from-white via-cyan-50/30 to-emerald-50/40 text-center dark:border-white/10 dark:from-[#0d1626] dark:via-cyan-950/10 dark:to-emerald-950/10',
+        'relative flex flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-card text-center',
         compact ? 'px-6 py-10' : 'px-6 py-16',
         className,
       )}
     >
-      {/* Decorative blur blobs to match app aesthetic */}
-      <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-cyan-300/20 blur-3xl dark:bg-cyan-400/10" />
-      <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-emerald-300/20 blur-3xl dark:bg-emerald-400/10" />
-
       <div
         className={cn(
-          'relative flex items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-emerald-500 text-white shadow-lg shadow-cyan-500/30 ring-1 ring-white/20',
+          'relative flex items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm',
           compact ? 'h-12 w-12' : 'h-16 w-16',
         )}
       >

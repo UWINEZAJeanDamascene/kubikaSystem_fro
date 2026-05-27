@@ -41,6 +41,12 @@ export function formatCurrency(
 ): string {
   let num = typeof amount === 'number' ? amount : Number(amount) || 0;
   if (isNaN(num)) num = 0;
+  if (currency === 'RWF' || currency === 'FRW') {
+    return `RWF ${new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num)}`;
+  }
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency
@@ -58,6 +64,12 @@ export function formatDocumentCurrency(
 ): string {
   const num = typeof amount === 'number' ? amount : Number(amount) || 0;
   const currency = overrideCurrency || documentCurrencyCode || 'RWF';
+  if (currency === 'RWF' || currency === 'FRW') {
+    return `RWF ${new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num)}`;
+  }
   return new Intl.NumberFormat('en-US', { 
     style: 'currency', 
     currency 
@@ -98,9 +110,10 @@ export function formatWithSymbol(
 ): string {
   const num = typeof amount === 'number' ? amount : Number(amount) || 0;
   const symbol = getCurrencySymbol(currency);
+  const isWholeFranc = currency === 'RWF' || currency === 'FRW';
   const formatted = num.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: isWholeFranc ? 0 : 2,
+    maximumFractionDigits: isWholeFranc ? 0 : 2
   });
   return `${symbol} ${formatted}`;
 }

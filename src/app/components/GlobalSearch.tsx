@@ -48,7 +48,6 @@ import {
   Clock,
   Calendar,
   Play,
-  DollarSign,
   FolderTree,
   Lock,
   History,
@@ -138,7 +137,7 @@ const PAGES: PageEntry[] = [
   { label: 'Budget Settings', href: '/budgets/settings', group: 'Finance Control', icon: Settings },
   { label: 'Projects', href: '/projects', group: 'Finance Control', icon: FolderTree, keywords: 'cost center' },
   { label: 'Employees', href: '/employees', group: 'Finance Control', icon: Users, keywords: 'hr staff' },
-  { label: 'Payroll', href: '/payroll', group: 'Finance Control', icon: DollarSign, keywords: 'salary paye' },
+  { label: 'Payroll', href: '/payroll', group: 'Finance Control', icon: Banknote, keywords: 'salary paye' },
   { label: 'Payroll Runs', href: '/payroll-runs', group: 'Finance Control', icon: Play },
   { label: 'Timesheets', href: '/timesheets', group: 'Finance Control', icon: ClipboardCheck },
   { label: 'Employee Advances', href: '/employee-advances', group: 'Finance Control', icon: Wallet },
@@ -248,7 +247,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
             next.push({
               id: `product-${p._id ?? p.id}`,
               label: p.name ?? 'Unnamed product',
-              sub: [p.sku, p.barcode].filter(Boolean).join(' • '),
+              sub: [p.sku, p.barcode].filter(Boolean).join(' / '),
               href: `/products/${p._id ?? p.id}`,
               icon: Package,
               group: 'Products',
@@ -260,7 +259,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
             next.push({
               id: `client-${c._id ?? c.id}`,
               label: c.name ?? c.companyName ?? 'Unnamed client',
-              sub: [c.code, c.email, c.phone].filter(Boolean).join(' • '),
+              sub: [c.code, c.email, c.phone].filter(Boolean).join(' / '),
               href: `/clients/${c._id ?? c.id}`,
               icon: Users,
               group: 'Clients',
@@ -274,7 +273,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
             next.push({
               id: `invoice-${inv._id ?? inv.id}`,
               label: String(num),
-              sub: [clientName, inv.status].filter(Boolean).join(' • '),
+              sub: [clientName, inv.status].filter(Boolean).join(' / '),
               href: `/invoices/${inv._id ?? inv.id}`,
               icon: Receipt,
               group: 'Invoices',
@@ -286,7 +285,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
             next.push({
               id: `supplier-${s._id ?? s.id}`,
               label: s.name ?? 'Unnamed supplier',
-              sub: [s.code, s.email, s.phone].filter(Boolean).join(' • '),
+              sub: [s.code, s.email, s.phone].filter(Boolean).join(' / '),
               href: `/suppliers/${s._id ?? s.id}`,
               icon: Building2,
               group: 'Suppliers',
@@ -319,13 +318,13 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
   };
 
   const itemClass =
-    "group/cmd-item relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-700 outline-none transition-all data-[selected=true]:bg-gradient-to-r data-[selected=true]:from-cyan-50 data-[selected=true]:to-emerald-50 data-[selected=true]:text-slate-950 data-[selected=true]:shadow-sm data-[selected=true]:ring-1 data-[selected=true]:ring-cyan-200 dark:text-slate-200 dark:data-[selected=true]:from-cyan-500/15 dark:data-[selected=true]:to-emerald-500/15 dark:data-[selected=true]:text-white dark:data-[selected=true]:ring-cyan-400/30";
+    "group/cmd-item relative flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-foreground outline-none transition data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground";
 
   const iconTileClass =
-    "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200 transition group-data-[selected=true]/cmd-item:from-cyan-500 group-data-[selected=true]/cmd-item:to-emerald-500 group-data-[selected=true]/cmd-item:text-white group-data-[selected=true]/cmd-item:ring-cyan-400/40 dark:from-white/[0.06] dark:to-white/[0.02] dark:text-slate-300 dark:ring-white/10";
+    "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground ring-1 ring-inset ring-border transition group-data-[selected=true]/cmd-item:bg-primary group-data-[selected=true]/cmd-item:text-primary-foreground";
 
   const hrefChipClass =
-    "ml-auto hidden font-mono text-[10px] tracking-tight text-slate-400 group-data-[selected=true]/cmd-item:text-cyan-700 sm:inline-flex sm:rounded-md sm:bg-slate-100/70 sm:px-1.5 sm:py-0.5 sm:ring-1 sm:ring-inset sm:ring-slate-200 dark:text-slate-500 dark:group-data-[selected=true]/cmd-item:text-cyan-300 dark:sm:bg-white/5 dark:sm:ring-white/10";
+    "ml-auto hidden font-mono text-[10px] tracking-tight text-muted-foreground sm:inline-flex sm:rounded-md sm:bg-muted sm:px-1.5 sm:py-0.5 sm:ring-1 sm:ring-inset sm:ring-border";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -333,14 +332,9 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
         <DialogOverlay className="bg-slate-950/40 backdrop-blur-sm dark:bg-black/60" />
         <DialogPrimitive.Content
           aria-describedby={undefined}
-          className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed left-[50%] top-[10vh] z-50 w-[calc(100%-2rem)] max-w-2xl translate-x-[-50%] overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl shadow-cyan-900/10 backdrop-blur-xl duration-200 dark:border-white/10 dark:bg-[#0d1626]/95 dark:shadow-black/40"
+          className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed left-[50%] top-[10vh] z-50 w-[calc(100%-2rem)] max-w-2xl translate-x-[-50%] overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-2xl duration-200"
         >
           <DialogPrimitive.Title className="sr-only">Global search</DialogPrimitive.Title>
-
-          {/* Decorative gradient header strip */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
-          <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full bg-cyan-300/20 blur-3xl dark:bg-cyan-400/10" />
-          <div className="pointer-events-none absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-emerald-300/20 blur-3xl dark:bg-emerald-400/10" />
 
           <Command
             shouldFilter
@@ -348,7 +342,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
           >
             {/* Search input row */}
             <div className="flex items-center gap-3 border-b border-slate-200 px-4 dark:border-white/10">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-emerald-500 text-white shadow-lg shadow-cyan-500/30">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
                 <Search className="h-4 w-4" />
               </div>
               <CommandPrimitive.Input
@@ -368,7 +362,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
               </DialogPrimitive.Close>
             </div>
 
-            <CommandList className="max-h-[60vh] scroll-pt-2 px-2 py-2 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.18em] [&_[cmdk-group-heading]]:text-cyan-700 dark:[&_[cmdk-group-heading]]:text-cyan-300">
+            <CommandList className="max-h-[60vh] scroll-pt-2 px-2 py-2 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-primary">
               <CommandEmpty className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
                 {loading ? (
                   <div className="flex items-center justify-center gap-2">
@@ -498,12 +492,12 @@ export function GlobalSearchTrigger({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 text-sm text-slate-600 transition hover:bg-white hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+      className="group flex h-10 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
       title="Search (Ctrl+K)"
     >
       <Search className="h-4 w-4" />
       <span className="hidden md:inline">Search...</span>
-      <kbd className="ml-2 hidden items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-500 shadow-sm md:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
+      <kbd className="ml-2 hidden items-center gap-1 rounded-md border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm md:inline-flex">
         {isMac ? '⌘' : 'Ctrl'}
         <span>K</span>
       </kbd>

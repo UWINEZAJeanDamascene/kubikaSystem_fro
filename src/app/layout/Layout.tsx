@@ -77,10 +77,7 @@ export function Layout({ children }: LayoutProps) {
       style={{ paddingRight: isLg && effectiveChatOpen ? chatWidth : undefined }}
     >
       {/* Full-app background */}
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,#eef7f6_0%,#f8fbff_45%,#e9f2ef_100%)] dark:bg-[linear-gradient(135deg,#061013_0%,#091923_46%,#07140f_100%)]" />
-      <div className="absolute left-[-12rem] top-[-14rem] h-[34rem] w-[34rem] rounded-full bg-cyan-300/30 blur-3xl dark:bg-cyan-400/10" />
-      <div className="absolute bottom-[-12rem] right-[-10rem] h-[30rem] w-[30rem] rounded-full bg-emerald-300/30 blur-3xl dark:bg-emerald-400/10" />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,.045)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,.045)_1px,transparent_1px)] bg-[size:48px_48px] dark:bg-[linear-gradient(rgba(255,255,255,.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.045)_1px,transparent_1px)]" />
+      <div className="absolute inset-0 bg-background" />
       {/* Desktop Sidebar - always visible on lg screens */}
       <div className={`hidden lg:block transition-all duration-300 relative z-10 ${sidebarCollapsed ? 'w-20' : 'w-72'}`}>
         <Sidebar collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} />
@@ -98,17 +95,17 @@ export function Layout({ children }: LayoutProps) {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden relative z-10">
         {/* Mobile Header - show on screens smaller than lg */}
-        <div className="lg:hidden sticky top-0 z-50 flex items-center gap-3 bg-white/95 dark:bg-[#0d1626]/95 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 px-4 py-3 shadow-sm">
+        <div className="lg:hidden sticky top-0 z-50 flex items-center gap-2 border-b border-border bg-card/95 px-3 py-2 shadow-sm backdrop-blur-xl sm:gap-3 sm:px-4 sm:py-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(true)}
-            className="h-10 w-10 flex-shrink-0 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600"
+            className="h-10 w-10 flex-shrink-0"
           >
-            <Menu className="h-6 w-6 text-slate-700 dark:text-slate-200" />
+            <Menu className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m7.5 4.27 9 5.15"/>
                 <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
@@ -118,16 +115,16 @@ export function Layout({ children }: LayoutProps) {
             </div>
             <span className="hidden md:inline text-lg font-semibold text-slate-800 dark:text-white">StockManager</span>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSearchOpen(true)}
-              className="h-10 w-10 flex-shrink-0 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600"
+              className="h-10 w-10 flex-shrink-0"
               title="Search (Ctrl+K)"
               aria-label="Open global search"
             >
-              <Search className="h-5 w-5 text-slate-700 dark:text-slate-200" />
+              <Search className="h-5 w-5" />
             </Button>
             <QuickCreateMenu compact />
             <NotificationBell />
@@ -135,31 +132,31 @@ export function Layout({ children }: LayoutProps) {
               variant="ghost"
               size="icon"
               onClick={() => navigate('/')}
-              className="h-10 w-10 flex-shrink-0 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600"
+              className="h-10 w-10 flex-shrink-0"
               title="Back to Home"
             >
-              <Home className="h-5 w-5 text-slate-700 dark:text-slate-200" />
+              <Home className="h-5 w-5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className="h-10 w-10 flex-shrink-0 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600"
+              className="h-10 w-10 flex-shrink-0"
               title="Toggle theme"
             >
-              {theme === 'dark' ? <Sun className="h-5 w-5 text-slate-700 dark:text-slate-200" /> : <Moon className="h-5 w-5 text-slate-700 dark:text-slate-200" />}
+              {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
           </div>
         </div>
 
         {/* Desktop Top Bar */}
         {!isMobile && (
-          <header className="hidden lg:flex h-14 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white/92 px-6 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-[#0d1626]/92">
+          <header className="hidden h-14 flex-shrink-0 items-center justify-between border-b border-border bg-card/95 px-6 shadow-sm backdrop-blur-xl lg:flex">
             <div className="flex items-center gap-4 min-w-0">
               <Breadcrumbs />
             </div>
 
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-1.5">
               <GlobalSearchTrigger onClick={() => setSearchOpen(true)} />
               <QuickCreateMenu />
               <NotificationBell />
@@ -170,8 +167,8 @@ export function Layout({ children }: LayoutProps) {
                   onClick={toggleChat}
                   className={`h-10 gap-2 rounded-xl px-3 transition-all ${
                     chatOpen
-                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 hover:brightness-110'
-                      : 'bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-700 ring-1 ring-inset ring-indigo-200 hover:from-indigo-100 hover:to-violet-100 hover:shadow-md dark:from-indigo-500/15 dark:to-violet-500/15 dark:text-indigo-300 dark:ring-indigo-500/30 dark:hover:from-indigo-500/25 dark:hover:to-violet-500/25'
+                      ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
+                      : 'bg-card text-foreground ring-1 ring-inset ring-border hover:bg-accent hover:text-accent-foreground'
                   }`}
                   title={chatOpen ? 'Close Stacy AI assistant' : 'Open Stacy AI assistant'}
                 >
@@ -187,7 +184,7 @@ export function Layout({ children }: LayoutProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/')}
-                className="h-10 gap-2 rounded-xl px-3 text-slate-700 hover:bg-white dark:text-slate-200 dark:hover:bg-white/10"
+                className="h-10 gap-2 px-3 text-foreground hover:bg-accent hover:text-accent-foreground"
                 title="Back to Home"
               >
                 <Home className="h-4 w-4" />
@@ -197,7 +194,7 @@ export function Layout({ children }: LayoutProps) {
                 variant="ghost"
                 size="icon"
                 onClick={toggleTheme}
-                className="h-10 w-10 rounded-xl text-slate-700 hover:bg-white dark:text-slate-200 dark:hover:bg-white/10"
+                className="h-10 w-10 text-foreground hover:bg-accent hover:text-accent-foreground"
                 title="Toggle theme"
               >
                 {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -207,12 +204,12 @@ export function Layout({ children }: LayoutProps) {
         )}
 
         {/* Mobile breadcrumbs */}
-        <div className="lg:hidden border-b border-slate-200 bg-white/70 px-3 py-2 dark:border-white/10 dark:bg-[#0d1626]/70">
+        <div className="border-b border-border bg-card/80 px-3 py-2 lg:hidden">
           <Breadcrumbs />
         </div>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto px-2 py-3 sm:px-3 md:px-5 md:py-5">
+        <div className="flex-1 overflow-auto px-3 py-3 sm:px-4 md:px-5 md:py-5 xl:px-6">
           {children}
         </div>
       </main>

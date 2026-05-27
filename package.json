@@ -48,7 +48,6 @@
     "@tanstack/react-query-devtools": "^5.99.0",
     "@types/exceljs": "^0.5.3",
     "@types/file-saver": "^2.0.7",
-    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "4.7.0",
     "axios": "^1.13.6",
     "class-variance-authority": "0.7.1",
@@ -92,6 +91,8 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@types/papaparse": "^5.5.2"
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^18.3.29",
+    "@types/react-dom": "^18.3.7"
   }
 }

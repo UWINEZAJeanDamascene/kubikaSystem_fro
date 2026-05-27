@@ -30,7 +30,7 @@ import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
 import {
   Package,
   Layers,
-  DollarSign,
+  Banknote,
   CheckCircle,
   ArrowUpRight,
   RefreshCw,
@@ -50,10 +50,10 @@ function formatNumber(value: number): string {
 }
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+  return `RWF ${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)}`;
 }
 
 function formatDateTime(value?: string): string {
@@ -413,9 +413,9 @@ export default function InventoryDashboardPage() {
             />
             <SummaryCard
               title="Stock Value"
-              value={`$${formatCurrency(totalValue)}`}
-              subtitle={`Dead stock value $${formatCurrency(deadStockValue)}`}
-              icon={<DollarSign className="h-5 w-5" />}
+              value={formatCurrency(totalValue)}
+              subtitle={`Dead stock value ${formatCurrency(deadStockValue)}`}
+              icon={<Banknote className="h-5 w-5" />}
               tone="amber"
               loading={loading}
             />
@@ -512,7 +512,7 @@ export default function InventoryDashboardPage() {
                         Dead stock value
                       </p>
                       <p className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">
-                        ${formatCurrency(deadStockValue)}
+                        {formatCurrency(deadStockValue)}
                       </p>
                     </div>
                   </div>
@@ -800,7 +800,7 @@ export default function InventoryDashboardPage() {
                                 <div className="flex flex-col gap-0.5">
                                   <span className="font-medium">{name}</span>
                                   <span className="font-mono">
-                                    ${formatCurrency(Number(value))}
+                                    {formatCurrency(Number(value))}
                                   </span>
                                 </div>
                               )}
@@ -871,7 +871,7 @@ export default function InventoryDashboardPage() {
                             </div>
                             <div className="flex justify-between gap-2 overflow-hidden text-xs text-slate-500 dark:text-slate-400">
                               <span className="shrink-0">{formatNumber(warehouse.sku_count)} SKUs</span>
-                              <span className="min-w-0 text-right">${formatCurrency(warehouse.total_value)}</span>
+                              <span className="min-w-0 text-right">{formatCurrency(warehouse.total_value)}</span>
                             </div>
                           </div>
                         );
@@ -892,7 +892,7 @@ export default function InventoryDashboardPage() {
                 action={
                   !loading && (
                     <Badge variant="secondary">
-                      ${formatCurrency(deadStockValue)}
+                      {formatCurrency(deadStockValue)}
                     </Badge>
                   )
                 }
@@ -937,7 +937,7 @@ export default function InventoryDashboardPage() {
                               {formatNumber(item.qty_on_hand)}
                             </TableCell>
                             <TableCell className="text-right font-mono">
-                              ${formatCurrency(item.stock_value)}
+                              {formatCurrency(item.stock_value)}
                             </TableCell>
                             <TableCell className="text-right">
                               <Badge variant="outline">

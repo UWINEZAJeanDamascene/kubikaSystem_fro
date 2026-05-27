@@ -23,7 +23,6 @@ import {
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
 import {
   FileText,
-  DollarSign,
   PiggyBank,
   Percent,
   RefreshCw,
@@ -416,7 +415,7 @@ export default function SalesDashboardPage() {
               title="Total Invoiced"
               value={formatCurrency(totalInvoiced)}
               subtitle="Month to date, excluding drafts"
-              icon={<DollarSign className="h-5 w-5" />}
+              icon={<Banknote className="h-5 w-5" />}
               tone="green"
               loading={loading}
             />
@@ -917,7 +916,7 @@ export default function SalesDashboardPage() {
                             </div>
                             <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
                               <span>{pct}% of invoices</span>
-                              <span>${formatCurrency(status.total_amount)}</span>
+                              <span>{formatCurrency(status.total_amount)}</span>
                             </div>
                           </div>
                         );
@@ -957,7 +956,7 @@ export default function SalesDashboardPage() {
                       Total value
                     </p>
                     <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">
-                      ${formatCurrency(creditNotes?.total_value ?? 0)}
+                      {formatCurrency(creditNotes?.total_value ?? 0)}
                     </p>
                   </div>
                   <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">

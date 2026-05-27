@@ -49,10 +49,10 @@ import {
 } from "lucide-react";
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+  return `RWF ${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)}`;
 }
 
 function formatCompactCurrency(value: number): string {

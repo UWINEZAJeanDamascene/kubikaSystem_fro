@@ -90,8 +90,8 @@ export function QuickCreateMenu({ compact = false }: QuickCreateMenuProps) {
           type="button"
           className={
             compact
-              ? 'flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 transition hover:brightness-110'
-              : 'flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-3 text-sm font-semibold text-white shadow-md shadow-cyan-500/30 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cyan-400/50'
+              ? 'flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring/50'
+              : 'flex h-10 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring/50'
           }
           title="Create new"
           aria-label="Create new"
@@ -104,21 +104,21 @@ export function QuickCreateMenu({ compact = false }: QuickCreateMenuProps) {
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="w-72 overflow-hidden rounded-2xl border-slate-200 bg-white/95 p-1 shadow-2xl shadow-cyan-900/10 backdrop-blur-xl dark:border-white/10 dark:bg-[#0d1626]/95"
+        className="w-72 overflow-hidden rounded-lg border-border bg-popover p-1 shadow-xl"
       >
         <div className="px-3 pb-2 pt-3">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-300">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-primary">
             Quick create
           </div>
-          <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+          <div className="mt-0.5 text-xs text-muted-foreground">
             Jump straight into a new record
           </div>
         </div>
 
         {GROUPS.map((g, gi) => (
           <div key={g.label}>
-            {gi > 0 && <DropdownMenuSeparator className="my-1 bg-slate-200/70 dark:bg-white/10" />}
-            <DropdownMenuLabel className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            {gi > 0 && <DropdownMenuSeparator className="my-1" />}
+            <DropdownMenuLabel className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               {g.label}
             </DropdownMenuLabel>
             <DropdownMenuGroup>
@@ -131,9 +131,9 @@ export function QuickCreateMenu({ compact = false }: QuickCreateMenuProps) {
                       e.preventDefault();
                       navigate(it.href);
                     }}
-                    className="group/qc-item flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm text-slate-700 outline-none transition focus:bg-gradient-to-r focus:from-cyan-50 focus:to-emerald-50 focus:text-slate-950 dark:text-slate-200 dark:focus:from-cyan-500/15 dark:focus:to-emerald-500/15 dark:focus:text-white"
+                    className="group/qc-item flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm text-foreground outline-none transition focus:bg-accent focus:text-accent-foreground"
                   >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-50 text-slate-600 ring-1 ring-inset ring-slate-200 transition group-focus/qc-item:from-cyan-500 group-focus/qc-item:to-emerald-500 group-focus/qc-item:text-white group-focus/qc-item:ring-cyan-400/40 dark:from-white/[0.06] dark:to-white/[0.02] dark:text-slate-300 dark:ring-white/10">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground ring-1 ring-inset ring-border transition group-focus/qc-item:bg-primary group-focus/qc-item:text-primary-foreground">
                       <Icon className="h-4 w-4" />
                     </div>
                     <span className="font-medium">{it.label}</span>

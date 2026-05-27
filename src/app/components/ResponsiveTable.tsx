@@ -42,8 +42,8 @@ export function ResponsiveTable({
       {/* Desktop: scrollable table with optional sticky first column */}
       <div
         className={cn(
-          'hidden md:block overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#0d1626]/60',
-          stickyFirstCol && '[&_table_th:first-child]:sticky [&_table_td:first-child]:sticky [&_table_th:first-child]:left-0 [&_table_td:first-child]:left-0 [&_table_th:first-child]:z-10 [&_table_td:first-child]:bg-inherit [&_table_th:first-child]:bg-slate-50 dark:[&_table_th:first-child]:bg-[#0d1626]',
+          'hidden md:block overflow-x-auto rounded-lg bg-card shadow-sm',
+          stickyFirstCol && '[&_table_th:first-child]:sticky [&_table_td:first-child]:sticky [&_table_th:first-child]:left-0 [&_table_td:first-child]:left-0 [&_table_th:first-child]:z-10 [&_table_td:first-child]:bg-inherit [&_table_th:first-child]:bg-muted',
         )}
       >
         {table}
@@ -98,9 +98,9 @@ export function MobileCardRow({
           : undefined
       }
       className={cn(
-        'rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition dark:border-white/10 dark:bg-[#0d1626]/60',
+        'rounded-lg border border-border bg-card p-3 shadow-sm transition',
         interactive &&
-          'cursor-pointer hover:border-cyan-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-cyan-400/50 dark:hover:border-cyan-400/40',
+          'cursor-pointer hover:border-primary/40 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring/50',
         className,
       )}
     >

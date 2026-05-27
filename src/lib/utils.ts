@@ -6,26 +6,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Currency formatting utilities for Rwandan Francs (FRW)
+// Currency formatting utilities for Rwandan Francs (RWF)
 
 export function formatCurrency(value: number | undefined | null): string {
-  if (value === undefined || value === null || isNaN(value)) return 'FRW 0';
-  return new Intl.NumberFormat('en-RW', { 
-    style: 'currency', 
-    currency: 'RWF',
+  if (value === undefined || value === null || isNaN(value)) return 'RWF 0';
+  return `RWF ${new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  }).format(value);
+  }).format(value)}`;
 }
 
 export function formatCurrencyWithDecimals(value: number | undefined | null): string {
-  if (value === undefined || value === null || isNaN(value)) return 'FRW 0.00';
-  return new Intl.NumberFormat('en-RW', { 
-    style: 'currency', 
-    currency: 'RWF',
+  if (value === undefined || value === null || isNaN(value)) return 'RWF 0';
+  return `RWF ${new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  }).format(value);
+  }).format(value)}`;
 }
 
 export function formatNumber(value: number | undefined | null): string {
@@ -55,7 +51,7 @@ export function formatDate(date: string | Date | undefined | null): string {
   if (isNaN(d.getTime())) return '-';
   return d.toLocaleDateString('en-GB', {
     day: '2-digit',
-    month: 'short',
+    month: '2-digit',
     year: 'numeric'
   });
 }

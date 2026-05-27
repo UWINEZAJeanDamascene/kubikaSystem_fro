@@ -23,7 +23,6 @@ import {
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
 import {
   ShoppingCart,
-  DollarSign,
   Truck,
   AlertTriangle,
   RefreshCw,
@@ -42,10 +41,10 @@ import {
 } from "lucide-react";
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+  return `RWF ${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)}`;
 }
 
 function formatNumber(value: number): string {
@@ -437,31 +436,31 @@ export default function PurchaseDashboardPage() {
             <MetricCard
               title="POs This Month"
               value={formatNumber(summary?.po_count_mtd ?? 0)}
-              subtitle={`${formatNumber(openPoCount)} open, $${formatCurrency(poTotalValue)} total`}
+              subtitle={`${formatNumber(openPoCount)} open, ${formatCurrency(poTotalValue)} total`}
               icon={<ShoppingCart className="h-5 w-5" />}
               tone="blue"
               loading={loading}
             />
             <MetricCard
               title="Open PO Value"
-              value={`$${formatCurrency(openPoValue)}`}
+              value={formatCurrency(openPoValue)}
               subtitle={`${openPoRate}% of purchase orders still open`}
-              icon={<DollarSign className="h-5 w-5" />}
+              icon={<Banknote className="h-5 w-5" />}
               tone="indigo"
               loading={loading}
             />
             <MetricCard
               title="GRN Pending"
               value={formatNumber(grnPendingCount)}
-              subtitle={`$${formatCurrency(grnPendingValue)} pending receiving value`}
+              subtitle={`${formatCurrency(grnPendingValue)} pending receiving value`}
               icon={<Truck className="h-5 w-5" />}
               tone="amber"
               loading={loading}
             />
             <MetricCard
               title="AP Overdue"
-              value={`$${formatCurrency(apOverdue)}`}
-              subtitle={`$${formatCurrency(apOutstanding)} total outstanding`}
+              value={formatCurrency(apOverdue)}
+              subtitle={`${formatCurrency(apOutstanding)} total outstanding`}
               icon={<AlertTriangle className="h-5 w-5" />}
               tone="red"
               loading={loading}
@@ -515,7 +514,7 @@ export default function PurchaseDashboardPage() {
                       <ChartTooltip
                         content={
                           <ChartTooltipContent
-                            formatter={(value) => `$${formatCurrency(Number(value))}`}
+                            formatter={(value) => formatCurrency(Number(value))}
                           />
                         }
                       />
@@ -559,7 +558,7 @@ export default function PurchaseDashboardPage() {
                           AP overdue
                         </p>
                         <p className="mt-1 text-sm font-semibold text-red-600 dark:text-red-400">
-                          ${formatCurrency(apOverdue)}
+                          {formatCurrency(apOverdue)}
                         </p>
                       </div>
                     </div>
@@ -578,7 +577,7 @@ export default function PurchaseDashboardPage() {
                 action={
                   !loading && (
                     <Badge variant={apOverdue > 0 ? "destructive" : "secondary"}>
-                      ${formatCurrency(apOutstanding)}
+                      {formatCurrency(apOutstanding)}
                     </Badge>
                   )
                 }
@@ -620,7 +619,7 @@ export default function PurchaseDashboardPage() {
                                     ]?.label || name}
                                   </span>
                                   <span className="font-mono">
-                                    ${formatCurrency(Number(value))}
+                                    {formatCurrency(Number(value))}
                                   </span>
                                 </div>
                               )}
@@ -679,7 +678,7 @@ export default function PurchaseDashboardPage() {
                               </span>
                             </div>
                             <p className="mt-2 font-mono text-sm font-semibold text-slate-950 dark:text-white">
-                              ${formatCurrency(value)}
+                              {formatCurrency(value)}
                             </p>
                             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                               {pct.toFixed(0)}% of AP
@@ -823,14 +822,14 @@ export default function PurchaseDashboardPage() {
                         tickLine={false}
                         axisLine={false}
                         tick={{ fontSize: 11 }}
-                        tickFormatter={(value) => `$${formatNumber(Number(value))}`}
+                        tickFormatter={(value) => formatCurrency(Number(value))}
                       />
                       <ChartTooltip
                         content={
                           <ChartTooltipContent
                             formatter={(value) => (
                               <span className="font-mono">
-                                ${formatCurrency(Number(value))}
+                                {formatCurrency(Number(value))}
                               </span>
                             )}
                           />
@@ -942,7 +941,7 @@ export default function PurchaseDashboardPage() {
                             </div>
                             <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
                               <span>{pct}% of POs</span>
-                              <span>${formatCurrency(status.total_value)}</span>
+                              <span>{formatCurrency(status.total_value)}</span>
                             </div>
                           </div>
                         );
@@ -975,7 +974,7 @@ export default function PurchaseDashboardPage() {
                         Total outstanding
                       </p>
                       <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                        ${formatCurrency(ap?.total_outstanding ?? 0)}
+                        {formatCurrency(ap?.total_outstanding ?? 0)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
@@ -991,7 +990,7 @@ export default function PurchaseDashboardPage() {
                         Overdue amount
                       </p>
                       <p className="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">
-                        ${formatCurrency(ap?.overdue_amount ?? 0)}
+                        {formatCurrency(ap?.overdue_amount ?? 0)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
@@ -1035,7 +1034,7 @@ export default function PurchaseDashboardPage() {
                         Total value
                       </p>
                       <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                        ${formatCurrency(purchaseReturns?.total_amount ?? 0)}
+                        {formatCurrency(purchaseReturns?.total_amount ?? 0)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">

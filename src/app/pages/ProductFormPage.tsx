@@ -3,11 +3,10 @@ import { useNavigate, useParams } from 'react-router';
 import { productsApi, categoriesApi, suppliersApi, warehousesApi, stockApi, chartOfAccountsApi, ebmApi } from '@/lib/api';
 import { Layout } from '../layout/Layout';
 import { 
-  ArrowLeft, 
   Save, 
   Loader2,
   Package,
-  DollarSign,
+  Banknote,
   Settings,
   Warehouse
 } from 'lucide-react';
@@ -32,6 +31,8 @@ import {
 } from '@/app/components/ui/tooltip';
 import { HelpCircle } from 'lucide-react';
 import { Badge } from '@/app/components/ui/badge';
+import { PageHeader } from '@/app/components/PageHeader';
+import { LoadingState } from '@/app/components/PageState';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
@@ -593,8 +594,15 @@ export default function ProductFormPage() {
   if (initialLoading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <div className="container mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6 2xl:max-w-[1400px]">
+          <PageHeader
+            title={tr('products.editProduct', 'Edit Product')}
+            subtitle="Loading product information and linked accounting settings."
+            icon={Package}
+            onBack={() => navigate('/products')}
+            backLabel={t('common.back') || 'Back'}
+          />
+          <LoadingState title="Loading product" description="Preparing product details." />
         </div>
       </Layout>
     );
@@ -603,32 +611,18 @@ export default function ProductFormPage() {
   return (
     <Layout>
       <div className="container mx-auto py-4 sm:py-6 px-3 sm:px-4 max-w-5xl 2xl:max-w-[1400px] overflow-x-hidden min-h-0">
-        {/* Page Header - Responsive */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6">
-          {/* Back Button - Full width on mobile, auto on desktop */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/products')} 
-            className="dark:text-slate-200 dark:hover:bg-slate-800 self-start sm:self-auto -ml-2 sm:ml-0"
-          >
-            <ArrowLeft className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">{t('common.back') || 'Back'}</span>
-          </Button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white leading-tight">
-              {isEditMode ? tr('products.editProduct', 'Edit Product') : tr('products.newProduct', 'New Product')}
-            </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              {isEditMode ? tr('products.editSubtitle', 'Update product information') : tr('products.createSubtitle', 'Add a new product to your inventory')}
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title={isEditMode ? tr('products.editProduct', 'Edit Product') : tr('products.newProduct', 'New Product')}
+          subtitle={isEditMode ? tr('products.editSubtitle', 'Update stock, pricing, EBM, and accounting settings.') : tr('products.createSubtitle', 'Add a product with the details needed for inventory, sales, accounting, and RRA EBM.')}
+          icon={Package}
+          onBack={() => navigate('/products')}
+          backLabel={t('common.back') || 'Back'}
+        />
 
         <form onSubmit={handleSubmit} className="overflow-x-hidden">
           <div className="grid gap-6">
             {/* Basic Information */}
-            <Card className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 shadow-xl">
+            <Card>
               <CardHeader className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
                 <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
                   <Package className="h-5 w-5" />
@@ -800,7 +794,7 @@ export default function ProductFormPage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 shadow-xl">
+            <Card>
               <CardHeader className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
                 <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
                   <Package className="h-5 w-5" />
@@ -924,10 +918,10 @@ export default function ProductFormPage() {
             </Card>
 
             {/* Pricing */}
-              <Card className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 shadow-xl">
+              <Card>
               <CardHeader className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
                 <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
-                  <DollarSign className="h-5 w-5" />
+                  <Banknote className="h-5 w-5" />
                   {t('products.pricing') || 'Pricing'}
                 </CardTitle>
                 <CardDescription className="text-slate-500 dark:text-slate-300">
@@ -995,7 +989,7 @@ export default function ProductFormPage() {
             </Card>
 
             {/* Accounting */}
-            <Card className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 shadow-xl">
+            <Card>
               <CardHeader className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
                 <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
                   <Settings className="h-5 w-5" />
@@ -1089,7 +1083,7 @@ export default function ProductFormPage() {
             </Card>
 
             {/* Inventory */}
-            <Card className="rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950 shadow-xl">
+            <Card>
               <CardHeader className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
                 <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
                   <Warehouse className="h-5 w-5" />
@@ -1337,11 +1331,11 @@ export default function ProductFormPage() {
             </Card>
 
             {/* Form Actions */}
-              <div className="flex items-center justify-end gap-4">
-              <Button type="button" variant="outline" onClick={() => navigate('/products')} className="h-10 px-4 rounded-md dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">
+            <div className="sticky bottom-0 z-20 -mx-3 flex flex-col-reverse gap-3 border-t border-border bg-background/95 px-3 py-3 backdrop-blur sm:mx-0 sm:flex-row sm:justify-end sm:rounded-lg sm:border sm:bg-card sm:px-4">
+              <Button type="button" variant="outline" onClick={() => navigate('/products')} className="h-10 px-4 rounded-md">
                 {t('common.cancel') || 'Cancel'}
               </Button>
-              <Button type="submit" disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-4 rounded-md">
+              <Button type="submit" disabled={saving} className="h-10 px-4 rounded-md">
                 {saving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

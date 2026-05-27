@@ -100,9 +100,10 @@ export function CurrencyProvider({ children }: CurrencyProviderProps) {
   const formatCurrency = useCallback((amount: number, from?: string): string => {
     const convertedAmount = convertAmount(amount, from);
     const symbol = getCurrencySymbol(displayCurrency);
+    const isWholeFranc = displayCurrency === 'RWF' || displayCurrency === 'FRW';
     const formatted = convertedAmount.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      minimumFractionDigits: isWholeFranc ? 0 : 2,
+      maximumFractionDigits: isWholeFranc ? 0 : 2
     });
     return `${symbol} ${formatted}`;
   }, [convertAmount, displayCurrency]);
@@ -152,7 +153,7 @@ export function useCurrency() {
       formatCurrency: (amount: number) => {
         const num = typeof amount === 'number' ? amount : Number(amount) || 0;
         const symbol = CURRENCY_SYMBOLS['RWF'] || 'RWF';
-        const formatted = num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const formatted = num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         return `${symbol} ${formatted}`;
       },
       getCurrencySymbol: (currency?: string) => {

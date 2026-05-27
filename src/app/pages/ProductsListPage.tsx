@@ -54,6 +54,8 @@ import {
 import { Badge } from '@/app/components/ui/badge';
 import { EmptyState } from '@/app/components/EmptyState';
 import { ResponsiveTable, MobileCardRow } from '@/app/components/ResponsiveTable';
+import { PageHeader } from '@/app/components/PageHeader';
+import { ErrorState, LoadingState } from '@/app/components/PageState';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
@@ -352,9 +354,12 @@ export default function ProductsListPage() {
   };
 
   const formatCurrency = (value: number | string | undefined) => {
-    if (!value) return '0.00';
+    if (!value) return 'RWF 0';
     const num = typeof value === 'string' ? parseFloat(value) : value;
-    return num.toFixed(2);
+    return `RWF ${new Intl.NumberFormat('en-US', {
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,
+    }).format(Number.isFinite(num) ? num : 0)}`;
   };
 
   const getStockStatus = (product: Product) => {
@@ -372,11 +377,13 @@ export default function ProductsListPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-            <p className="text-slate-500 dark:text-slate-400">Loading products...</p>
-          </div>
+        <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-6 2xl:max-w-[2200px]">
+          <PageHeader
+            title={t('products.title') || 'Products'}
+            subtitle={t('products.subtitle') || 'Manage your product inventory'}
+            icon={Package}
+          />
+          <LoadingState title="Loading products" description="Fetching stock, pricing, and EBM status." />
         </div>
       </Layout>
     );
@@ -386,15 +393,12 @@ export default function ProductsListPage() {
   if (error) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <AlertTriangle className="h-12 w-12 text-red-500" />
-            <p className="text-lg font-medium text-red-600 dark:text-red-400">Failed to load products</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{error}</p>
-            <Button onClick={() => loadProducts()} variant="outline" className="mt-2">
-              Try Again
-            </Button>
-          </div>
+        <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-6 2xl:max-w-[2200px]">
+          <ErrorState
+            title="Failed to load products"
+            description={error}
+            onRetry={() => loadProducts()}
+          />
         </div>
       </Layout>
     );
@@ -418,39 +422,39 @@ export default function ProductsListPage() {
     { stockValue: 0, units: 0, lowStock: 0, outOfStock: 0, active: 0 }
   );
   const riskCount = inventorySummary.lowStock + inventorySummary.outOfStock;
+  const hasFilters = Boolean(searchTerm || categoryFilter || supplierFilter || statusFilter);
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('');
+    setSupplierFilter('');
+    setStatusFilter('');
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
 
   return (
     <Layout>
       <div className="container mx-auto py-4 sm:py-6 px-3 sm:px-4 max-w-7xl 2xl:max-w-[2200px]">
-        {/* Page Header - Responsive */}
-        <div className="flex flex-col gap-3 mb-5">
-          {/* Title Row */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                {t('products.title') || 'Products'}
-              </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                {t('products.subtitle') || 'Manage your product inventory'}
-              </p>
-            </div>
-            {/* Action Buttons - Icon only on mobile, text on sm+ */}
-            <div className="flex flex-wrap items-center gap-2">
+        <PageHeader
+          title={t('products.title') || 'Products'}
+          subtitle={t('products.subtitle') || 'Manage stock, pricing, suppliers, and RRA EBM readiness from one place.'}
+          icon={Package}
+          actions={
+            <>
               <Button onClick={handleCheckLowStock} variant="outline" size="sm" disabled={actionLoading}>
-                <Bell className="h-4 w-4" />
-                <span className="ml-1.5 hidden sm:inline">{t('products.checkLowStock') || 'Check Low Stock'}</span>
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bell className="h-4 w-4" />}
+                <span className="hidden sm:inline">{t('products.checkLowStock') || 'Check Low Stock'}</span>
               </Button>
               <Button onClick={handleExport} variant="outline" size="sm">
                 <Download className="h-4 w-4" />
-                <span className="ml-1.5 hidden sm:inline">{t('common.export') || 'Export'}</span>
+                <span className="hidden sm:inline">{t('common.export') || 'Export'}</span>
               </Button>
-              <Button onClick={() => navigate('/products/new')} size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Button onClick={() => navigate('/products/new')} size="sm">
                 <Plus className="h-4 w-4" />
-                <span className="ml-1.5 hidden sm:inline">{t('products.addProduct') || 'New Product'}</span>
+                <span>{t('products.addProduct') || 'New Product'}</span>
               </Button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 mb-5">
           <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -504,7 +508,7 @@ export default function ProductsListPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-4 mb-5 shadow-sm">
+        <div className="mb-5 rounded-lg border border-border bg-card p-3 shadow-sm sm:p-4">
           <form onSubmit={handleSearch} className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -518,9 +522,9 @@ export default function ProductsListPage() {
                 />
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap">
               <Select value={categoryFilter || 'all'} onValueChange={(value) => { setCategoryFilter(value === 'all' ? '' : value); setPagination(prev => ({ ...prev, currentPage: 1 })); }}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full lg:w-[160px]">
                   <SelectValue placeholder={t('products.allCategories') || 'All Categories'} />
                 </SelectTrigger>
                 <SelectContent>
@@ -532,7 +536,7 @@ export default function ProductsListPage() {
               </Select>
 
               <Select value={supplierFilter || 'all'} onValueChange={(value) => { setSupplierFilter(value === 'all' ? '' : value); setPagination(prev => ({ ...prev, currentPage: 1 })); }}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full lg:w-[160px]">
                   <SelectValue placeholder={t('products.allSuppliers') || 'All Suppliers'} />
                 </SelectTrigger>
                 <SelectContent>
@@ -544,7 +548,7 @@ export default function ProductsListPage() {
               </Select>
               
               <Select value={statusFilter || 'all'} onValueChange={(value) => { setStatusFilter(value === 'all' ? '' : value); setPagination(prev => ({ ...prev, currentPage: 1 })); }}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full lg:w-[140px]">
                   <SelectValue placeholder={t('products.allStatus') || 'Status'} />
                 </SelectTrigger>
                 <SelectContent>
@@ -557,10 +561,15 @@ export default function ProductsListPage() {
                 </SelectContent>
               </Select>
               
-              <Button type="submit" variant="secondary">
+              <Button type="submit" variant="secondary" className="w-full sm:w-auto">
                 <Search className="h-4 w-4 mr-2" />
                 {t('common.search') || 'Search'}
               </Button>
+              {hasFilters && (
+                <Button type="button" variant="ghost" onClick={clearFilters} className="w-full sm:w-auto">
+                  Clear
+                </Button>
+              )}
             </div>
           </form>
         </div>
@@ -577,7 +586,7 @@ export default function ProductsListPage() {
               title={t('products.noProducts') || 'No products yet'}
               description={t('products.noProductsHint') || 'Add your first product to start tracking stock, pricing, and EBM registration.'}
               action={
-                <Button onClick={() => navigate('/products/new')} className="bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/30 hover:brightness-110">
+                <Button onClick={() => navigate('/products/new')}>
                   <Plus className="h-4 w-4 mr-2" />
                   {t('products.addFirstProduct') || 'Add your first product'}
                 </Button>
@@ -599,7 +608,7 @@ export default function ProductsListPage() {
                   <MobileCardRow
                     key={product._id}
                     title={product.name}
-                    subtitle={[product.sku, product.barcode].filter(Boolean).join(' • ')}
+                    subtitle={[product.sku, product.barcode].filter(Boolean).join(' / ')}
                     badge={
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${stockStatus.color}`}>
                         {stockStatus.label}

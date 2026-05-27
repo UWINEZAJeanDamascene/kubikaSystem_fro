@@ -48,10 +48,10 @@ import {
 } from "lucide-react";
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+  return `RWF ${new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)}`;
 }
 
 function formatNumber(value: number): string {
@@ -478,7 +478,7 @@ export default function FinanceDashboardPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <MetricCard
               title="Total Bank Balance"
-              value={`$${formatCurrency(totalBankBalance)}`}
+              value={formatCurrency(totalBankBalance)}
               subtitle={`${bankBalances?.accounts?.length ?? 0} bank account(s)`}
               icon={<Landmark className="h-5 w-5" />}
               tone="blue"
@@ -486,7 +486,7 @@ export default function FinanceDashboardPage() {
             />
             <MetricCard
               title="Upcoming AP"
-              value={`$${formatCurrency(upcomingAp)}`}
+              value={formatCurrency(upcomingAp)}
               subtitle={`${formatNumber(upcomingCount)} payment(s) due`}
               icon={<CreditCard className="h-5 w-5" />}
               tone="amber"
@@ -494,8 +494,8 @@ export default function FinanceDashboardPage() {
             />
             <MetricCard
               title="Net Cash Flow"
-              value={`$${formatCurrency(netCashFlow)}`}
-              subtitle={`In $${formatCurrency(cashInflows)} / Out $${formatCurrency(cashOutflows)}`}
+              value={formatCurrency(netCashFlow)}
+              subtitle={`In ${formatCurrency(cashInflows)} / Out ${formatCurrency(cashOutflows)}`}
               icon={<TrendingUp className="h-5 w-5" />}
               tone="green"
               loading={loading}
@@ -503,7 +503,7 @@ export default function FinanceDashboardPage() {
             />
             <MetricCard
               title="Net VAT Payable"
-              value={`$${formatCurrency(netVat)}`}
+              value={formatCurrency(netVat)}
               subtitle={`${taxData?.vat?.invoiceCount ?? 0} invoices, ${taxData?.vat?.expenseCount ?? 0} expenses`}
               icon={<Receipt className="h-5 w-5" />}
               tone="violet"
@@ -520,7 +520,7 @@ export default function FinanceDashboardPage() {
                 action={
                   !loading && (
                     <Badge variant={netVat > 0 ? "secondary" : "outline"}>
-                      ${formatCurrency(netVat)}
+                      {formatCurrency(netVat)}
                     </Badge>
                   )
                 }
@@ -543,7 +543,7 @@ export default function FinanceDashboardPage() {
                         <ChartTooltip
                           content={
                             <ChartTooltipContent
-                              formatter={(value) => `$${formatCurrency(Number(value))}`}
+                              formatter={(value) => formatCurrency(Number(value))}
                             />
                           }
                         />
@@ -577,7 +577,7 @@ export default function FinanceDashboardPage() {
                             </span>
                           </div>
                           <span className="text-sm font-semibold text-slate-950 dark:text-white">
-                            ${formatCurrency(item.value)}
+                            {formatCurrency(item.value)}
                           </span>
                         </div>
                       ))}
@@ -695,7 +695,7 @@ export default function FinanceDashboardPage() {
                                     ]?.label || name}
                                   </span>
                                   <span className="font-mono">
-                                    ${formatCurrency(Number(value))}
+                                    {formatCurrency(Number(value))}
                                   </span>
                                 </div>
                               )}
@@ -757,7 +757,7 @@ export default function FinanceDashboardPage() {
                             Inflows
                           </p>
                           <p className="mt-1 text-lg font-bold text-slate-950 dark:text-white">
-                            ${formatCurrency(cashInflows)}
+                            {formatCurrency(cashInflows)}
                           </p>
                         </div>
                         <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
@@ -765,7 +765,7 @@ export default function FinanceDashboardPage() {
                             Outflows
                           </p>
                           <p className="mt-1 text-lg font-bold text-slate-950 dark:text-white">
-                            ${formatCurrency(cashOutflows)}
+                            {formatCurrency(cashOutflows)}
                           </p>
                         </div>
                       </div>
@@ -873,7 +873,7 @@ export default function FinanceDashboardPage() {
                 action={
                   !loading && (
                     <Badge variant="secondary">
-                      ${formatCurrency(bankBalances?.total_balance ?? 0)}
+                      {formatCurrency(bankBalances?.total_balance ?? 0)}
                     </Badge>
                   )
                 }
@@ -903,7 +903,7 @@ export default function FinanceDashboardPage() {
                               formatter={(value, name) => (
                                 <div className="flex flex-col gap-0.5">
                                   <span className="font-medium">{name}</span>
-                                  <span>${formatCurrency(Number(value))}</span>
+                                  <span>{formatCurrency(Number(value))}</span>
                                 </div>
                               )}
                             />
@@ -958,7 +958,7 @@ export default function FinanceDashboardPage() {
                               {account.account_number || "-"}
                             </TableCell>
                             <TableCell className="text-right font-mono font-medium">
-                              {account.currency} {formatCurrency(account.current_balance)}
+                              {formatCurrency(account.current_balance)}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1014,7 +1014,7 @@ export default function FinanceDashboardPage() {
                                     ]?.label || name}
                                   </span>
                                   <span className="font-mono">
-                                    ${formatCurrency(Number(value))}
+                                    {formatCurrency(Number(value))}
                                   </span>
                                 </div>
                               )}
@@ -1042,7 +1042,7 @@ export default function FinanceDashboardPage() {
                           Budgeted
                         </p>
                         <p className="mt-1 font-mono text-sm font-bold text-slate-950 dark:text-white">
-                          ${formatCurrency(budgetVsActual.total_budgeted ?? 0)}
+                          {formatCurrency(budgetVsActual.total_budgeted ?? 0)}
                         </p>
                       </div>
                       <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
@@ -1050,7 +1050,7 @@ export default function FinanceDashboardPage() {
                           Actual
                         </p>
                         <p className="mt-1 font-mono text-sm font-bold text-slate-950 dark:text-white">
-                          ${formatCurrency(budgetVsActual.total_actual ?? 0)}
+                          {formatCurrency(budgetVsActual.total_actual ?? 0)}
                         </p>
                       </div>
                       <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
@@ -1064,7 +1064,7 @@ export default function FinanceDashboardPage() {
                               : "text-red-600 dark:text-red-400"
                           }`}
                         >
-                          ${formatCurrency(Math.abs(budgetVsActual.total_variance ?? 0))}
+                          {formatCurrency(Math.abs(budgetVsActual.total_variance ?? 0))}
                         </p>
                       </div>
                     </div>
@@ -1105,7 +1105,7 @@ export default function FinanceDashboardPage() {
                         <ArrowUpRight className="h-4 w-4 text-emerald-500" />
                       </div>
                       <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                        ${formatCurrency(outputVat)}
+                        {formatCurrency(outputVat)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
@@ -1116,7 +1116,7 @@ export default function FinanceDashboardPage() {
                         <ArrowDownRight className="h-4 w-4 text-red-500" />
                       </div>
                       <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">
-                        ${formatCurrency(inputVat)}
+                        {formatCurrency(inputVat)}
                       </p>
                     </div>
                     <div className="rounded-lg border border-violet-200 bg-violet-50 p-4 dark:border-violet-900 dark:bg-violet-950/30">
@@ -1127,7 +1127,7 @@ export default function FinanceDashboardPage() {
                         <Receipt className="h-4 w-4 text-violet-500" />
                       </div>
                       <p className="mt-2 text-2xl font-bold text-violet-950 dark:text-violet-100">
-                        ${formatCurrency(netVat)}
+                        {formatCurrency(netVat)}
                       </p>
                     </div>
                   </div>
@@ -1139,7 +1139,7 @@ export default function FinanceDashboardPage() {
               <PanelTitle
                 icon={<CalendarClock className="h-4 w-4 text-amber-500" />}
                 title={`Upcoming Payments (Next ${upcomingPayments?.days_ahead ?? 14} Days)`}
-                subtitle={`${upcomingPayments?.count ?? 0} payment(s), $${formatCurrency(upcomingPayments?.total ?? 0)} total`}
+                subtitle={`${upcomingPayments?.count ?? 0} payment(s), ${formatCurrency(upcomingPayments?.total ?? 0)} total`}
               />
               <CardContent>
                 {loading ? (
@@ -1175,7 +1175,7 @@ export default function FinanceDashboardPage() {
                               {payment.party_name}
                             </TableCell>
                             <TableCell className="text-right font-mono font-medium">
-                              ${formatCurrency(payment.amount)}
+                              {formatCurrency(payment.amount)}
                             </TableCell>
                             <TableCell className="text-slate-500">
                               {payment.due_date
@@ -1245,14 +1245,14 @@ export default function FinanceDashboardPage() {
                         tickLine={false}
                         axisLine={false}
                         tick={{ fontSize: 12 }}
-                        tickFormatter={(value) => `$${formatNumber(Number(value))}`}
+                        tickFormatter={(value) => formatCurrency(Number(value))}
                       />
                       <ChartTooltip
                         content={
                           <ChartTooltipContent
                             formatter={(value) => (
                               <span className="font-mono">
-                                ${formatCurrency(Number(value))}
+                                {formatCurrency(Number(value))}
                               </span>
                             )}
                           />
@@ -1316,10 +1316,10 @@ export default function FinanceDashboardPage() {
                               </div>
                             </TableCell>
                             <TableCell className="text-right font-mono text-emerald-600 dark:text-emerald-400">
-                              ${formatCurrency(source.cash_debit)}
+                              {formatCurrency(source.cash_debit)}
                             </TableCell>
                             <TableCell className="text-right font-mono text-red-600 dark:text-red-400">
-                              ${formatCurrency(source.cash_credit)}
+                              {formatCurrency(source.cash_credit)}
                             </TableCell>
                           </TableRow>
                         ))}
