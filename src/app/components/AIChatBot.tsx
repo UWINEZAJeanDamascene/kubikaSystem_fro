@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   X, Send, Bot, Loader2, ChevronDown,
   LogIn, RotateCcw, Maximize2, Minimize2, Sparkles,
-  TrendingUp, BarChart3, PieChart, Table, Zap,
+  TrendingUp, BarChart3, PieChart, Table, Zap, FileSpreadsheet,
   GripVertical, Download, Sunrise, TrendingDown, Minus,
   AlertTriangle, AlertCircle, Info, Target, Activity,
 } from 'lucide-react';
@@ -62,7 +62,7 @@ interface ParsedBlock {
 }
 
 // ─── Quick questions ─────────────────────────────────────────────────────────
-const QUICK_QUESTIONS = [
+const QUICK_QUESTIONS_DEPRECATED = [
   '🌅 Generate my morning briefing',
   '📈 Predict next month\'s revenue',
   '⚠️ What are my biggest risks?',
@@ -78,6 +78,38 @@ const QUICK_QUESTIONS = [
   '🔄 How do I receive stock after a purchase?',
   '🏦 Why is my balance sheet not balanced?',
   '👥 How do I add a new user?',
+];
+void QUICK_QUESTIONS_DEPRECATED;
+
+const QUICK_PROMPTS = [
+  'Generate my morning briefing',
+  'Predict next month revenue',
+  'What are my biggest risks?',
+  'Export stock analysis to Excel with charts',
+  'Create a PDF report for this month sales',
+  'Show my sales trend this quarter',
+  'Which batches expire next month?',
+  'Compare receivables and payables risk',
+  'Calculate my financial ratios',
+  'Why is my balance sheet not balanced?',
+  'How do I create and confirm an invoice?',
+  'How do I receive stock after a purchase?',
+];
+
+const CAPABILITY_TILES = [
+  { label: 'Analyze', detail: 'Live module data', icon: BarChart3, tone: 'text-cyan-300 bg-cyan-400/10 border-cyan-300/20' },
+  { label: 'Forecast', detail: 'Trends and risk', icon: TrendingUp, tone: 'text-emerald-300 bg-emerald-400/10 border-emerald-300/20' },
+  { label: 'Calculate', detail: 'Ratios and totals', icon: Target, tone: 'text-amber-200 bg-amber-300/10 border-amber-200/20' },
+  { label: 'Export', detail: 'Excel, CSV, PDF', icon: FileSpreadsheet, tone: 'text-violet-200 bg-violet-300/10 border-violet-200/20' },
+];
+
+const MODULE_GROUPS = [
+  'Inventory Core',
+  'Supply Chain',
+  'Revenue Flow',
+  'Finance Control',
+  'Intelligence',
+  'Control Room',
 ];
 
 // ─── Chart colors ───────────────────────────────────────────────────────────
@@ -1368,6 +1400,38 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString('en-RW', { hour: '2-digit', minute: '2-digit' });
 }
 
+function CapabilityPanel() {
+  return (
+    <div className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 shadow-sm">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-300">Stacy command center</p>
+          <p className="mt-0.5 text-[11px] text-slate-400">Grounded in live modules, calculations, forecasts, and exports.</p>
+        </div>
+        <Activity className="h-4 w-4 shrink-0 text-emerald-300" />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {CAPABILITY_TILES.map(({ label, detail, icon: Icon, tone }) => (
+          <div key={label} className={`rounded-lg border px-2.5 py-2 ${tone}`}>
+            <div className="flex items-center gap-1.5">
+              <Icon className="h-3.5 w-3.5" />
+              <span className="text-[11px] font-semibold text-slate-100">{label}</span>
+            </div>
+            <p className="mt-1 text-[10px] text-slate-400">{detail}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {MODULE_GROUPS.map((module) => (
+          <span key={module} className="rounded-md border border-slate-700/70 bg-slate-950/60 px-2 py-1 text-[10px] font-medium text-slate-300">
+            {module}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Initial message ─────────────────────────────────────────────────────────
 const makeInitialMessage = (): Message => ({
   role: 'assistant',
@@ -1402,11 +1466,33 @@ What can I help you with today?`,
   timestamp: new Date(),
 });
 
+const makePolishedInitialMessage = (): Message => ({
+  role: 'assistant',
+  content: `Hi, I'm **Stacy**, your KUBIKA SYSTEM AI assistant.
+
+I can work across your live modules: Inventory Core, Supply Chain, Revenue Flow, Finance Control, Intelligence, and Control Room.
+
+I can help you:
+
+- Analyze stock, sales, purchases, suppliers, clients, expenses, ledgers, and reports
+- Interpret P&L, Balance Sheet, Cash Flow, VAT, receivables, payables, and ratios
+- Forecast revenue, expenses, cash flow, inventory pressure, and collection risk
+- Generate Excel, CSV, and PDF files from analyzed data
+- Build chart-ready data and explain the numbers behind the chart
+- Troubleshoot workflows and explain the next action clearly
+
+I use live data when available, show assumptions for forecasts, and avoid guessing when something is not yet exposed to AI tools.
+
+What should we analyze first?`,
+  timestamp: new Date(),
+});
+void makeInitialMessage;
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function AIChatBot() {
   const { isAuthenticated } = useAuth();
   const { open, width, expanded, setOpen, setWidth, setExpanded, toggle } = useChatPanelStore();
-  const [messages, setMessages] = useState<Message[]>([makeInitialMessage()]);
+  const [messages, setMessages] = useState<Message[]>([makePolishedInitialMessage()]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -1422,7 +1508,7 @@ export default function AIChatBot() {
     if (savedMessages.length > 0) {
       setMessages(savedMessages.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
     } else {
-      setMessages([makeInitialMessage()]);
+      setMessages([makePolishedInitialMessage()]);
     }
   }, [isAuthenticated]);
 
@@ -1609,7 +1695,7 @@ export default function AIChatBot() {
     if (savedMessages.length > 0) {
       setMessages(savedMessages.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
     } else {
-      setMessages([makeInitialMessage()]);
+      setMessages([makePolishedInitialMessage()]);
     }
     setInput('');
   };
@@ -1687,7 +1773,7 @@ export default function AIChatBot() {
               </p>
               <p className="text-[11px] text-indigo-200 flex items-center gap-1">
                 <Zap className="h-3 w-3" />
-                {isAuthenticated ? 'Online · Full system knowledge' : 'Sign in to unlock full features'}
+                {isAuthenticated ? 'Online - live tools enabled' : 'Sign in to unlock full features'}
               </p>
             </div>
             <div className="flex items-center gap-1">
@@ -1752,12 +1838,13 @@ export default function AIChatBot() {
             ))}
 
             {messages.length === 1 && !loading && isAuthenticated && (
-              <div className="mt-1 flex flex-col gap-2">
+              <div className="mt-1 flex flex-col gap-3">
+                <CapabilityPanel />
                 <p className="px-1 text-[11px] text-slate-500 font-medium flex items-center gap-1">
                   <Sparkles className="h-3 w-3" /> Quick questions:
                 </p>
                 <div className="grid grid-cols-1 gap-1.5">
-                  {QUICK_QUESTIONS.map((q, i) => (
+                  {QUICK_PROMPTS.map((q, i) => (
                     <button
                       key={i}
                       onClick={() => sendMessage(q)}
@@ -1824,7 +1911,7 @@ export default function AIChatBot() {
                 </div>
                 <p className="mt-1.5 text-center text-[10px] text-slate-600 flex items-center justify-center gap-1">
                   <Sparkles className="h-3 w-3" />
-                  Stacy · Powered by Groq · Verify important info
+                  Stacy - live tools, forecasts, exports - verify critical decisions
                 </p>
               </>
             ) : (
@@ -1863,7 +1950,7 @@ export default function AIChatBot() {
               </p>
               <p className="text-[11px] text-indigo-200 flex items-center gap-1">
                 <Zap className="h-3 w-3" />
-                {isAuthenticated ? 'Online · Full system knowledge' : 'Sign in to unlock full features'}
+                {isAuthenticated ? 'Online - live tools enabled' : 'Sign in to unlock full features'}
               </p>
             </div>
             <div className="flex items-center gap-1">
@@ -1931,12 +2018,13 @@ export default function AIChatBot() {
 
             {/* Quick questions */}
             {messages.length === 1 && !loading && isAuthenticated && (
-              <div className="mt-1 flex flex-col gap-2">
+              <div className="mt-1 flex flex-col gap-3">
+                <CapabilityPanel />
                 <p className="px-1 text-[11px] text-slate-500 font-medium flex items-center gap-1">
                   <Sparkles className="h-3 w-3" /> Quick questions:
                 </p>
                 <div className="grid grid-cols-1 gap-1.5">
-                  {QUICK_QUESTIONS.map((q, i) => (
+                  {QUICK_PROMPTS.map((q, i) => (
                     <button
                       key={i}
                       onClick={() => sendMessage(q)}
@@ -2006,7 +2094,7 @@ export default function AIChatBot() {
                 </div>
                 <p className="mt-1.5 text-center text-[10px] text-slate-600 flex items-center justify-center gap-1">
                   <Sparkles className="h-3 w-3" />
-                  Stacy · Powered by Groq · Verify important info
+                  Stacy - live tools, forecasts, exports - verify critical decisions
                 </p>
               </>
             ) : (

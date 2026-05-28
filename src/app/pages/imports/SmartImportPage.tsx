@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/app/components/ui/tooltip";
 import { AlertCircle, Check, Download, FileSpreadsheet, Loader2, Save, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/store/authStore";
 
 type Step = "upload" | "map" | "validate" | "process" | "results";
 
@@ -178,8 +179,9 @@ export default function SmartImportPage() {
   }
 
   async function downloadAuthenticated(url: string, filename: string) {
-    const token = localStorage.getItem("token");
-    const companyId = localStorage.getItem("companyId");
+    const authState = useAuthStore.getState();
+    const token = authState.accessToken || localStorage.getItem("token");
+    const companyId = authState.activeCompanyId || localStorage.getItem("companyId");
     const res = await fetch(url, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),

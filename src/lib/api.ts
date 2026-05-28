@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "./apiBase";
+import { useAuthStore } from "@/store/authStore";
 export { API_BASE_URL };
 
 // Bank Account Types
@@ -182,8 +183,9 @@ async function request<T>(
   endpoint: string,
   options: RequestOptions = {},
 ): Promise<T> {
-  const token = localStorage.getItem("token");
-  const companyId = localStorage.getItem("companyId");
+  const authState = useAuthStore.getState();
+  const token = authState.accessToken || localStorage.getItem("token");
+  const companyId = authState.activeCompanyId || localStorage.getItem("companyId");
 
   const isFormData = options.body instanceof FormData;
   const headers: Record<string, string> = {
@@ -6256,8 +6258,9 @@ export interface SmartImportTemplate {
 }
 
 function authHeaders(includeJson = true): Record<string, string> {
-  const token = localStorage.getItem("token");
-  const companyId = localStorage.getItem("companyId");
+  const authState = useAuthStore.getState();
+  const token = authState.accessToken || localStorage.getItem("token");
+  const companyId = authState.activeCompanyId || localStorage.getItem("companyId");
   return {
     ...(includeJson ? { "Content-Type": "application/json" } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
