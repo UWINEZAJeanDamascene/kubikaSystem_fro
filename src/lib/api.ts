@@ -6237,120 +6237,92 @@ export const auditTrailApi = {
     request<{ success: boolean; data: unknown }>(`/audit-trail/${id}`),
 };
 
-// Bulk Data Import/Export API
-export const bulkDataApi = {
-  getTypes: () =>
-    request<{
-      success: boolean;
-      data: Array<{
-        key: string;
-        label: string;
-        resource: string;
-        fields: Array<{ field: string; label: string; required: boolean }>;
-      }>;
-    }>("/bulk/types"),
-  exportData: (type: string) => {
-    const token = localStorage.getItem("token");
-    return fetch(`${API_BASE_URL}/bulk/export/${type}`, {
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
-    }).then((res) => {
-      if (!res.ok) throw new Error(`Failed to export ${type}`);
-      return res.blob();
-    });
-  },
-  importData: (type: string, file: File) => {
-    const token = localStorage.getItem("token");
+export interface SmartImportField {
+  key: string;
+  label: string;
+  required: boolean;
+  section: string;
+  example?: string;
+  instructions?: string;
+}
+
+export interface SmartImportTemplate {
+  _id: string;
+  entityType: string;
+  name: string;
+  columnMapping: Record<string, string>;
+  lastUsedAt?: string;
+  useCount: number;
+}
+
+function authHeaders(includeJson = true): Record<string, string> {
+  const token = localStorage.getItem("token");
+  const companyId = localStorage.getItem("companyId");
+  return {
+    ...(includeJson ? { "Content-Type": "application/json" } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(companyId ? { "X-Company-Id": companyId } : {}),
+  };
+}
+
+export const smartImportsApi = {
+  getEntityTypes: () =>
+    request<{ success: boolean; data: Array<{ key: string; label: string; fields: SmartImportField[] }> }>("/imports/entity-types"),
+  parseHeaders: (entityType: string, file: File) => {
     const formData = new FormData();
+    formData.append("entityType", entityType);
     formData.append("file", file);
-    return fetch(`${API_BASE_URL}/bulk/import/${type}`, {
+    return fetch(`${API_BASE_URL}/imports/parse-headers`, {
       method: "POST",
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
+      headers: authHeaders(false),
       body: formData,
     }).then(async (res) => {
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || `Failed to import ${type}`);
-      return data;
+      if (!res.ok) throw new Error(data.message || "Failed to parse import file");
+      return data as { success: boolean; data: any };
     });
   },
-  exportProducts: () => {
-    const token = localStorage.getItem("token");
-    return fetch(`${API_BASE_URL}/bulk/export/products`, {
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
-    }).then((res) => {
-      if (!res.ok) throw new Error("Failed to export products");
-      return res.blob();
-    });
+  getTemplates: (entityType: string) =>
+    request<{ success: boolean; data: SmartImportTemplate[] }>(`/imports/templates/${entityType}`),
+  saveTemplate: (payload: { entityType: string; name: string; columnMapping: Record<string, string> }) =>
+    request<{ success: boolean; data: SmartImportTemplate }>("/imports/templates", { method: "POST", body: payload }),
+  updateTemplate: (id: string, payload: { name: string; columnMapping: Record<string, string> }) =>
+    request<{ success: boolean; data: SmartImportTemplate }>(`/imports/templates/${id}`, { method: "PUT", body: payload }),
+  deleteTemplate: (id: string) =>
+    request<{ success: boolean; data: { deleted: boolean } }>(`/imports/templates/${id}`, { method: "DELETE" }),
+  validate: (payload: { entityType: string; columnMapping: Record<string, string>; rows?: any[]; file?: File | null }) => {
+    if (payload.file) {
+      const formData = new FormData();
+      formData.append("entityType", payload.entityType);
+      formData.append("columnMapping", JSON.stringify(payload.columnMapping));
+      formData.append("file", payload.file);
+      return fetch(`${API_BASE_URL}/imports/validate`, {
+        method: "POST",
+        headers: authHeaders(false),
+        body: formData,
+      }).then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Validation failed");
+        return data as { success: boolean; data: any };
+      });
+    }
+    return request<{ success: boolean; data: any }>("/imports/validate", { method: "POST", body: payload });
   },
-  exportClients: () => {
-    const token = localStorage.getItem("token");
-    return fetch(`${API_BASE_URL}/bulk/export/clients`, {
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
-    }).then((res) => {
-      if (!res.ok) throw new Error("Failed to export clients");
-      return res.blob();
-    });
-  },
-  exportSuppliers: () => {
-    const token = localStorage.getItem("token");
-    return fetch(`${API_BASE_URL}/bulk/export/suppliers`, {
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
-    }).then((res) => {
-      if (!res.ok) throw new Error("Failed to export suppliers");
-      return res.blob();
-    });
-  },
-  downloadTemplate: (type: string) => {
-    const token = localStorage.getItem("token");
-    return fetch(`${API_BASE_URL}/bulk/template/${type}`, {
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
+  process: (payload: { entityType: string; fileName: string; rows: any[]; duplicateAction: "skip" | "update" | "create"; templateId?: string | null }) =>
+    request<{ success: boolean; data: { jobId: string; logId: string; backend: string } }>("/imports/process", { method: "POST", body: payload }),
+  progress: (jobId: string) =>
+    request<{ success: boolean; data: any }>(`/imports/progress/${jobId}`),
+  history: (params?: { entityType?: string; from?: string; to?: string }) =>
+    request<{ success: boolean; data: any[] }>("/imports/history", { params }),
+  downloadTemplate: (entityType: string) =>
+    fetch(`${API_BASE_URL}/imports/download-template/${entityType}`, {
+      headers: authHeaders(false),
     }).then((res) => {
       if (!res.ok) throw new Error("Failed to download template");
       return res.blob();
-    });
-  },
-  importProducts: (file: File) => {
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-    return fetch(`${API_BASE_URL}/bulk/import/products`, {
-      method: "POST",
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
-      body: formData,
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to import products");
-      return data;
-    });
-  },
-  importClients: (file: File) => {
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-    return fetch(`${API_BASE_URL}/bulk/import/clients`, {
-      method: "POST",
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
-      body: formData,
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to import clients");
-      return data;
-    });
-  },
-  importSuppliers: (file: File) => {
-    const token = localStorage.getItem("token");
-    const formData = new FormData();
-    formData.append("file", file);
-    return fetch(`${API_BASE_URL}/bulk/import/suppliers`, {
-      method: "POST",
-      headers: { Authorization: token ? `Bearer ${token}` : "" },
-      body: formData,
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.message || "Failed to import suppliers");
-      return data;
-    });
-  },
+    }),
+  downloadErrorReportUrl: (id: string) => `${API_BASE_URL}/imports/history/${id}/error-report`,
+  downloadResultsReportUrl: (id: string) => `${API_BASE_URL}/imports/history/${id}/results-report`,
 };
 
 // Testimonials API

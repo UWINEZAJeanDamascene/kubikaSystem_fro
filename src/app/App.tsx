@@ -66,7 +66,7 @@ const NotificationSettingsPage = lazy(() => import('./pages/NotificationSettings
 const BackupPage = lazy(() => import('./pages/BackupPage'));
 const TestimonialsPage = lazy(() => import('./pages/TestimonialsPage'));
 const DepartmentsPage = lazy(() => import('./pages/DepartmentsPage'));
-const BulkDataPage = lazy(() => import('./pages/BulkDataPage'));
+const SmartImportPage = lazy(() => import('./pages/imports/SmartImportPage'));
 const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage'));
 const PlatformAdminPage = lazy(() => import('./pages/PlatformAdminPage'));
 const TenantsPage = lazy(() => import('./pages/TenantsPage'));
@@ -735,7 +735,8 @@ function AppRoutes() {
             <ChartOfAccountsPage />
           </ErrorBoundary>
         } />
-        <Route path="/bulk-data" element={<BulkDataPage />} />
+        <Route path="/imports" element={<SmartImportPage />} />
+        <Route path="/imports/:entityType" element={<SmartImportPage />} />
         <Route path="/audit-trail" element={<AuditTrailPage />} />
         {/* Platform Owner routes - separate layout, no company context */}
         <Route path="/platform-admin" element={

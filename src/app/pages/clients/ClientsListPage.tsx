@@ -229,7 +229,7 @@ export default function ClientsListPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate('/bulk-data')}
+                    onClick={() => navigate('/imports/customers')}
                     className="h-9 gap-1.5 dark:border-slate-700 dark:text-slate-200"
                   >
                     <FileText className="h-4 w-4" />

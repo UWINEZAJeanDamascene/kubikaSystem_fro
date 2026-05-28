@@ -160,7 +160,7 @@ const PAGES: PageEntry[] = [
   { label: 'Notifications', href: '/notifications/list', group: 'Control Room', icon: Bell, keywords: 'inbox alerts' },
   { label: 'Notification Settings', href: '/notifications', group: 'Control Room', icon: Settings2 },
   { label: 'Backup & Restore', href: '/backups', group: 'Control Room', icon: HardDrive, keywords: 'data backup' },
-  { label: 'Bulk Data', href: '/bulk-data', group: 'Control Room', icon: FileSpreadsheet, keywords: 'import export csv' },
+  { label: 'Smart Import', href: '/imports', group: 'Control Room', icon: FileSpreadsheet, keywords: 'import export csv excel mapping' },
   { label: 'Audit Trail', href: '/audit-trail', group: 'Control Room', icon: History, keywords: 'logs activity' },
   { label: 'Testimonials', href: '/testimonials', group: 'Control Room', icon: Star },
   { label: 'Getting Started Guide', href: '/onboarding', group: 'Control Room', icon: HelpCircle, keywords: 'help tutorial' },

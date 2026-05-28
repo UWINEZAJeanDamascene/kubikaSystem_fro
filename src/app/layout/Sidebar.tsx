@@ -750,7 +750,7 @@ const systemNav: NavSection = {
     },
     {
       nameKey: "nav.bulkData",
-      href: "/bulk-data",
+      href: "/imports",
       icon: FileSpreadsheet,
       permission: "products:read",
     },

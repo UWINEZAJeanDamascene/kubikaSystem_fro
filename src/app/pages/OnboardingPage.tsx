@@ -281,7 +281,7 @@ const SECTIONS: OnboardingSection[] = [
       { name: 'Company Settings', href: '/company-settings', icon: Settings, what: 'Currency, fiscal year, tax rates and company profile.' },
       { name: 'Notifications', href: '/notifications', icon: Bell, what: 'Configure alert rules for low stock, payments and system events.' },
       { name: 'Backup & Restore', href: '/backups', icon: HardDrive, what: 'Manual and scheduled backups of your company data.' },
-      { name: 'Bulk Data', href: '/bulk-data', icon: FileText, what: 'Import products, clients and suppliers from spreadsheet files.' },
+      { name: 'Smart Import', href: '/imports', icon: FileText, what: 'Import products, customers, suppliers, employees, accounts and opening balances from spreadsheet files.' },
       { name: 'Audit Trail', href: '/audit-trail', icon: Clock, what: 'Log of every data change with user, timestamp and before/after values.' },
     ],
     workflow: [

@@ -27,7 +27,7 @@ export const APP_ROUTES = {
   SECURITY: '/security',
   BACKUPS: '/backups',
   DEPARTMENTS: '/departments',
-  BULK_DATA: '/bulk-data',
+  BULK_DATA: '/imports',
   AUDIT_TRAIL: '/audit-trail',
   
   // Notifications
