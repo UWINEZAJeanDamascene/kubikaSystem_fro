@@ -5,12 +5,22 @@
 
 import { API_BASE_URL, api as request } from "./api";
 
+const formatDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 // Helper to download file with auth token
 const downloadFile = async (url: string, filename: string) => {
   const token = localStorage.getItem("token");
+  const companyId = localStorage.getItem("companyId");
   const response = await fetch(url, {
+    cache: "no-store",
     headers: {
       Authorization: token ? `Bearer ${token}` : "",
+      ...(companyId ? { "X-Company-Id": companyId } : {}),
     },
   });
   if (!response.ok) {
@@ -250,9 +260,9 @@ export const weeklyReportsApi = {
       '/reports/weekly/inventory-reorder'
     ),
   downloadInventoryReorderPDF: () =>
-    downloadFile(`${API_BASE_URL}/reports/weekly/inventory-reorder/pdf`, `weekly-inventory-reorder-${new Date().toISOString().split('T')[0]}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/weekly/inventory-reorder/pdf`, `weekly-inventory-reorder-${formatDate(new Date())}.pdf`),
   downloadInventoryReorderExcel: () =>
-    downloadFile(`${API_BASE_URL}/reports/weekly/inventory-reorder/excel`, `weekly-inventory-reorder-${new Date().toISOString().split('T')[0]}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/weekly/inventory-reorder/excel`, `weekly-inventory-reorder-${formatDate(new Date())}.xlsx`),
 
   // 3. Weekly Supplier Performance
   getSupplierPerformance: (weekStart?: string) =>
@@ -270,9 +280,9 @@ export const weeklyReportsApi = {
       '/reports/weekly/receivables-aging'
     ),
   downloadReceivablesAgingPDF: () =>
-    downloadFile(`${API_BASE_URL}/reports/weekly/receivables-aging/pdf`, `weekly-receivables-aging-${new Date().toISOString().split('T')[0]}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/weekly/receivables-aging/pdf`, `weekly-receivables-aging-${formatDate(new Date())}.pdf`),
   downloadReceivablesAgingExcel: () =>
-    downloadFile(`${API_BASE_URL}/reports/weekly/receivables-aging/excel`, `weekly-receivables-aging-${new Date().toISOString().split('T')[0]}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/weekly/receivables-aging/excel`, `weekly-receivables-aging-${formatDate(new Date())}.xlsx`),
 
   // 5. Weekly Payables Aging
   getPayablesAging: () =>
@@ -280,9 +290,9 @@ export const weeklyReportsApi = {
       '/reports/weekly/payables-aging'
     ),
   downloadPayablesAgingPDF: () =>
-    downloadFile(`${API_BASE_URL}/reports/weekly/payables-aging/pdf`, `weekly-payables-aging-${new Date().toISOString().split('T')[0]}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/weekly/payables-aging/pdf`, `weekly-payables-aging-${formatDate(new Date())}.pdf`),
   downloadPayablesAgingExcel: () =>
-    downloadFile(`${API_BASE_URL}/reports/weekly/payables-aging/excel`, `weekly-payables-aging-${new Date().toISOString().split('T')[0]}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/weekly/payables-aging/excel`, `weekly-payables-aging-${formatDate(new Date())}.xlsx`),
 
   // 6. Weekly Cash Flow
   getCashFlow: (weekStart?: string) =>
@@ -300,9 +310,9 @@ export const weeklyReportsApi = {
       '/reports/weekly/payroll-preview'
     ),
   downloadPayrollPreviewPDF: () =>
-    downloadFile(`${API_BASE_URL}/reports/weekly/payroll-preview/pdf`, `weekly-payroll-${new Date().toISOString().split('T')[0]}.pdf`),
+    downloadFile(`${API_BASE_URL}/reports/weekly/payroll-preview/pdf`, `weekly-payroll-${formatDate(new Date())}.pdf`),
   downloadPayrollPreviewExcel: () =>
-    downloadFile(`${API_BASE_URL}/reports/weekly/payroll-preview/excel`, `weekly-payroll-${new Date().toISOString().split('T')[0]}.xlsx`),
+    downloadFile(`${API_BASE_URL}/reports/weekly/payroll-preview/excel`, `weekly-payroll-${formatDate(new Date())}.xlsx`),
 
   // Helper: Get default week (last completed Monday-Sunday week)
   getDefaultWeek: () => {
@@ -313,6 +323,6 @@ export const weeklyReportsApi = {
     lastSunday.setDate(today.getDate() - daysFromLastSunday);
     const monday = new Date(lastSunday);
     monday.setDate(lastSunday.getDate() - 6);
-    return monday.toISOString().split('T')[0];
+    return formatDate(monday);
   }
 };

@@ -70,7 +70,6 @@ export function useWeeklySupplierPerformance(weekStart?: string) {
       if (!response.success) {
         throw new Error('Failed to load supplier performance report');
       }
-      console.log('API Response data:', response.data);
       return response.data;
     },
     staleTime: 0,

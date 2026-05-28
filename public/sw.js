@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `stock-mgt-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `stock-mgt-dynamic-${CACHE_VERSION}`;
 const API_CACHE = `stock-mgt-api-${CACHE_VERSION}`;
@@ -136,6 +136,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+  const isReportExport = /^\/api\/reports\/.+\/(pdf|excel)$/.test(url.pathname);
 
   // Skip non-GET requests — queue mutating requests if offline
   if (request.method !== 'GET') {
@@ -189,6 +190,12 @@ self.addEventListener('fetch', (event) => {
         })
       );
     }
+    return;
+  }
+
+  // Report exports are live file downloads. Never replace them with offline JSON.
+  if (request.method === 'GET' && isReportExport) {
+    event.respondWith(fetch(request.clone()));
     return;
   }
 

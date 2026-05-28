@@ -7,7 +7,7 @@ import { useWeeklySalesPerformance } from "@/lib/hooks/useWeeklyReports";
 import { toast } from "sonner";
 import { WeeklyReportScaffold, weeklyReportCardClass, type WeeklyMetric } from "./components/WeeklyReportScaffold";
 
-const fmt = (n: number | null) => n === null || n === undefined ? "-" : "RWF " + Math.abs(n).toLocaleString("en-RW", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n: number | null) => n === null || n === undefined ? "-" : (n < 0 ? "-" : "") + "RWF " + Math.abs(n).toLocaleString("en-RW", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const pct = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}%`;
 const Change = ({ value }: { value: number }) => value > 0 ? <span className="inline-flex items-center gap-1 text-emerald-600"><TrendingUp className="h-4 w-4" />{pct(value)}</span> : value < 0 ? <span className="inline-flex items-center gap-1 text-rose-600"><TrendingDown className="h-4 w-4" />{pct(value)}</span> : <span className="inline-flex items-center gap-1 text-slate-500"><Minus className="h-4 w-4" />0%</span>;
 

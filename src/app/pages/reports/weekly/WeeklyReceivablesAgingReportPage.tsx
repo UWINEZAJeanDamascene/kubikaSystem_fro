@@ -8,7 +8,7 @@ import { useWeeklyReceivablesAging } from "@/lib/hooks/useWeeklyReports";
 import { toast } from "sonner";
 import { WeeklyReportScaffold, weeklyReportCardClass, type WeeklyMetric } from "./components/WeeklyReportScaffold";
 
-const fmt = (n: number | null) => n === null || n === undefined ? "-" : "RWF " + Math.abs(n).toLocaleString("en-RW", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n: number | null) => n === null || n === undefined ? "-" : (n < 0 ? "-" : "") + "RWF " + Math.abs(n).toLocaleString("en-RW", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const buckets = [
   { key: "0-7", label: "0-7 Days", tone: "emerald" as const },
   { key: "8-14", label: "8-14 Days", tone: "amber" as const },

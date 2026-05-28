@@ -14,7 +14,7 @@ import {
 
 const fmt = (n: number | null) => {
   if (n === null || n === undefined) return "-";
-  return "RWF " + Math.abs(n).toLocaleString("en-RW", {
+  return `${n < 0 ? "-" : ""}RWF ` + Math.abs(n).toLocaleString("en-RW", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

@@ -7,7 +7,7 @@ import { useWeeklyPayrollPreview } from "@/lib/hooks/useWeeklyReports";
 import { toast } from "sonner";
 import { WeeklyReportScaffold, weeklyReportCardClass, type WeeklyMetric } from "./components/WeeklyReportScaffold";
 
-const fmt = (n: number | null | undefined) => n === null || n === undefined ? "-" : "RWF " + Math.abs(n).toLocaleString("en-RW", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n: number | null | undefined) => n === null || n === undefined ? "-" : (n < 0 ? "-" : "") + "RWF " + Math.abs(n).toLocaleString("en-RW", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function WeeklyPayrollPreviewReportPage() {
   const navigate = useNavigate();
