@@ -88,7 +88,7 @@ interface InvoiceFormData {
   lines: InvoiceLine[];
 }
 
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'RWF', 'KES', 'UGX', 'TZS'];
+const CURRENCIES = ['RWF'];
 
 const emptyLine: InvoiceLine = {
   product: '',
@@ -120,7 +120,7 @@ export default function InvoiceFormPage() {
     invoiceDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     paymentTerms: 'net30',
-    currencyCode: 'USD',
+    currencyCode: 'RWF',
     notes: '',
     lines: [{ ...emptyLine }]
   });
@@ -178,7 +178,7 @@ export default function InvoiceFormPage() {
           invoiceDate: invoice.invoiceDate ? invoice.invoiceDate.split('T')[0] : '',
           dueDate: invoice.dueDate ? invoice.dueDate.split('T')[0] : '',
           paymentTerms: invoice.paymentTerms || 'net30',
-          currencyCode: invoice.currencyCode || 'USD',
+          currencyCode: 'RWF',
           notes: invoice.notes || '',
           lines: invoice.lines && invoice.lines.length > 0
             ? invoice.lines.map((line: any) => ({
@@ -361,7 +361,7 @@ export default function InvoiceFormPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: formData.currencyCode }).format(amount);
+    return `RWF ${Math.round(Number(amount || 0)).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
   };
 
   if (loading) {
@@ -445,7 +445,7 @@ export default function InvoiceFormPage() {
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-sm text-slate-700 dark:text-slate-300">Currency</Label>
-                      <Select value={formData.currencyCode} onValueChange={(value) => setFormData(prev => ({ ...prev, currencyCode: value }))}>
+                      <Select value={formData.currencyCode} onValueChange={() => setFormData(prev => ({ ...prev, currencyCode: 'RWF' }))}>
                         <SelectTrigger className="bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white">
                           <SelectValue />
                         </SelectTrigger>

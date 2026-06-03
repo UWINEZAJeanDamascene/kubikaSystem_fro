@@ -129,6 +129,10 @@ export default function ClientQuotationViewPage() {
 
   const handleAccept = async () => {
     if (!quotation) return;
+    if (quotation.status !== 'sent') {
+      toast.error('Quotation must be sent before it can be accepted');
+      return;
+    }
     setProcessing(true);
     try {
       const response = await quotationsApi.accept(quotation._id);
@@ -150,6 +154,10 @@ export default function ClientQuotationViewPage() {
 
   const handleReject = async () => {
     if (!quotation || !rejectionReason.trim()) return;
+    if (quotation.status !== 'sent') {
+      toast.error('Only sent quotations can be rejected');
+      return;
+    }
     setProcessing(true);
     try {
       // Use the updated reject API with reason
@@ -293,11 +301,22 @@ export default function ClientQuotationViewPage() {
                   </Button>
                   {canTakeAction && (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => setShowRejectDialog(true)} disabled={processing} className="h-9 gap-2 border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowRejectDialog(true)}
+                        disabled={processing || quotation.status !== 'sent'}
+                        className="h-9 gap-2 border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20"
+                      >
                         <Ban className="h-4 w-4" />
                         Reject
                       </Button>
-                      <Button size="sm" onClick={handleAccept} disabled={processing} className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                      <Button
+                        size="sm"
+                        onClick={handleAccept}
+                        disabled={processing || quotation.status !== 'sent'}
+                        className="h-9 gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                      >
                         {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
                         Accept
                       </Button>
@@ -328,11 +347,22 @@ export default function ClientQuotationViewPage() {
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setShowRejectDialog(true)} disabled={processing} className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowRejectDialog(true)}
+                      disabled={processing || quotation.status !== 'sent'}
+                      className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/20"
+                    >
                       <XCircle className="mr-1 h-4 w-4" />
                       Reject
                     </Button>
-                    <Button size="sm" onClick={handleAccept} disabled={processing} className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500">
+                    <Button
+                      size="sm"
+                      onClick={handleAccept}
+                      disabled={processing || quotation.status !== 'sent'}
+                      className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                    >
                       {processing ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-1 h-4 w-4" />}
                       Accept
                     </Button>

@@ -229,12 +229,12 @@ export default function ProductsListPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, categoryFilter, supplierFilter, statusFilter]);
+  }, [pagination.currentPage, pagination.limit, searchTerm, categoryFilter, supplierFilter, statusFilter]);
 
   // Load products on mount and when page/limit/filters change
   useEffect(() => {
     loadProducts();
-  }, [pagination.currentPage, pagination.limit, searchTerm, categoryFilter, supplierFilter, statusFilter]);
+  }, [loadProducts]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

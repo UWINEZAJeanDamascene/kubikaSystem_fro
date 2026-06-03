@@ -48,7 +48,7 @@ import {
   DoorOpen,
   DoorClosed,
 } from 'lucide-react';
-import { salesLegacyApi, clientsApi, warehouseApi, PosProduct, bankAccountsApi, invoicesApi, creditNotesApi } from '@/lib/api';
+import { salesLegacyApi, clientsApi, warehouseApi, PosProduct, bankAccountsApi, invoicesApi, creditNotesApi, tillApi } from '@/lib/api';
 import { useFormatCurrency } from '@/lib/currencyUtils';
 import { useTranslation } from 'react-i18next';
 import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
@@ -88,6 +88,7 @@ interface HeldSale {
 }
 
 interface TillSession {
+  _id?: string;
   openedAt: string;
   openingFloat: number;
   closingCount?: number;
@@ -156,6 +157,7 @@ export default function SalesLegacyPage() {
   const [bankAccounts, setBankAccounts] = useState<Array<{_id: string; name: string; accountType: string}>>([]);
   const [heldSales, setHeldSales] = useState<HeldSale[]>([]);
   const [tillSession, setTillSession] = useState<TillSession | null>(null);
+  const [tillLoading, setTillLoading] = useState(false);
   const [openingFloatInput, setOpeningFloatInput] = useState('');
   const [closingCountInput, setClosingCountInput] = useState('');
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
@@ -168,13 +170,39 @@ export default function SalesLegacyPage() {
   const lastScanKeyAtRef = useRef(0);
   const scanFlushTimerRef = useRef<number | null>(null);
   
+  const fetchActiveTill = useCallback(async () => {
+    setTillLoading(true);
+    try {
+      const response = await tillApi.getActive();
+      if (response.success) {
+        const active = response.data as any;
+        if (active && active.status === 'open') {
+          setTillSession({
+            _id: active._id,
+            openedAt: active.openedAt,
+            openingFloat: toNumericAmount(active.openingFloat),
+            closingCount: active.closingCount,
+            status: active.status,
+          });
+        } else {
+          setTillSession(null);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load till session:', error);
+      toast.error('Could not load till status');
+    } finally {
+      setTillLoading(false);
+    }
+  }, []);
+
   // Load initial data
   useEffect(() => {
     loadWarehouses();
     loadClients();
     loadBankAccounts();
+    fetchActiveTill();
     const storedHeldSales = localStorage.getItem('pos-held-sales');
-    const storedTillSession = localStorage.getItem('pos-till-session');
     if (storedHeldSales) {
       try {
         setHeldSales(JSON.parse(storedHeldSales));
@@ -182,27 +210,12 @@ export default function SalesLegacyPage() {
         localStorage.removeItem('pos-held-sales');
       }
     }
-    if (storedTillSession) {
-      try {
-        const parsed = JSON.parse(storedTillSession);
-        if (parsed?.status === 'open') setTillSession(parsed);
-      } catch {
-        localStorage.removeItem('pos-till-session');
-      }
-    }
-  }, []);
+  }, [fetchActiveTill]);
 
   useEffect(() => {
     localStorage.setItem('pos-held-sales', JSON.stringify(heldSales));
   }, [heldSales]);
 
-  useEffect(() => {
-    if (tillSession) {
-      localStorage.setItem('pos-till-session', JSON.stringify(tillSession));
-    } else {
-      localStorage.removeItem('pos-till-session');
-    }
-  }, [tillSession]);
   
   const loadBankAccounts = async () => {
     try {
@@ -485,44 +498,60 @@ export default function SalesLegacyPage() {
     toast.success('Held sale recalled');
   };
 
-  const openTill = () => {
+  const openTill = async () => {
     const openingFloat = Number(openingFloatInput);
     if (!Number.isFinite(openingFloat) || openingFloat < 0) {
       toast.error('Enter a valid opening float');
       return;
     }
-    setTillSession({ openedAt: new Date().toISOString(), openingFloat, status: 'open' });
-    setOpeningFloatInput('');
-    toast.success('Till opened');
+    setTillLoading(true);
+    try {
+      const response = await tillApi.open(openingFloat);
+      if (response.success) {
+        const data = response.data as any;
+        setTillSession({
+          _id: data._id,
+          openedAt: data.openedAt,
+          openingFloat: toNumericAmount(data.openingFloat),
+          closingCount: data.closingCount,
+          status: data.status,
+        });
+        toast.success('Till opened');
+      } else {
+        toast.error(response.message || 'Failed to open till');
+      }
+    } catch (error: any) {
+      console.error('Failed to open till:', error);
+      toast.error(error?.message || 'Failed to open till');
+    } finally {
+      setTillLoading(false);
+      setOpeningFloatInput('');
+    }
   };
 
-  const closeTill = () => {
+  const closeTill = async () => {
     if (!tillSession) return;
     const closingCount = Number(closingCountInput);
     if (!Number.isFinite(closingCount) || closingCount < 0) {
       toast.error('Enter a valid closing count');
       return;
     }
-    const saleLog = JSON.parse(localStorage.getItem('pos-sale-log') || '[]') as Array<{
-      completedAt: string;
-      paymentMethod: string;
-      total: number;
-    }>;
-    const cashSales = saleLog
-      .filter((sale) => sale.paymentMethod === 'cash' && new Date(sale.completedAt) >= new Date(tillSession.openedAt))
-      .reduce((sum, sale) => sum + toNumber(sale.total), 0);
-    const zRead = {
-      ...tillSession,
-      closingCount,
-      cashSales,
-      expectedCash: tillSession.openingFloat + cashSales,
-      closedAt: new Date().toISOString(),
-      status: 'closed' as const,
-    };
-    localStorage.setItem(`pos-z-read-${zRead.closedAt}`, JSON.stringify(zRead));
-    setTillSession(null);
-    setClosingCountInput('');
-    toast.success(`Z-read saved. Variance: ${formatCurrency(closingCount - zRead.expectedCash)}`);
+    setTillLoading(true);
+    try {
+      const response = await tillApi.close(closingCount);
+      if (response.success) {
+        setTillSession(null);
+        setClosingCountInput('');
+        toast.success('Till closed');
+      } else {
+        toast.error(response.message || 'Failed to close till');
+      }
+    } catch (error: any) {
+      console.error('Failed to close till:', error);
+      toast.error(error?.message || 'Failed to close till');
+    } finally {
+      setTillLoading(false);
+    }
   };
 
   const loadRecentInvoices = async () => {
@@ -713,11 +742,6 @@ export default function SalesLegacyPage() {
       return;
     }
     
-    if (paymentAmount < cartCalculations.grandTotal) {
-      toast.error('Payment amount must be at least the grand total');
-      return;
-    }
-    
     setIsSubmitting(true);
     
     try {
@@ -750,7 +774,13 @@ export default function SalesLegacyPage() {
         paymentAmount,
         paymentReference,
         notes,
-        bankAccountId: (paymentMethod === 'bank_transfer' || paymentMethod === 'cheque' || paymentMethod === 'mobile_money') && bankAccountId ? bankAccountId : undefined
+        bankAccountId: (paymentMethod === 'bank_transfer' || paymentMethod === 'cheque' || paymentMethod === 'mobile_money') && bankAccountId ? bankAccountId : undefined,
+        tillSession: tillSession ? {
+          id: tillSession.openedAt,
+          openedAt: tillSession.openedAt,
+          openingFloat: Number(tillSession.openingFloat) || 0,
+          status: tillSession.status,
+        } : undefined,
       };
       
       const response = await salesLegacyApi.createDirectSale(requestData, sendEmail);
@@ -1006,9 +1036,10 @@ export default function SalesLegacyPage() {
                             value={closingCountInput}
                             onChange={(e) => setClosingCountInput(e.target.value)}
                             className="h-9 w-36 bg-white dark:bg-slate-900"
+                            disabled={tillLoading}
                           />
-                          <Button variant="outline" size="sm" onClick={closeTill} className="h-9 gap-2">
-                            <DoorClosed className="h-4 w-4" />
+                          <Button variant="outline" size="sm" onClick={closeTill} className="h-9 gap-2" disabled={tillLoading}>
+                            {tillLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <DoorClosed className="h-4 w-4" />}
                             Close Till
                           </Button>
                         </div>
@@ -1107,8 +1138,8 @@ export default function SalesLegacyPage() {
                       onChange={(e) => setOpeningFloatInput(e.target.value)}
                       className="h-10 bg-white text-slate-900 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-white dark:ring-slate-700"
                     />
-                    <Button onClick={openTill} className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700">
-                      <DoorOpen className="h-4 w-4" />
+                    <Button onClick={openTill} className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700" disabled={tillLoading}>
+                      {tillLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <DoorOpen className="h-4 w-4" />}
                       Open Till
                     </Button>
                   </CardContent>
@@ -1337,9 +1368,11 @@ export default function SalesLegacyPage() {
                     <span className="text-base font-bold text-slate-950 dark:text-white">{formatCurrency(cartCalculations.grandTotal)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500 dark:text-slate-400">Change Due</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {paymentAmount >= cartCalculations.grandTotal ? 'Change Due' : 'Outstanding'}
+                    </span>
                     <span className={`font-semibold ${paymentAmount >= cartCalculations.grandTotal ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {formatCurrency(Math.max(0, paymentAmount - cartCalculations.grandTotal))}
+                      {formatCurrency(Math.abs(paymentAmount - cartCalculations.grandTotal))}
                     </span>
                   </div>
 

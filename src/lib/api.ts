@@ -2019,6 +2019,12 @@ export interface SalesLegacyRequest {
   dueDate?: string;
   terms?: string;
   bankAccountId?: string;
+  tillSession?: {
+    id?: string;
+    openedAt?: string;
+    openingFloat?: number;
+    status?: 'open' | 'closed';
+  };
 }
 
 export interface PosProduct {
@@ -2066,6 +2072,20 @@ export const salesLegacyApi = {
       success: boolean;
       data: { invoice: unknown; receiptDate: string; receiptNumber: string };
     }>(`/sales-legacy/receipt/${invoiceId}`),
+};
+
+export const tillApi = {
+  open: (openingFloat: number) =>
+    request<{ success: boolean; data: any }>("/tills/open", {
+      method: "POST",
+      body: { openingFloat },
+    }),
+  getActive: () => request<{ success: boolean; data: any }>("/tills/active"),
+  close: (closingCount?: number) =>
+    request<{ success: boolean; data: any }>("/tills/close", {
+      method: "POST",
+      body: { closingCount },
+    }),
 };
 
 // Recurring Invoices API
@@ -2306,10 +2326,10 @@ export const quotationsApi = {
     request<{ success: boolean; message: string }>(`/quotations/${id}`, {
       method: "DELETE",
     }),
-  send: (id: string, sendEmail?: boolean) =>
+  send: (id: string, sendEmail?: boolean, recipientEmail?: string) =>
     request<{ success: boolean; data: unknown }>(`/quotations/${id}/send`, {
       method: "POST",
-      body: sendEmail ? { sendEmail } : undefined,
+      body: sendEmail ? { sendEmail, recipientEmail } : undefined,
     }),
   accept: (id: string, sendEmail?: boolean) =>
     request<{ success: boolean; data: unknown }>(`/quotations/${id}/accept`, {

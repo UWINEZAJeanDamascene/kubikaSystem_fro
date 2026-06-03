@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Copy, Eye, FileJson, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { ebmApi } from "@/lib/api";
+import { Layout } from "@/app/layout/Layout";
 import { Button } from "@/app/components/ui/button";
 import { Badge } from "@/app/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
@@ -103,11 +104,17 @@ export default function EBMRetryQueuePage() {
         fromDate: filters.fromDate || undefined,
         toDate: filters.toDate || undefined,
       };
-      const [queueRes, alertsRes] = await Promise.all([ebmApi.getQueue(params), ebmApi.getAlerts()]);
-      setItems((queueRes.data?.queue || []) as QueueItem[]);
+      const queueRes = await ebmApi.getQueue(params);
+      setItems((queueRes.data?.queue || queueRes.data?.records || []) as QueueItem[]);
       setCounts(queueRes.data?.counts || {});
       setPagination(queueRes.data?.pagination || { page, pageSize: pagination.pageSize, total: 0, pages: 1 });
-      setAlerts((alertsRes.data || []) as EBMAlert[]);
+      try {
+        const alertsRes = await ebmApi.getAlerts();
+        setAlerts((alertsRes.data || []) as EBMAlert[]);
+      } catch (alertError: any) {
+        setAlerts([]);
+        toast.error(alertError?.message || "Failed to load EBM alerts");
+      }
       setSelected([]);
     } catch (error: any) {
       toast.error(error?.message || "Failed to load EBM dashboard");
@@ -190,6 +197,7 @@ export default function EBMRetryQueuePage() {
   };
 
   return (
+    <Layout>
     <div className="min-h-screen bg-slate-50 p-6 dark:bg-slate-950">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -383,5 +391,6 @@ export default function EBMRetryQueuePage() {
         </DialogContent>
       </Dialog>
     </div>
+    </Layout>
   );
 }

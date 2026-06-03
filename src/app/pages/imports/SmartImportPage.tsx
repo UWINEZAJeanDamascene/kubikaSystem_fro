@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/app/components/ui/tooltip";
 import { AlertCircle, Check, Download, FileSpreadsheet, Loader2, Save, Trash2, Upload } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 
@@ -226,6 +227,20 @@ export default function SmartImportPage() {
           {step === "upload" && (
             <Card>
               <CardContent className="space-y-4 p-6">
+                {entityType === "opening_stock" && (
+                  <Alert
+                    variant="warning"
+                    className="border border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-100"
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Opening Stock rules</AlertTitle>
+                    <AlertDescription className="space-y-1 text-sm">
+                      <p>Only one opening stock per product per warehouse is allowed. If stock already exists (even via adjustment/receipt/transfer), this import will be blocked until you reverse it.</p>
+                      <p>If you make a mistake (quantity or cost), you must reverse the opening stock journal manually in Finance Control → Journal Entries, then re-import. You cannot re-import to overwrite.</p>
+                      <p>Include an As-of Date (DD/MM/YYYY) for the migration date. If omitted, today will be used.</p>
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <div
                   className="flex min-h-[240px] cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 p-6 text-center dark:bg-slate-900"
                   onClick={() => fileInputRef.current?.click()}
@@ -326,23 +341,58 @@ export default function SmartImportPage() {
 
               <Card><CardContent className="p-0">
                 <Table>
-                  <TableHeader><TableRow><TableHead>Row</TableHead><TableHead>Status</TableHead><TableHead>Errors</TableHead><TableHead>Data</TableHead></TableRow></TableHeader>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Row</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Warnings</TableHead>
+                      <TableHead>Errors</TableHead>
+                      <TableHead>Data</TableHead>
+                    </TableRow>
+                  </TableHeader>
                   <TableBody>
-                    {validationRows.map((row: any) => (
-                      <TableRow key={row.rowNumber}>
-                        <TableCell>{row.rowNumber}</TableCell>
-                        <TableCell>{row.valid ? <Badge className="bg-emerald-600">Valid</Badge> : <Badge variant="destructive">Error</Badge>}</TableCell>
-                        <TableCell>
-                          {(row.errors || []).map((error: any, index: number) => (
-                            <Tooltip key={`${row.rowNumber}-${error.field}-${index}`}>
-                              <TooltipTrigger><AlertCircle className="mr-1 inline h-4 w-4 text-red-600" /></TooltipTrigger>
-                              <TooltipContent>{error.message}</TooltipContent>
-                            </Tooltip>
-                          ))}
-                        </TableCell>
-                        <TableCell className="max-w-[620px] truncate text-xs text-slate-500">{JSON.stringify(row.data)}</TableCell>
-                      </TableRow>
-                    ))}
+                    {validationRows.map((row: any) => {
+                      const hasWarnings = Array.isArray(row.warnings) && row.warnings.length > 0;
+                      return (
+                        <TableRow key={row.rowNumber}>
+                          <TableCell>{row.rowNumber}</TableCell>
+                          <TableCell>
+                            {row.valid ? (
+                              hasWarnings ? (
+                                <Badge className="bg-amber-100 text-amber-800 border border-amber-200">Valid with warnings</Badge>
+                              ) : (
+                                <Badge className="bg-emerald-600">Valid</Badge>
+                              )
+                            ) : (
+                              <Badge variant="destructive">Error</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {hasWarnings ? (
+                              row.warnings.map((warn: any, index: number) => (
+                                <Tooltip key={`${row.rowNumber}-warn-${index}`}>
+                                  <TooltipTrigger>
+                                    <Badge className="mr-1 bg-amber-100 text-amber-800 border border-amber-200">Warning</Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs text-amber-900">{warn.message || warn}</TooltipContent>
+                                </Tooltip>
+                              ))
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {(row.errors || []).map((error: any, index: number) => (
+                              <Tooltip key={`${row.rowNumber}-${error.field}-${index}`}>
+                                <TooltipTrigger><AlertCircle className="mr-1 inline h-4 w-4 text-red-600" /></TooltipTrigger>
+                                <TooltipContent>{error.message}</TooltipContent>
+                              </Tooltip>
+                            ))}
+                          </TableCell>
+                          <TableCell className="max-w-[620px] truncate text-xs text-slate-500">{JSON.stringify(row.data)}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent></Card>

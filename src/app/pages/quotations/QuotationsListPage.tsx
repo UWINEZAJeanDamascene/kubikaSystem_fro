@@ -49,6 +49,7 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/app/components/ui/dialog';
 import { Label } from '@/app/components/ui/label';
 import { useFormatCurrency } from '@/lib/currencyUtils';
+import { toast } from 'sonner';
 
 interface Quotation {
   _id: string;
@@ -98,6 +99,7 @@ export default function QuotationsListPage() {
   const [sendEmail, setSendEmail] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<{type: 'send' | 'accept' | 'reject', id: string} | null>(null);
+  const [recipientEmail, setRecipientEmail] = useState('');
 
   const fetchClients = useCallback(async () => {
     try {
@@ -176,28 +178,34 @@ export default function QuotationsListPage() {
 
   const handleSend = async (id: string) => {
     try {
-      await quotationsApi.send(id, sendEmail);
+      await quotationsApi.send(id, sendEmail, recipientEmail || undefined);
+      toast.success(t('quotation.sentSuccess', 'Quotation sent'));
       fetchQuotations();
     } catch (error) {
       console.error('Failed to send quotation:', error);
+      toast.error(t('quotation.sendFailed', 'Failed to send quotation'));
     }
   };
 
   const handleAccept = async (id: string) => {
     try {
       await quotationsApi.accept(id, sendEmail);
+      toast.success(t('quotation.acceptedSuccess', 'Quotation accepted'));
       fetchQuotations();
     } catch (error) {
       console.error('Failed to accept quotation:', error);
+      toast.error(t('quotation.acceptFailed', 'Failed to accept quotation'));
     }
   };
 
   const handleReject = async (id: string) => {
     try {
       await quotationsApi.reject(id, undefined, sendEmail);
+      toast.success(t('quotation.rejectedSuccess', 'Quotation rejected'));
       fetchQuotations();
     } catch (error) {
       console.error('Failed to reject quotation:', error);
+      toast.error(t('quotation.rejectFailed', 'Failed to reject quotation'));
     }
   };
 
@@ -719,16 +727,27 @@ export default function QuotationsListPage() {
           <DialogHeader>
             <DialogTitle className="dark:text-white">Send Email to Customer</DialogTitle>
           </DialogHeader>
-          <div className="flex items-center gap-2 py-4">
-            <input
-              type="checkbox"
-              id="quotationSendEmail"
-              checked={sendEmail}
-              onChange={(e) => setSendEmail(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 dark:border-slate-700 dark:bg-slate-900"
-            />
-            <Label htmlFor="quotationSendEmail" className="cursor-pointer text-sm text-slate-600 dark:text-slate-300">
-              Send quotation details to customer via email
+          <div className="space-y-3 py-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="quotationSendEmail"
+                checked={sendEmail}
+                onChange={(e) => setSendEmail(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 dark:border-slate-700 dark:bg-slate-900"
+              />
+              <Label htmlFor="quotationSendEmail" className="cursor-pointer text-sm text-slate-600 dark:text-slate-300">
+                Send quotation details to customer via email
+              </Label>
+            </div>
+            <Label className="flex flex-col gap-2 text-sm text-slate-700 dark:text-slate-300">
+              <span>{t('quotation.recipientEmail', 'Recipient email')}</span>
+              <Input
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder={t('quotation.recipientEmailPlaceholder', 'Enter recipient email')}
+              />
             </Label>
           </div>
           <DialogFooter>

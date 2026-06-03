@@ -32,6 +32,7 @@ interface ClientFormData {
   name: string;
   code?: string;
   type: 'individual' | 'company';
+  taxId?: string;
   contact: {
     email?: string;
     phone?: string;
@@ -51,6 +52,7 @@ interface ClientFormData {
 const initialFormData: ClientFormData = {
   name: '',
   type: 'individual',
+  taxId: '',
   contact: {},
   paymentTerms: 'cash',
   creditLimit: 0,
@@ -85,6 +87,7 @@ export default function ClientFormPage() {
           name: client.name || '',
           code: client.code,
           type: client.type || 'individual',
+          taxId: client.taxId || '',
           contact: client.contact || {},
           paymentTerms: (client as any).paymentTerms || 'cash',
           creditLimit: client.creditLimit || 0,
@@ -132,6 +135,7 @@ export default function ClientFormPage() {
         name: formData.name,
         code: formData.code,
         type: formData.type,
+        taxId: formData.taxId?.trim(),
         contact: formData.contact,
         paymentTerms: formData.paymentTerms,
         creditLimit: formData.creditLimit,
@@ -268,6 +272,23 @@ export default function ClientFormPage() {
                           </SelectContent>
                         </Select>
                       </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="taxId" className="text-sm text-slate-700 dark:text-slate-300">TIN Number</Label>
+                        <Input
+                          id="taxId"
+                          value={formData.taxId || ''}
+                          onChange={(e) => handleChange('taxId', e.target.value.replace(/\D/g, '').slice(0, 9))}
+                          inputMode="numeric"
+                          maxLength={9}
+                          className="h-10 bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                          placeholder="9-digit Rwanda TIN"
+                        />
+                        {formData.taxId && formData.taxId.length !== 9 && (
+                          <p className="text-xs text-amber-600 dark:text-amber-300">TIN should be 9 digits for B2B EBM invoices.</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-1.5">
                         <Label htmlFor="paymentTerms" className="text-sm text-slate-700 dark:text-slate-300">Payment Terms</Label>
                         <Select value={formData.paymentTerms} onValueChange={(value) => handleChange('paymentTerms', value)}>

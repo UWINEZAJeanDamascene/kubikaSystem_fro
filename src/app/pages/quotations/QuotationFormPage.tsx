@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useLocation } from 'react-router';
 import { quotationsApi, clientsApi, productsApi } from '@/lib/api';
 import { Layout } from '../../layout/Layout';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -10,20 +10,22 @@ import {
   Loader2,
   Plus,
   Trash2,
-  XCircle,
-  CheckCircle,
-  Pencil,
   ArrowRight,
   Receipt,
   Package,
   Calculator,
   CalendarDays,
+  Clock,
   DollarSign,
   Users,
   FileText,
   PenLine,
   BadgeCheck,
   Ban,
+  FileDown,
+  Link2,
+  Printer,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -37,6 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/app/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/app/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Label } from '@/app/components/ui/label';
 import {
@@ -48,6 +51,7 @@ import {
   TableRow,
 } from '@/app/components/ui/table';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 interface Product {
   _id: string;
@@ -80,6 +84,7 @@ interface QuotationFormData {
   quotationDate: string;
   expiryDate: string;
   currency: string;
+  exchangeRate: number;
   notes: string;
   lines: QuotationLine[];
 }
@@ -99,6 +104,7 @@ export default function QuotationFormPage() {
   const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const isViewMode = searchParams.get('view') === 'true';
   const isEditMode = Boolean(id) && !isViewMode;
@@ -106,6 +112,9 @@ export default function QuotationFormPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [quotation, setQuotation] = useState<any>(null);
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [sendEmail, setSendEmail] = useState(true);
+  const [recipientEmail, setRecipientEmail] = useState('');
 
   useEffect(() => {
     console.log('[QuotationFormPage] Quotation loaded:', quotation);
@@ -124,9 +133,35 @@ export default function QuotationFormPage() {
     quotationDate: new Date().toISOString().split('T')[0],
     expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     currency: 'RWF',
+    exchangeRate: 1,
     notes: '',
     lines: [{ ...emptyLine }]
   });
+
+  // Prefill from duplicate state
+  useEffect(() => {
+    const dup = (location.state as any)?.duplicateQuotation;
+    if (dup) {
+      setFormData({
+        client: dup.client?._id || dup.client || '',
+        quotationDate: dup.quotationDate ? dup.quotationDate.split('T')[0] : new Date().toISOString().split('T')[0],
+        expiryDate: dup.expiryDate ? dup.expiryDate.split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        currency: dup.currency || dup.currencyCode || 'RWF',
+        exchangeRate: dup.exchangeRate || 1,
+        notes: dup.notes || '',
+        lines: (dup.lines || []).map((line: any) => ({
+          _id: undefined,
+          product: typeof line.product === 'object' ? line.product?._id : line.product,
+          description: line.description || line.productName || '',
+          qty: line.qty || line.quantity || 1,
+          unitPrice: line.unitPrice || 0,
+          discountPercent: line.discountPct || line.discountPercent || 0,
+          taxRate: line.taxRate || 0,
+          lineTotal: line.lineTotal || 0,
+        })) || [{ ...emptyLine }],
+      });
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchClients();
@@ -175,7 +210,8 @@ export default function QuotationFormPage() {
           client: quotation.client?._id || '',
           quotationDate: quotation.quotationDate ? quotation.quotationDate.split('T')[0] : '',
           expiryDate: quotation.expiryDate ? quotation.expiryDate.split('T')[0] : '',
-          currency: quotation.currency || 'RWF',
+          currency: quotation.currency || quotation.currencyCode || 'RWF',
+          exchangeRate: quotation.exchangeRate || 1,
           notes: quotation.notes || '',
           lines: quotation.lines && quotation.lines.length > 0 
             ? quotation.lines.map((line: any) => ({
@@ -239,6 +275,31 @@ export default function QuotationFormPage() {
     }));
   };
 
+  const addChargeLine = () => {
+    // Try to auto-select a charge/shipping product if it exists
+    const chargeProduct = products.find(p => {
+      const name = (p.name || '').toLowerCase();
+      return name.includes('charge') || name.includes('shipping');
+    });
+    if (!chargeProduct) {
+      toast.warning(t('quotation.chargeProductMissing', 'No charge/shipping product found; please select a product for this line.'));
+    }
+    setFormData(prev => ({
+      ...prev,
+      lines: [
+        ...prev.lines,
+        {
+          ...emptyLine,
+          description: 'Shipping / Other charge',
+          product: chargeProduct?._id || '',
+          productName: chargeProduct?.name || '',
+          productSku: chargeProduct?.sku || '',
+          unitPrice: chargeProduct?.sellingPrice ?? emptyLine.unitPrice,
+        },
+      ],
+    }));
+  };
+
   const removeLine = (index: number) => {
     if (formData.lines.length > 1) {
       const newLines = formData.lines.filter((_, i) => i !== index);
@@ -246,32 +307,22 @@ export default function QuotationFormPage() {
     }
   };
 
-  const calculateSubtotal = () => {
-    return formData.lines.reduce((sum, line) => sum + (line.qty * line.unitPrice), 0);
-  };
-
-  const calculateDiscount = () => {
-    return formData.lines.reduce((sum, line) => {
-      const lineSubtotal = line.qty * line.unitPrice;
-      return sum + (lineSubtotal * (line.discountPercent / 100));
-    }, 0);
-  };
-
-  const calculateTax = () => {
-    return formData.lines.reduce((sum, line) => {
-      const lineSubtotal = line.qty * line.unitPrice;
-      const discountAmount = lineSubtotal * (line.discountPercent / 100);
-      const afterDiscount = lineSubtotal - discountAmount;
-      return sum + (afterDiscount * (line.taxRate / 100));
-    }, 0);
-  };
-
-  const calculateTotal = () => {
-    const subtotal = calculateSubtotal();
-    const discount = calculateDiscount();
-    const tax = calculateTax();
-    return subtotal - discount + tax;
-  };
+  const calculateSubtotal = () => formData.lines.reduce((sum, line) => sum + (line.qty * line.unitPrice), 0);
+  const calculateDiscount = () => formData.lines.reduce((sum, line) => {
+    const lineSubtotal = line.qty * line.unitPrice;
+    return sum + (lineSubtotal * (line.discountPercent / 100));
+  }, 0);
+  const calculateTax = () => formData.lines.reduce((sum, line) => {
+    const lineSubtotal = line.qty * line.unitPrice;
+    const discountAmount = lineSubtotal * (line.discountPercent / 100);
+    const afterDiscount = lineSubtotal - discountAmount;
+    return sum + (afterDiscount * (line.taxRate / 100));
+  }, 0);
+  const calculateTotal = () => calculateSubtotal() - calculateDiscount() + calculateTax();
+  const calculateCharges = () => formData.lines.reduce((sum, line) => {
+    const label = (line.description || line.productName || '').toLowerCase();
+    return label.includes('charge') || label.includes('shipping') ? sum + line.lineTotal : sum;
+  }, 0);
 
   const handleSave = async (sendImmediately: boolean = false) => {
     if (!formData.client || formData.lines.length === 0) {
@@ -284,7 +335,8 @@ export default function QuotationFormPage() {
         client: formData.client,
         quotationDate: formData.quotationDate,
         expiryDate: formData.expiryDate,
-        currency: formData.currency,
+        currencyCode: formData.currency,
+        exchangeRate: formData.exchangeRate,
         notes: formData.notes,
         // Reset to draft if the original status was rejected (backend only allows editing draft)
         status: quotation?.status === 'rejected' ? 'draft' : undefined,
@@ -308,8 +360,9 @@ export default function QuotationFormPage() {
       if (response.success && response.data) {
         const quotationId = (response.data as any)._id;
         if (sendImmediately && quotationId) {
-          await quotationsApi.send(quotationId);
+          await quotationsApi.send(quotationId, sendEmail, recipientEmail || undefined);
         }
+        toast.success(sendImmediately ? t('quotation.sentSuccess', 'Quotation saved & sent') : t('quotation.savedSuccess', 'Quotation saved'));
         navigate('/quotations');
       }
     } catch (error) {
@@ -363,12 +416,13 @@ export default function QuotationFormPage() {
   ) : null;
 
   return (
+    <>
     <Layout>
       <div className="min-h-screen bg-slate-50 px-4 py-5 dark:bg-slate-950 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1600px] 2xl:max-w-[2200px] space-y-6">
           {/* Hero Header */}
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-            <div className="grid gap-5 p-5 xl:grid-cols-[1fr_420px] xl:items-stretch">
+            <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_420px] xl:items-stretch">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="rounded-lg bg-amber-50 p-2.5 text-amber-700 ring-1 ring-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900/60">
@@ -380,6 +434,14 @@ export default function QuotationFormPage() {
                 <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                   {isViewMode ? t('quotation.viewDescription', 'Review quotation details, line items, and summary.') : t('quotation.createDescription', 'Fill in client, line items, and terms to build a quotation.')}
                 </p>
+                {isViewMode && quotation?.expiryDate && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <Badge variant="outline" className="dark:border-slate-700 dark:text-slate-300">
+                      <Clock className="mr-1 h-3 w-3" />
+                      {new Date(quotation.expiryDate) < new Date() ? 'Expired' : `Expires ${new Date(quotation.expiryDate).toLocaleDateString()}`}
+                    </Badge>
+                  </div>
+                )}
                 {isViewMode && quotation && (
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary" className="dark:bg-slate-800 dark:text-slate-300">
@@ -388,7 +450,7 @@ export default function QuotationFormPage() {
                     </Badge>
                     <Badge variant="secondary" className="dark:bg-slate-800 dark:text-slate-300">
                       <DollarSign className="mr-1 h-3 w-3" />
-                      {quotation.currency || 'RWF'}
+                      {quotation.currency || quotation.currencyCode || formData.currency || 'RWF'}
                     </Badge>
                     <Badge variant="secondary" className="dark:bg-slate-800 dark:text-slate-300">
                       <Users className="mr-1 h-3 w-3" />
@@ -401,6 +463,71 @@ export default function QuotationFormPage() {
                     <ArrowLeft className="h-4 w-4" />
                     {t('common.back', 'Back')}
                   </Button>
+                  {isViewMode && quotation && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/quotations/new', { state: { duplicateQuotation: quotation } })}
+                      className="h-10 gap-2 dark:border-slate-700 dark:text-slate-200"
+                    >
+                      <Copy className="h-4 w-4" />
+                      {t('quotation.duplicate', 'Duplicate')}
+                    </Button>
+                  )}
+                  {isViewMode && quotation && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-10 gap-2"
+                        onClick={() => {
+                          const apiBase = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'https://kubikasystem-bnd.onrender.com/api';
+                          const token = quotation.publicAcceptToken || quotation.publicRejectToken;
+                          const url = token
+                            ? `${apiBase}/quotations/public/${token}/pdf`
+                            : `${apiBase}/quotations/${quotation._id}/pdf`;
+                          window.open(url, '_blank');
+                        }}
+                      >
+                        <FileDown className="h-4 w-4" />
+                        {t('quotation.downloadPdf', 'Download PDF')}
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-10 gap-2" onClick={() => window.print()}>
+                        <Printer className="h-4 w-4" />
+                        {t('quotation.print', 'Print')}
+                      </Button>
+                      {quotation.publicAcceptToken && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-10 gap-2"
+                          onClick={async () => {
+                            const url = `${window.location.origin}/quotations/public/${quotation.publicAcceptToken}/accept`;
+                            await navigator.clipboard.writeText(url);
+                            toast.success('Share link copied');
+                          }}
+                        >
+                          <Link2 className="h-4 w-4" />
+                          {t('quotation.copyShareLink', 'Copy share link')}
+                        </Button>
+                      )}
+                      {quotation.publicRejectToken && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-10 gap-2"
+                          onClick={async () => {
+                            const url = `${window.location.origin}/quotations/public/${quotation.publicRejectToken}/reject`;
+                            await navigator.clipboard.writeText(url);
+                            toast.success('Reject link copied');
+                          }}
+                        >
+                          <Link2 className="h-4 w-4" />
+                          {t('quotation.copyRejectLink', 'Copy reject link')}
+                        </Button>
+                      )}
+                    </>
+                  )}
                   {isViewMode && quotation?.status === 'rejected' && (
                     <Button size="sm" onClick={() => navigate(`/quotations/${id}/edit`)} className="h-10 gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500">
                       <PenLine className="h-4 w-4" />
@@ -415,11 +542,15 @@ export default function QuotationFormPage() {
                   )}
                   {!isViewMode && (
                     <>
+                      <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                        <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
+                        {t('quotation.sendEmail', 'Email quotation to customer on send')}
+                      </label>
                       <Button onClick={() => handleSave(false)} disabled={saving || !formData.client} className="h-10 gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500">
                         {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         {t('quotation.saveDraft', 'Save Draft')}
                       </Button>
-                      <Button variant="default" onClick={() => handleSave(true)} disabled={saving || !formData.client} className="h-10 gap-2">
+                      <Button variant="default" onClick={() => setSendDialogOpen(true)} disabled={saving || !formData.client} className="h-10 gap-2">
                         {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                         {t('quotation.sendToClient', 'Save & Send')}
                       </Button>
@@ -431,26 +562,32 @@ export default function QuotationFormPage() {
               <div className="grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/40">
                 <div className="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Subtotal</p>
-                  <p className="mt-1 text-lg font-bold text-slate-950 dark:text-white">{formatCurrency(calculateSubtotal())}</p>
+                  <p className="mt-1 text-lg font-bold text-slate-950 dark:text-white">{formatCurrency(quotation?.subtotal ?? calculateSubtotal())}</p>
                 </div>
                 <div className="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Discount</p>
-                  <p className="mt-1 text-lg font-bold text-red-600 dark:text-red-400">- {formatCurrency(calculateDiscount())}</p>
+                  <p className="mt-1 text-lg font-bold text-red-600 dark:text-red-400">- {formatCurrency(quotation?.totalDiscount ?? calculateDiscount())}</p>
                 </div>
                 <div className="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Tax</p>
-                  <p className="mt-1 text-lg font-bold text-slate-950 dark:text-white">{formatCurrency(calculateTax())}</p>
+                  <p className="mt-1 text-lg font-bold text-slate-950 dark:text-white">{formatCurrency(quotation?.taxAmount ?? calculateTax())}</p>
                 </div>
                 <div className="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Total</p>
-                  <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(calculateTotal())}</p>
+                  <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(quotation?.totalAmount ?? calculateTotal())}</p>
                 </div>
+                {quotation?.baseCurrency && quotation?.totalAmountBase != null && (
+                  <div className="col-span-2 rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Base Total ({quotation.baseCurrency})</p>
+                    <p className="mt-1 text-lg font-bold text-slate-950 dark:text-white">{formatCurrency(quotation.totalAmountBase, quotation.baseCurrency)}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* Status Alerts */}
-          {isViewMode && (quotation?.status === 'rejected' || quotation?.rejectionReason) && (
+          {isViewMode && (quotation?.status === 'rejected' || quotation?.rejectionReason || quotation?.customerAction?.action === 'rejected') && (
             <Card className="overflow-hidden border-l-4 border-l-red-500 bg-red-50/80 shadow-sm dark:border-l-red-500 dark:bg-red-950/20">
               <CardContent className="py-5">
                 <div className="flex items-start gap-4">
@@ -459,15 +596,15 @@ export default function QuotationFormPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="text-base font-semibold text-red-900 dark:text-red-400">Quotation Rejected by Client</h3>
-                    {quotation?.rejectionDate && (
+                    {(quotation?.rejectionDate || quotation?.customerAction?.actedAt) && (
                       <p className="mt-0.5 text-sm text-red-700/80 dark:text-red-400/80">
-                        Rejected on {new Date(quotation.rejectionDate).toLocaleDateString()} at {new Date(quotation.rejectionDate).toLocaleTimeString()}
+                        Rejected on {new Date(quotation.rejectionDate || quotation.customerAction?.actedAt as string).toLocaleDateString()} at {new Date(quotation.rejectionDate || quotation.customerAction?.actedAt as string).toLocaleTimeString()}
                       </p>
                     )}
-                    {quotation?.rejectionReason ? (
+                    {quotation?.rejectionReason || quotation?.customerAction?.comment ? (
                       <div className="mt-3 rounded-md border border-red-200 bg-white p-3 shadow-sm dark:border-red-800 dark:bg-slate-900">
                         <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">Client&apos;s Reason</p>
-                        <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">{quotation.rejectionReason}</p>
+                        <p className="text-sm leading-relaxed text-slate-800 dark:text-slate-200">{quotation.rejectionReason || quotation.customerAction?.comment}</p>
                       </div>
                     ) : (
                       <div className="mt-3 rounded-md border border-red-200 bg-white p-3 shadow-sm dark:border-red-800 dark:bg-slate-900">
@@ -500,7 +637,7 @@ export default function QuotationFormPage() {
             </Card>
           )}
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_380px]">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px]">
             {/* Main Content */}
             <div className="space-y-6">
               {/* Basic Information */}
@@ -514,7 +651,7 @@ export default function QuotationFormPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-5 p-5">
-                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
                     <div>
                       <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t('quotation.client')} *</Label>
                       {isViewMode ? (
@@ -553,6 +690,20 @@ export default function QuotationFormPage() {
                             <SelectItem value="LBP" className="dark:focus:bg-slate-800 dark:focus:text-white">LBP (ل.ل)</SelectItem>
                           </SelectContent>
                         </Select>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t('quotation.exchangeRate', 'Exchange Rate')}</Label>
+                      {isViewMode ? (
+                        <div className="mt-1 rounded-md border border-slate-200 bg-slate-50 p-2.5 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">{formData.exchangeRate}</div>
+                      ) : (
+                        <Input
+                          type="number"
+                          step="0.0001"
+                          value={formData.exchangeRate}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, exchangeRate: parseFloat(e.target.value) || 0 }))}
+                          className="h-10 bg-white text-slate-900 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-white dark:ring-slate-700"
+                        />
                       )}
                     </div>
                   </div>
@@ -746,6 +897,10 @@ export default function QuotationFormPage() {
                         <Plus className="h-4 w-4" />
                         {t('quotation.addLine', 'Add Line')}
                       </Button>
+                      <Button variant="ghost" onClick={addChargeLine} className="h-9 gap-2 text-slate-600 hover:text-indigo-600 dark:text-slate-300">
+                        <Plus className="h-4 w-4" />
+                        {t('quotation.addCharge', 'Add other charge line')}
+                      </Button>
                     </div>
                   )}
                 </CardContent>
@@ -755,7 +910,7 @@ export default function QuotationFormPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Totals */}
-              <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+              <Card className="overflow-hidden border-slate-200 bg- white shadow-sm dark:border-slate-800 dark:bg-slate-950">
                 <CardHeader className="border-b border-slate-100 bg-slate-50/60 dark:border-slate-800 dark:bg-slate-900/50">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-md bg-violet-50 text-violet-700 ring-1 ring-violet-100 dark:bg-violet-950/40 dark:text-violet-300 dark:ring-violet-900/60">
@@ -767,21 +922,32 @@ export default function QuotationFormPage() {
                 <CardContent className="space-y-4 p-5">
                   <div className="flex justify-between text-sm text-slate-700 dark:text-slate-300">
                     <span>{t('quotation.subtotal', 'Subtotal')}</span>
-                    <span className="font-medium">{formatCurrency(calculateSubtotal())}</span>
+                    <span className="font-medium">{formatCurrency(quotation?.subtotal ?? calculateSubtotal(), quotation?.currency || quotation?.currencyCode || formData.currency)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-slate-700 dark:text-slate-300">
+                    <span>{t('quotation.charges', 'Charges')}</span>
+                    <span className="font-medium">{formatCurrency(calculateCharges(), quotation?.currency || quotation?.currencyCode || formData.currency)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between text-sm text-slate-700 dark:text-slate-300">
                     <span>{t('quotation.discount', 'Discount')}</span>
-                    <span className="font-medium text-red-600 dark:text-red-400">- {formatCurrency(calculateDiscount())}</span>
+                    <span className="font-medium text-red-600 dark:text-red-400">- {formatCurrency(quotation?.totalDiscount ?? calculateDiscount(), quotation?.currency || quotation?.currencyCode || formData.currency)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-slate-700 dark:text-slate-300">
                     <span>{t('quotation.tax', 'Tax')}</span>
-                    <span className="font-medium">{formatCurrency(calculateTax())}</span>
+                    <span className="font-medium">{formatCurrency(quotation?.taxAmount ?? calculateTax(), quotation?.currency || quotation?.currencyCode || formData.currency)}</span>
                   </div>
                   <div className="flex justify-between border-t border-slate-100 pt-4 text-lg font-bold dark:border-slate-800">
                     <span className="text-slate-950 dark:text-white">{t('quotation.total', 'Total')}</span>
-                    <span className="text-emerald-700 dark:text-emerald-400">{formatCurrency(calculateTotal())}</span>
+                    <span className="text-emerald-700 dark:text-emerald-400">{formatCurrency(quotation?.totalAmount ?? calculateTotal(), quotation?.currency || quotation?.currencyCode || formData.currency)}</span>
                   </div>
-                  <div className="mt-1 text-right text-xs text-slate-500 dark:text-slate-500">{formData.currency}</div>
+                  <div className="mt-1 text-right text-xs text-slate-500 dark:text-slate-500">{quotation?.currency || quotation?.currencyCode || formData.currency}</div>
+                  {quotation?.baseCurrency && quotation?.totalAmountBase != null && (
+                    <div className="rounded-md bg-slate-50 p-3 text-right text-sm dark:bg-slate-900/50">
+                      <div className="text-slate-500 dark:text-slate-400">Base Total ({quotation.baseCurrency})</div>
+                      <div className="text-base font-semibold text-slate-950 dark:text-white">{formatCurrency(quotation.totalAmountBase, quotation.baseCurrency)}</div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -826,7 +992,7 @@ export default function QuotationFormPage() {
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     {t('quotation.saveDraft', 'Save Draft')}
                   </Button>
-                  <Button variant="default" onClick={() => handleSave(true)} disabled={saving || !formData.client} className="h-10 gap-2">
+                  <Button variant="default" onClick={() => setSendDialogOpen(true)} disabled={saving || !formData.client} className="h-10 gap-2">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     {t('quotation.sendToClient', 'Save & Send')}
                   </Button>
@@ -836,6 +1002,39 @@ export default function QuotationFormPage() {
           </div>
         </div>
       </div>
+
+          <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('quotation.sendToClient', 'Send quotation to client')}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <label className="flex flex-col gap-2 text-sm text-slate-700 dark:text-slate-300">
+            <span>{t('quotation.recipientEmail', 'Recipient email')}</span>
+            <Input
+              type="email"
+              value={recipientEmail}
+              onChange={(e) => setRecipientEmail(e.target.value)}
+              placeholder={t('quotation.recipientEmailPlaceholder', 'Confirm recipient email')}
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+            <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
+            {t('quotation.sendEmail', 'Email quotation to customer')}
+          </label>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {t('quotation.sendConfirm', 'This will save and send the quotation if allowed by status and permissions.')}
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setSendDialogOpen(false)}>{t('common.cancel', 'Cancel')}</Button>
+          <Button onClick={async () => { setSendDialogOpen(false); await handleSave(true); }}>
+            {t('quotation.sendNow', 'Send now')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </Layout>
+    </>
   );
 }

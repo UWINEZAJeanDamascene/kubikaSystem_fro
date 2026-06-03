@@ -104,7 +104,8 @@ export function QuickCreateMenu({ compact = false }: QuickCreateMenuProps) {
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="w-72 overflow-hidden rounded-lg border-border bg-popover p-1 shadow-xl"
+        collisionPadding={8}
+        className="max-h-[min(34rem,calc(100vh-5.5rem))] w-[min(18rem,calc(100vw-1rem))] overflow-y-auto overflow-x-hidden overscroll-contain rounded-lg border-border bg-popover p-1 shadow-xl"
       >
         <div className="px-3 pb-2 pt-3">
           <div className="text-[10px] font-semibold uppercase tracking-wide text-primary">

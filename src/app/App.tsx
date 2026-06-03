@@ -115,6 +115,7 @@ const SupplierDetailPage = lazy(() => import('./pages/suppliers/SupplierDetailPa
 const QuotationsListPage = lazy(() => import('./pages/quotations/QuotationsListPage'));
 const QuotationFormPage = lazy(() => import('./pages/quotations/QuotationFormPage'));
 const ClientQuotationViewPage = lazy(() => import('./pages/quotations/ClientQuotationViewPage'));
+const ClientQuotationPublicPage = lazy(() => import('./pages/quotations/ClientQuotationPublicPage'));
 const InvoicesListPage = lazy(() => import('./pages/invoices/InvoicesListPage'));
 const InvoiceFormPage = lazy(() => import('./pages/invoices/InvoiceFormPage'));
 const InvoiceDetailPage = lazy(() => import('./pages/invoices/InvoiceDetailPage'));
@@ -457,6 +458,7 @@ function AppRoutes() {
         <Route path="/quotations/:id/edit" element={<QuotationFormPage />} />
         <Route path="/quotations/:id" element={<QuotationFormPage />} />
         <Route path="/client/quotations/:id" element={<ClientQuotationViewPage />} />
+        <Route path="/quotations/public/:token/:action" element={<ClientQuotationPublicPage />} />
         <Route path="/invoices" element={<InvoicesListPage />} />
         <Route path="/invoices/new" element={<InvoiceFormPage />} />
         <Route path="/invoices/:id/edit" element={<InvoiceFormPage />} />
