@@ -3,7 +3,11 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { UserProfileDialog } from "@/app/components/UserProfileDialog";
 import { CompanyProfileDialog } from "@/app/components/CompanyProfileDialog";
 import { companyApi } from "@/lib/api";
-import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/app/components/ui/avatar";
 import {
   Users,
   Lock,
@@ -44,6 +48,7 @@ import {
   Waves,
   Gauge,
   Calendar,
+  ShieldCheck,
   Shield,
   LayoutDashboard,
   Banknote,
@@ -166,10 +171,33 @@ const MODULE_ALIASES: Record<string, string[]> = {
   "payroll & payroll runs": ["Payroll runs"],
   "payroll and payroll runs": ["Payroll runs"],
   "accounting periods": ["Financial reports"],
-  "finance control (full)": ["Chart of accounts", "Journal entries", "Fixed assets", "Liabilities", "Budgets", "Projects", "Employees", "Payroll runs", "Financial reports"],
+  "finance control (full)": [
+    "Chart of accounts",
+    "Journal entries",
+    "Fixed assets",
+    "Liabilities",
+    "Budgets",
+    "Projects",
+    "Employees",
+    "Payroll runs",
+    "Financial reports",
+  ],
   "inventory core (full)": ["Batches", "Serial numbers"],
-  "revenue flow (full)": ["Clients", "Pick and pack", "Credit notes", "Recurring invoices", "AR and AP"],
-  "intelligence (full)": ["Reports hub", "Profit and loss", "Balance sheet", "Cash flow", "Financial ratios", "Debt maturity"],
+  "revenue flow (full)": [
+    "Clients",
+    "Pick and pack",
+    "Credit notes",
+    "Recurring invoices",
+    "AR and AP",
+  ],
+  "intelligence (full)": [
+    "Reports hub",
+    "Profit and loss",
+    "Balance sheet",
+    "Cash flow",
+    "Financial ratios",
+    "Debt maturity",
+  ],
 };
 
 function normalizePlanModule(value: string) {
@@ -208,18 +236,32 @@ function expandPlanModules(modules?: string[]) {
     if (
       joined.includes("everything in starter") ||
       joined.includes("everything in core") ||
-      tokens.some((token) => ["everything in starter", "everything in core"].some((match) => token.toLowerCase().includes(match)))
+      tokens.some((token) =>
+        ["everything in starter", "everything in core"].some((match) =>
+          token.toLowerCase().includes(match),
+        ),
+      )
     ) {
-      CORE_MODULES.forEach((coreModule) => addPlanModule(normalized, coreModule));
+      CORE_MODULES.forEach((coreModule) =>
+        addPlanModule(normalized, coreModule),
+      );
     }
 
     if (
       joined.includes("everything in growth") ||
       joined.includes("everything in professional") ||
       joined.includes("everything in business") ||
-      tokens.some((token) => ["everything in growth", "everything in professional", "everything in business"].some((match) => token.toLowerCase().includes(match)))
+      tokens.some((token) =>
+        [
+          "everything in growth",
+          "everything in professional",
+          "everything in business",
+        ].some((match) => token.toLowerCase().includes(match)),
+      )
     ) {
-      BUSINESS_MODULES.forEach((businessModule) => addPlanModule(normalized, businessModule));
+      BUSINESS_MODULES.forEach((businessModule) =>
+        addPlanModule(normalized, businessModule),
+      );
     }
 
     tokens.forEach((token) => addPlanModule(normalized, token));
@@ -391,7 +433,14 @@ const purchasingNav: NavSection = {
       featureKey: "purchases",
       moduleNames: ["Purchase orders"],
     },
-    { nameKey: "nav.grn", href: "/grn", icon: Truck, permission: "grn:read", featureKey: "purchases", moduleNames: ["GRN"] },
+    {
+      nameKey: "nav.grn",
+      href: "/grn",
+      icon: Truck,
+      permission: "grn:read",
+      featureKey: "purchases",
+      moduleNames: ["GRN"],
+    },
     {
       nameKey: "nav.importedItems",
       href: "/imported-items",
@@ -425,6 +474,19 @@ const purchasingNav: NavSection = {
       moduleNames: ["Freight bills", "GRN", "Purchase orders"],
     },
     {
+      nameKey: "nav.ebmControlCenter",
+      href: "/ebm/control-center",
+      icon: LayoutDashboard,
+      permission: "purchase_orders:read",
+      featureKey: "purchases",
+      moduleNames: [
+        "EBM control center",
+        "EBM retry queue",
+        "EBM unmatched purchases",
+        "Purchase orders",
+      ],
+    },
+    {
       nameKey: "nav.ebmUnmatchedPurchases",
       href: "/ebm/unmatched-purchases",
       icon: FileText,
@@ -439,6 +501,18 @@ const purchasingNav: NavSection = {
       permission: "purchase_orders:read",
       featureKey: "purchases",
       moduleNames: ["EBM retry queue", "Purchase orders"],
+    },
+    {
+      nameKey: "nav.ebmCompliance",
+      href: "/ebm/compliance",
+      icon: ShieldCheck,
+      permission: "purchase_orders:read",
+      featureKey: "purchases",
+      moduleNames: [
+        "EBM retry queue",
+        "EBM unmatched purchases",
+        "Purchase orders",
+      ],
     },
   ],
 };
@@ -825,13 +899,20 @@ export function Sidebar({
 }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, hasPermission: checkPermission, updateUser } = useAuth();
+  const {
+    user,
+    logout,
+    hasPermission: checkPermission,
+    updateUser,
+  } = useAuth();
   const { language, toggleLanguage } = useLanguage();
   const { t } = useTranslation();
   const [loggingOut, setLoggingOut] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [companyProfileOpen, setCompanyProfileOpen] = useState(false);
-  const [companyOptions, setCompanyOptions] = useState<Record<string, { name: string; logo_url?: string }>>({});
+  const [companyOptions, setCompanyOptions] = useState<
+    Record<string, { name: string; logo_url?: string }>
+  >({});
   const company = useCompanyStore((state) => state.company);
   const setCompany = useCompanyStore((state) => state.setCompany);
   const companies = useAuthStore((state) => state.companies);
@@ -842,49 +923,55 @@ export function Sidebar({
   // Fetch company data on mount
   useEffect(() => {
     // Clear any old localStorage company data
-    localStorage.removeItem('company-storage');
+    localStorage.removeItem("company-storage");
 
     // Always fetch fresh company profile from DB
-    companyApi.getMe().then((response) => {
-      if (response.success && response.data) {
-        const companyData = response.data as any;
-        setCompany({
-          _id: companyData._id || companyData.id || '',
-          name: companyData.name || 'My Company',
-          legal_name: companyData.legal_name,
-          email: companyData.email,
-          phone: companyData.phone,
-          website: companyData.website,
-          registration_number: companyData.registration_number,
-          tax_identification_number: companyData.tax_identification_number,
-          industry: companyData.industry,
-          logo_url: companyData.logo_url,
-          address: companyData.address,
-          base_currency: companyData.base_currency,
-          subscription_plan: companyData.subscription_plan,
-          subscription_status: companyData.subscription_status,
-          feature_access: companyData.feature_access,
-          enabledModules: companyData.enabledModules,
-          subscription_modules: companyData.subscription_modules,
-        });
-      }
-    }).catch(() => {
-      if (!company) {
-        setCompany({ _id: 'fallback', name: 'My Company' });
-      }
-    });
+    companyApi
+      .getMe()
+      .then((response) => {
+        if (response.success && response.data) {
+          const companyData = response.data as any;
+          setCompany({
+            _id: companyData._id || companyData.id || "",
+            name: companyData.name || "My Company",
+            legal_name: companyData.legal_name,
+            email: companyData.email,
+            phone: companyData.phone,
+            website: companyData.website,
+            registration_number: companyData.registration_number,
+            tax_identification_number: companyData.tax_identification_number,
+            industry: companyData.industry,
+            logo_url: companyData.logo_url,
+            address: companyData.address,
+            base_currency: companyData.base_currency,
+            subscription_plan: companyData.subscription_plan,
+            subscription_status: companyData.subscription_status,
+            feature_access: companyData.feature_access,
+            enabledModules: companyData.enabledModules,
+            subscription_modules: companyData.subscription_modules,
+          });
+        }
+      })
+      .catch(() => {
+        if (!company) {
+          setCompany({ _id: "fallback", name: "My Company" });
+        }
+      });
 
     // Fetch user profile for latest avatar
-    usersApi.getProfile().then((response) => {
-      if (response.success && response.data) {
-        const profile = response.data as any;
-        if (profile.avatar) {
-          updateUser?.({ avatar: profile.avatar });
+    usersApi
+      .getProfile()
+      .then((response) => {
+        if (response.success && response.data) {
+          const profile = response.data as any;
+          if (profile.avatar) {
+            updateUser?.({ avatar: profile.avatar });
+          }
         }
-      }
-    }).catch(() => {
-      // Ignore profile fetch errors
-    });
+      })
+      .catch(() => {
+        // Ignore profile fetch errors
+      });
   }, []);
 
   useEffect(() => {
@@ -896,12 +983,15 @@ export function Sidebar({
           const response = await companyApi.getById(membership.companyId);
           if (response.success && response.data) {
             const data = response.data as any;
-            return [membership.companyId, { name: data.name || 'Company', logo_url: data.logo_url }] as const;
+            return [
+              membership.companyId,
+              { name: data.name || "Company", logo_url: data.logo_url },
+            ] as const;
           }
         } catch (error) {
-          return [membership.companyId, { name: 'Company' }] as const;
+          return [membership.companyId, { name: "Company" }] as const;
         }
-        return [membership.companyId, { name: 'Company' }] as const;
+        return [membership.companyId, { name: "Company" }] as const;
       }),
     ).then((entries) => {
       setCompanyOptions(Object.fromEntries(entries));
@@ -912,7 +1002,7 @@ export function Sidebar({
     if (companyId === activeCompanyId) return;
 
     setActiveCompany(companyId, role);
-    localStorage.setItem('companyId', companyId);
+    localStorage.setItem("companyId", companyId);
 
     try {
       const response = await companyApi.getById(companyId);
@@ -920,7 +1010,7 @@ export function Sidebar({
         const companyData = response.data as any;
         setCompany({
           _id: companyData._id || companyData.id || companyId,
-          name: companyData.name || 'My Company',
+          name: companyData.name || "My Company",
           legal_name: companyData.legal_name,
           email: companyData.email,
           phone: companyData.phone,
@@ -939,7 +1029,7 @@ export function Sidebar({
         });
       }
     } finally {
-      navigate('/dashboard');
+      navigate("/dashboard");
       onNavigate?.();
     }
   };
@@ -966,8 +1056,13 @@ export function Sidebar({
     if (!company) return true;
 
     // If the company has explicit subscription modules, derive access from the planModules set
-    if (company.subscription_modules && Array.isArray(company.subscription_modules)) {
-      return item.moduleNames.some((moduleName) => planModules.has(moduleName.toLowerCase()));
+    if (
+      company.subscription_modules &&
+      Array.isArray(company.subscription_modules)
+    ) {
+      return item.moduleNames.some((moduleName) =>
+        planModules.has(moduleName.toLowerCase()),
+      );
     }
 
     // Fallback: if no subscription modules configured, allow access (treat as permissive)
@@ -977,7 +1072,7 @@ export function Sidebar({
   const hasFeatureAccess = (featureKey?: string) => {
     if (!featureKey) return true; // system items without featureKey are always visible
     const fa = company?.feature_access;
-    if (!fa || typeof fa !== 'object') return !company; // allow while loading, lock down once loaded
+    if (!fa || typeof fa !== "object") return !company; // allow while loading, lock down once loaded
 
     const keys = Object.keys(fa);
     // If feature_access is completely empty, be permissive and let subscription_modules gate access
@@ -993,7 +1088,9 @@ export function Sidebar({
   };
 
   const filterVisible = (items: NavItem[]) =>
-    items.filter((item) => hasFeatureAccess(item.featureKey) && hasModuleAccess(item));
+    items.filter(
+      (item) => hasFeatureAccess(item.featureKey) && hasModuleAccess(item),
+    );
 
   const handleNavigate = () => {
     if (onNavigate) onNavigate();
@@ -1035,7 +1132,9 @@ export function Sidebar({
         title={collapsed ? t(item.nameKey) : undefined}
         className={cn(
           "group relative flex items-center overflow-hidden rounded-lg text-xs font-semibold transition-all duration-200",
-          compact ? "min-h-12 flex-col justify-center gap-1 px-2 py-2 text-center" : "gap-2 px-2 py-2 md:px-3 md:py-2.5",
+          compact
+            ? "min-h-12 flex-col justify-center gap-1 px-2 py-2 text-center"
+            : "gap-2 px-2 py-2 md:px-3 md:py-2.5",
           collapsed && "mx-auto h-11 w-11 justify-center rounded-2xl px-0 py-0",
           active
             ? "bg-white text-slate-950 shadow-lg shadow-cyan-950/20"
@@ -1059,7 +1158,12 @@ export function Sidebar({
           )}
         />
         {!collapsed && (
-          <span className={cn("truncate", compact && "max-w-full text-[11px] leading-tight")}>
+          <span
+            className={cn(
+              "truncate",
+              compact && "max-w-full text-[11px] leading-tight",
+            )}
+          >
             {t(item.nameKey)}
           </span>
         )}
@@ -1087,7 +1191,12 @@ export function Sidebar({
           <div className="mb-2 flex items-start justify-between gap-2 px-1.5 pt-1">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className={cn("h-1.5 w-1.5 rounded-full bg-gradient-to-r", section.accent)} />
+                <span
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full bg-gradient-to-r",
+                    section.accent,
+                  )}
+                />
                 <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
                   {section.label}
                 </span>
@@ -1102,7 +1211,12 @@ export function Sidebar({
           </div>
         )}
         {collapsed && (
-          <div className={cn("mx-auto mb-1.5 h-1 w-6 rounded-full bg-gradient-to-r", section.accent)} />
+          <div
+            className={cn(
+              "mx-auto mb-1.5 h-1 w-6 rounded-full bg-gradient-to-r",
+              section.accent,
+            )}
+          />
         )}
 
         <ul
@@ -1116,7 +1230,13 @@ export function Sidebar({
             const disabled = !checkPermission(item.permission);
             return (
               <li key={item.href}>
-                {renderNavItem(item, active, section, useGrid, item.disabled || disabled)}
+                {renderNavItem(
+                  item,
+                  active,
+                  section,
+                  useGrid,
+                  item.disabled || disabled,
+                )}
               </li>
             );
           })}
@@ -1165,7 +1285,10 @@ export function Sidebar({
             ) : (
               <button className="group flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.045] p-2 text-left transition-colors hover:bg-white/[0.08]">
                 <Avatar className="h-10 w-10 flex-shrink-0 ring-2 ring-cyan-300/30">
-                  <AvatarImage src={company?.logo_url} alt={company?.name || "Company"} />
+                  <AvatarImage
+                    src={company?.logo_url}
+                    alt={company?.name || "Company"}
+                  />
                   <AvatarFallback className="bg-gradient-to-br from-cyan-300 to-emerald-300 text-slate-950 text-sm font-bold">
                     {company?.name?.charAt(0).toUpperCase() || "C"}
                   </AvatarFallback>
@@ -1175,7 +1298,9 @@ export function Sidebar({
                     {company?.name || "My Company"}
                   </p>
                   <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
-                    {companies.length > 1 ? `${companies.length} companies` : activeRole || "Operating atlas"}
+                    {companies.length > 1
+                      ? `${companies.length} companies`
+                      : activeRole || "Operating atlas"}
                   </p>
                 </div>
                 <ChevronDown className="h-4 w-4 flex-shrink-0 text-slate-400 transition-transform group-data-[state=open]:rotate-180" />
@@ -1198,25 +1323,37 @@ export function Sidebar({
                 return (
                   <DropdownMenuItem
                     key={membership.companyId}
-                    onClick={() => handleCompanySwitch(membership.companyId, membership.role)}
+                    onClick={() =>
+                      handleCompanySwitch(membership.companyId, membership.role)
+                    }
                     className="cursor-pointer"
                   >
                     <Avatar className="h-7 w-7">
-                      <AvatarImage src={option?.logo_url} alt={option?.name || "Company"} />
+                      <AvatarImage
+                        src={option?.logo_url}
+                        alt={option?.name || "Company"}
+                      />
                       <AvatarFallback className="bg-cyan-100 text-xs font-semibold text-cyan-900">
                         {(option?.name || "C").charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{option?.name || "Company"}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{membership.role}</p>
+                      <p className="truncate text-sm font-medium">
+                        {option?.name || "Company"}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {membership.role}
+                      </p>
                     </div>
                     {isActive && <Check className="h-4 w-4 text-emerald-500" />}
                   </DropdownMenuItem>
                 );
               })
             ) : (
-              <DropdownMenuItem onClick={() => setCompanyProfileOpen(true)} className="cursor-pointer">
+              <DropdownMenuItem
+                onClick={() => setCompanyProfileOpen(true)}
+                className="cursor-pointer"
+              >
                 <Building2 className="h-4 w-4" />
                 Manage company profile
               </DropdownMenuItem>
@@ -1224,7 +1361,10 @@ export function Sidebar({
             {companies.length > 1 && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setCompanyProfileOpen(true)} className="cursor-pointer">
+                <DropdownMenuItem
+                  onClick={() => setCompanyProfileOpen(true)}
+                  className="cursor-pointer"
+                >
                   <Building2 className="h-4 w-4" />
                   Manage current company
                 </DropdownMenuItem>
@@ -1281,14 +1421,17 @@ export function Sidebar({
           onClick={handleNavigate}
           className={cn(
             "group mt-2 flex items-center gap-2 rounded-xl border border-dashed border-cyan-500/20 bg-gradient-to-r from-cyan-500/5 to-emerald-500/5 px-3 py-2.5 text-xs font-semibold transition-all duration-300 hover:border-cyan-500/40 hover:from-cyan-500/10 hover:to-emerald-500/10",
-            collapsed && "mx-auto h-11 w-11 justify-center rounded-2xl px-0 py-0",
+            collapsed &&
+              "mx-auto h-11 w-11 justify-center rounded-2xl px-0 py-0",
             location.pathname === "/onboarding"
               ? "text-cyan-300 border-cyan-500/30 bg-cyan-500/10"
               : "text-slate-400 hover:text-cyan-300",
           )}
           title={collapsed ? "Getting started guide" : undefined}
         >
-          <HelpCircle className={cn("flex-shrink-0 h-4 w-4", collapsed && "h-5 w-5")} />
+          <HelpCircle
+            className={cn("flex-shrink-0 h-4 w-4", collapsed && "h-5 w-5")}
+          />
           {!collapsed && (
             <>
               <span>Getting started guide</span>
@@ -1355,7 +1498,7 @@ export function Sidebar({
             >
               {user?.avatar ? (
                 <Avatar className="h-11 w-11">
-<AvatarImage src={user?.avatar} alt={user?.name || "User"} />
+                  <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
                   <AvatarFallback className="bg-gradient-to-br from-violet-500 to-cyan-400 text-white text-sm">
                     {user?.name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
@@ -1511,12 +1654,15 @@ export function Sidebar({
           </>
         )}
       </div>
-      
+
       {/* User Profile Dialog */}
       <UserProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
-      
+
       {/* Company Profile Dialog */}
-      <CompanyProfileDialog open={companyProfileOpen} onOpenChange={setCompanyProfileOpen} />
+      <CompanyProfileDialog
+        open={companyProfileOpen}
+        onOpenChange={setCompanyProfileOpen}
+      />
     </div>
   );
 }

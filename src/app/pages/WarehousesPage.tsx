@@ -13,7 +13,8 @@ import {
   Search,
   Boxes,
   Landmark,
-  RefreshCw
+  RefreshCw,
+  ShieldCheck,
 } from 'lucide-react';
 import { Layout } from '@/app/layout/Layout';
 import { Button } from '@/app/components/ui/button';
@@ -67,6 +68,15 @@ interface Warehouse {
   ebmRegistrationStatus?: 'not_registered' | 'registered' | 'failed';
   ebmRegisteredAt?: string | null;
   ebmRegistrationError?: string | null;
+  ebmInsuranceSubmitted?: boolean;
+  ebmInsurances?: BranchInsurance[];
+}
+
+interface BranchInsurance {
+  isrccCd: string;
+  isrccNm: string;
+  isrcRt?: number | null;
+  useYn?: 'Y' | 'N';
 }
 
 interface WarehouseFormData {
@@ -119,6 +129,12 @@ export default function WarehousesPage() {
   
   // Form state
   const [formData, setFormData] = useState<WarehouseFormData>(initialFormData);
+
+  // Branch insurance dialog state
+  const [insuranceDialogOpen, setInsuranceDialogOpen] = useState(false);
+  const [insuranceWarehouse, setInsuranceWarehouse] = useState<Warehouse | null>(null);
+  const [insuranceRows, setInsuranceRows] = useState<BranchInsurance[]>([]);
+  const [savingInsurance, setSavingInsurance] = useState(false);
 
   const fetchWarehouses = useCallback(async () => {
     try {
@@ -288,6 +304,68 @@ export default function WarehousesPage() {
     } catch (error: any) {
       toast.error(error.message || 'Branch registration failed');
       fetchWarehouses();
+    }
+  };
+
+  const handleOpenInsuranceDialog = (warehouse: Warehouse) => {
+    setInsuranceWarehouse(warehouse);
+    const existing = warehouse.ebmInsurances || [];
+    setInsuranceRows(existing.length > 0 ? existing : [{ isrccCd: '', isrccNm: '', isrcRt: null, useYn: 'Y' }]);
+    setInsuranceDialogOpen(true);
+  };
+
+  const handleInsuranceRowChange = (index: number, field: keyof BranchInsurance, value: string | number) => {
+    setInsuranceRows((rows) =>
+      rows.map((row, i) =>
+        i === index
+          ? {
+              ...row,
+              [field]: field === 'isrcRt' ? (value === '' ? null : Number(value)) : value,
+            }
+          : row,
+      ),
+    );
+  };
+
+  const handleAddInsuranceRow = () => {
+    setInsuranceRows((rows) => [...rows, { isrccCd: '', isrccNm: '', isrcRt: null, useYn: 'Y' }]);
+  };
+
+  const handleRemoveInsuranceRow = (index: number) => {
+    setInsuranceRows((rows) => rows.filter((_, i) => i !== index));
+  };
+
+  const handleSaveInsurance = async () => {
+    if (!insuranceWarehouse) return;
+
+    const cleaned = insuranceRows
+      .map((row) => ({
+        isrccCd: (row.isrccCd || '').trim(),
+        isrccNm: (row.isrccNm || '').trim(),
+        isrcRt: row.isrcRt == null || Number.isNaN(row.isrcRt) ? 0 : Number(row.isrcRt),
+        useYn: row.useYn === 'N' ? 'N' : 'Y',
+      }))
+      .filter((row) => row.isrccCd && row.isrccNm);
+
+    if (cleaned.length === 0) {
+      toast.error('Add at least one insurance entry');
+      return;
+    }
+
+    try {
+      setSavingInsurance(true);
+      const response = await warehousesApi.update(insuranceWarehouse._id, { ebmInsurances: cleaned });
+      if (response.success) {
+        toast.success('Branch insurance saved');
+        setInsuranceDialogOpen(false);
+        fetchWarehouses();
+      }
+    } catch (error: any) {
+      console.error('Error saving branch insurance:', error);
+      const message = error?.response?.data?.message || error?.message || 'Failed to save branch insurance';
+      toast.error(message);
+    } finally {
+      setSavingInsurance(false);
     }
   };
 
@@ -462,6 +540,17 @@ export default function WarehousesPage() {
                             </span>
                           )}
                           {warehouse.ebmRegisteredAt && <div className="mt-1 text-xs text-slate-500">{new Date(warehouse.ebmRegisteredAt).toLocaleString()}</div>}
+                          <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                            {warehouse.ebmInsuranceSubmitted ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-1 text-[11px] font-semibold text-sky-700 dark:bg-sky-900/30 dark:text-sky-200">
+                                <ShieldCheck className="h-3 w-3" /> Insurance synced
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                <ShieldCheck className="h-3 w-3" /> Insurance pending
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3">
                           {warehouse.isDefault ? (
@@ -495,6 +584,14 @@ export default function WarehousesPage() {
                               title={t('common.edit')}
                             >
                               <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenInsuranceDialog(warehouse)}
+                              title="Branch insurance"
+                            >
+                              <ShieldCheck className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -689,6 +786,90 @@ export default function WarehousesPage() {
               <Button onClick={handleSave} disabled={saving} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200">
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingWarehouse ? t('common.save') : t('common.create')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Branch Insurance Dialog */}
+        <Dialog open={insuranceDialogOpen} onOpenChange={setInsuranceDialogOpen}>
+          <DialogContent className="max-h-[88vh] max-w-3xl overflow-hidden bg-white p-0 dark:bg-slate-900 border-slate-200 dark:border-slate-700">
+            <DialogHeader className="border-b border-slate-200 px-6 py-5 dark:border-slate-700">
+              <DialogTitle className="text-slate-900 dark:text-white">
+                Branch insurance (VSDC /branches/saveBrancheInsurances)
+              </DialogTitle>
+              <DialogDescription className="text-slate-600 dark:text-slate-300">
+                Configure the insurance codes, names, and rates that will be submitted to RRA for this branch. Required when products are marked insurance applicable (isrcAplcbYn = "Y").
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
+              {insuranceRows.map((row, index) => (
+                <div key={`${row.isrccCd}-${index}`} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800/60 sm:grid-cols-12">
+                  <div className="sm:col-span-3 space-y-1">
+                    <Label className="text-slate-900 dark:text-white">Insurance Code</Label>
+                    <Input
+                      value={row.isrccCd}
+                      onChange={(e) => handleInsuranceRowChange(index, 'isrccCd', e.target.value)}
+                      placeholder="e.g. INS01"
+                      className="bg-white dark:bg-slate-700 text-slate-900 dark:text-white border-slate-200 dark:border-slate-600"
+                    />
+                  </div>
+                  <div className="sm:col-span-4 space-y-1">
+                    <Label className="text-slate-900 dark:text-white">Insurance Name</Label>
+                    <Input
+                      value={row.isrccNm}
+                      onChange={(e) => handleInsuranceRowChange(index, 'isrccNm', e.target.value)}
+                      placeholder="Provider or policy name"
+                      className="bg-white dark:bg-slate-700 text-slate-900 dark:text-white border-slate-200 dark:border-slate-600"
+                    />
+                  </div>
+                  <div className="sm:col-span-3 space-y-1">
+                    <Label className="text-slate-900 dark:text-white">Insurance Rate (%)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={row.isrcRt ?? ''}
+                      onChange={(e) => handleInsuranceRowChange(index, 'isrcRt', e.target.value)}
+                      placeholder="0"
+                      className="bg-white dark:bg-slate-700 text-slate-900 dark:text-white border-slate-200 dark:border-slate-600"
+                    />
+                  </div>
+                  <div className="sm:col-span-2 flex items-center gap-2">
+                    <label className="flex items-center gap-2 text-sm text-slate-900 dark:text-white">
+                      <input
+                        type="checkbox"
+                        checked={(row.useYn || 'Y') === 'Y'}
+                        onChange={(e) => handleInsuranceRowChange(index, 'useYn', e.target.checked ? 'Y' : 'N')}
+                        className="rounded border-gray-300 dark:border-slate-600"
+                      />
+                      Active
+                    </label>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveInsuranceRow(index)}
+                      disabled={insuranceRows.length === 1}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={handleAddInsuranceRow} className="border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white">
+                  <Plus className="h-4 w-4 mr-2" /> Add insurance entry
+                </Button>
+              </div>
+            </div>
+            <DialogFooter className="border-t border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-900">
+              <Button variant="outline" onClick={() => setInsuranceDialogOpen(false)} className="border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white">
+                {t('common.cancel')}
+              </Button>
+              <Button onClick={handleSaveInsurance} disabled={savingInsurance} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200">
+                {savingInsurance && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save branch insurance
               </Button>
             </DialogFooter>
           </DialogContent>

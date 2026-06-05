@@ -98,6 +98,10 @@ interface ProductFormData {
   ebmTaxTypeCode: string;
   ebmPackagingUnitCode: string;
   ebmQuantityUnitCode: string;
+  ebmItemStandardName: string;
+  ebmBatchNo: string;
+  ebmSafetyQty: string;
+  ebmAdditionalInfo: string;
 }
 
 interface EBMCodeOption {
@@ -279,6 +283,10 @@ export default function ProductFormPage() {
     ebmTaxTypeCode: 'B',
     ebmPackagingUnitCode: '',
     ebmQuantityUnitCode: '',
+    ebmItemStandardName: '',
+    ebmBatchNo: '',
+    ebmSafetyQty: '10',
+    ebmAdditionalInfo: '',
   });
 
   useEffect(() => {
@@ -424,6 +432,10 @@ export default function ProductFormPage() {
           ebmTaxTypeCode: product.ebm?.taxTyCd || product.ebm?.taxTypeCode || product.taxCode || 'B',
           ebmPackagingUnitCode: product.ebm?.pkgUnitCd || product.ebm?.packagingUnitCode || '',
           ebmQuantityUnitCode: product.ebm?.qtyUnitCd || product.ebm?.quantityUnitCode || product.unit || '',
+          ebmItemStandardName: product.ebm?.itemStdNm || '',
+          ebmBatchNo: product.ebm?.btchNo || '',
+          ebmSafetyQty: String(product.ebm?.sftyQty ?? product.lowStockThreshold ?? 0),
+          ebmAdditionalInfo: product.ebm?.addInfo || '',
         });
       }
     } catch (error) {
@@ -445,6 +457,9 @@ export default function ProductFormPage() {
       if (field === 'ebmTaxTypeCode') {
         next.taxCode = value;
         next.taxRate = value === 'B' ? '18' : '0';
+      }
+      if (field === 'lowStockThreshold' && !prev.ebmSafetyQty) {
+        next.ebmSafetyQty = value;
       }
       return next;
     });
@@ -544,6 +559,10 @@ export default function ProductFormPage() {
           taxTyCd: formData.ebmTaxTypeCode || null,
           pkgUnitCd: formData.ebmPackagingUnitCode || null,
           qtyUnitCd: formData.ebmQuantityUnitCode || null,
+          itemStdNm: formData.ebmItemStandardName.trim() || null,
+          btchNo: formData.ebmBatchNo.trim() || null,
+          sftyQty: parseFloat(formData.ebmSafetyQty) || 0,
+          addInfo: formData.ebmAdditionalInfo.trim() || null,
         },
         costingMethod: formData.costingMethod,
         reorderPoint: parseFloat(formData.reorderPoint) || 0,
@@ -913,6 +932,56 @@ export default function ProductFormPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ebmItemStandardName" className="dark:text-slate-200">Item Standard Name</Label>
+                  <Input
+                    id="ebmItemStandardName"
+                    value={formData.ebmItemStandardName}
+                    maxLength={100}
+                    onChange={(e) => handleChange('ebmItemStandardName', e.target.value)}
+                    placeholder={formData.name || 'RRA standard item name'}
+                    className="h-10 rounded-md px-3"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ebmBatchNo" className="dark:text-slate-200">Batch Number</Label>
+                  <Input
+                    id="ebmBatchNo"
+                    value={formData.ebmBatchNo}
+                    maxLength={30}
+                    onChange={(e) => handleChange('ebmBatchNo', e.target.value)}
+                    placeholder="Default batch number"
+                    className="h-10 rounded-md px-3"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ebmSafetyQty" className="dark:text-slate-200">Safety Quantity</Label>
+                  <Input
+                    id="ebmSafetyQty"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.ebmSafetyQty}
+                    onChange={(e) => handleChange('ebmSafetyQty', e.target.value)}
+                    className="h-10 rounded-md px-3"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="ebmAdditionalInfo" className="dark:text-slate-200">Additional Information</Label>
+                  <Textarea
+                    id="ebmAdditionalInfo"
+                    value={formData.ebmAdditionalInfo}
+                    maxLength={400}
+                    onChange={(e) => handleChange('ebmAdditionalInfo', e.target.value)}
+                    placeholder="Optional RRA item registration details"
+                    rows={3}
+                    className="rounded-md px-3"
+                  />
                 </div>
               </CardContent>
             </Card>

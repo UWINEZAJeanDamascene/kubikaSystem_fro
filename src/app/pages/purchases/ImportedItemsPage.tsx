@@ -8,7 +8,12 @@ import { Layout } from "../../layout/Layout";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Badge } from "@/app/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -49,6 +54,7 @@ interface OptionItem {
   name: string;
   sku?: string;
   code?: string;
+  rraBranchId?: string | null;
 }
 
 const statusClass: Record<string, string> = {
@@ -66,12 +72,25 @@ export default function ImportedItemsPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Record<string, { productId?: string; warehouseId?: string; supplierId?: string; reason?: string }>>({});
+  const [syncBranchId, setSyncBranchId] = useState<string>("00");
+  const [selected, setSelected] = useState<
+    Record<
+      string,
+      {
+        productId?: string;
+        warehouseId?: string;
+        supplierId?: string;
+        reason?: string;
+      }
+    >
+  >({});
 
   const fetchImports = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await ebmApi.getImportedItems({ status: status === "all" ? undefined : status });
+      const res = await ebmApi.getImportedItems({
+        status: status === "all" ? undefined : status,
+      });
       setItems((res.data || []) as ImportedItem[]);
     } catch (error: any) {
       toast.error(error.message || "Failed to load imported items");
@@ -89,24 +108,52 @@ export default function ImportedItemsPage() {
       productsApi.getAll({ limit: 500 }),
       warehousesApi.getAll({ limit: 200, isActive: true }),
       suppliersApi.getAll({ limit: 200 }),
-    ]).then(([productRes, warehouseRes, supplierRes]) => {
-      const productData = productRes.data as any;
-      setProducts((Array.isArray(productData) ? productData : productData?.data || []) as OptionItem[]);
-      const warehouseData = warehouseRes.data as any;
-      setWarehouses((Array.isArray(warehouseData) ? warehouseData : warehouseData?.data || []) as OptionItem[]);
-      const supplierData = supplierRes.data as any;
-      setSuppliers((Array.isArray(supplierData) ? supplierData : supplierData?.data || []) as OptionItem[]);
-    }).catch(() => {
-      toast.error("Failed to load product, warehouse, or supplier options");
-    });
+    ])
+      .then(([productRes, warehouseRes, supplierRes]) => {
+        const productData = productRes.data as any;
+        setProducts(
+          (Array.isArray(productData)
+            ? productData
+            : productData?.data || []) as OptionItem[],
+        );
+        const warehouseData = warehouseRes.data as any;
+        const warehouseList = (
+          Array.isArray(warehouseData)
+            ? warehouseData
+            : warehouseData?.data || []
+        ) as OptionItem[];
+        setWarehouses(warehouseList);
+        const firstBranch = warehouseList.find((w) => w.rraBranchId);
+        if (firstBranch?.rraBranchId) setSyncBranchId(firstBranch.rraBranchId);
+        const supplierData = supplierRes.data as any;
+        setSuppliers(
+          (Array.isArray(supplierData)
+            ? supplierData
+            : supplierData?.data || []) as OptionItem[],
+        );
+      })
+      .catch(() => {
+        toast.error("Failed to load product, warehouse, or supplier options");
+      });
   }, []);
 
-  const counts = useMemo(() => ({
-    total: items.length,
-    pending: items.filter((item) => item.confirmationStatus === "pending").length,
-    confirmed: items.filter((item) => item.confirmationStatus === "confirmed").length,
-    rejected: items.filter((item) => item.confirmationStatus === "rejected").length,
-  }), [items]);
+  const ebmBranches = useMemo(
+    () => warehouses.filter((w) => w.rraBranchId),
+    [warehouses],
+  );
+
+  const counts = useMemo(
+    () => ({
+      total: items.length,
+      pending: items.filter((item) => item.confirmationStatus === "pending")
+        .length,
+      confirmed: items.filter((item) => item.confirmationStatus === "confirmed")
+        .length,
+      rejected: items.filter((item) => item.confirmationStatus === "rejected")
+        .length,
+    }),
+    [items],
+  );
 
   const updateSelected = (id: string, patch: Record<string, string>) => {
     setSelected((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
@@ -115,7 +162,7 @@ export default function ImportedItemsPage() {
   const syncImports = async () => {
     setSyncing(true);
     try {
-      await ebmApi.syncImportedItems({ branchId: "00" });
+      await ebmApi.syncImportedItems({ branchId: syncBranchId });
       toast.success("Imported items pulled from RRA");
       fetchImports();
     } catch (error: any) {
@@ -133,12 +180,16 @@ export default function ImportedItemsPage() {
     }
     setBusyId(item._id);
     try {
+      const selectedWarehouse = warehouses.find(
+        (w) => w._id === form.warehouseId,
+      );
+      const branchId = selectedWarehouse?.rraBranchId || syncBranchId;
       await ebmApi.confirmImportedItem(item._id, {
         productId: form.productId,
         warehouseId: form.warehouseId,
         supplierId: form.supplierId,
         unitCost: item.unitCost,
-        branchId: "00",
+        branchId,
       });
       toast.success("Import confirmed and GRN flow triggered");
       fetchImports();
@@ -172,21 +223,54 @@ export default function ImportedItemsPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-950 dark:text-white">Imported Items</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Pull customs-declared imports from RRA and receive confirmed goods through GRN.</p>
+            <h1 className="text-2xl font-bold text-slate-950 dark:text-white">
+              Imported Items
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Pull customs-declared imports from RRA and receive confirmed goods
+              through GRN.
+            </p>
           </div>
-          <Button onClick={syncImports} disabled={syncing}>
-            {syncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <DownloadCloud className="mr-2 h-4 w-4" />}
-            Pull from RRA
-          </Button>
+          <div className="flex items-center gap-2">
+            {ebmBranches.length > 0 ? (
+              <Select value={syncBranchId} onValueChange={setSyncBranchId}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ebmBranches.map((w) => (
+                    <SelectItem key={w._id} value={w.rraBranchId!}>
+                      {w.name} ({w.rraBranchId})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <span className="text-xs text-slate-500">
+                Branch: {syncBranchId}
+              </span>
+            )}
+            <Button onClick={syncImports} disabled={syncing}>
+              {syncing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <DownloadCloud className="mr-2 h-4 w-4" />
+              )}
+              Pull from RRA
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-4">
           {Object.entries(counts).map(([key, value]) => (
             <Card key={key}>
               <CardContent className="p-4">
-                <p className="text-xs font-semibold uppercase text-slate-500">{key}</p>
-                <p className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">{value}</p>
+                <p className="text-xs font-semibold uppercase text-slate-500">
+                  {key}
+                </p>
+                <p className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">
+                  {value}
+                </p>
               </CardContent>
             </Card>
           ))}
@@ -209,7 +293,10 @@ export default function ImportedItemsPage() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex h-40 items-center justify-center text-slate-500"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading imports</div>
+              <div className="flex h-40 items-center justify-center text-slate-500">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading
+                imports
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -228,38 +315,108 @@ export default function ImportedItemsPage() {
                     {items.map((item) => (
                       <TableRow key={item._id}>
                         <TableCell>
-                          <p className="font-medium">{item.importDeclarationNo || item.importTaskCode}</p>
-                          <p className="text-xs text-slate-500">{item.importDate ? new Date(item.importDate).toLocaleDateString() : "-"}</p>
+                          <p className="font-medium">
+                            {item.importDeclarationNo || item.importTaskCode}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {item.importDate
+                              ? new Date(item.importDate).toLocaleDateString()
+                              : "-"}
+                          </p>
                         </TableCell>
                         <TableCell>
                           <p className="font-medium">{item.itemName}</p>
-                          <p className="text-xs text-slate-500">{item.itemClassCode || "-"} {item.supplierName ? `- ${item.supplierName}` : ""}</p>
+                          <p className="text-xs text-slate-500">
+                            {item.itemClassCode || "-"}{" "}
+                            {item.supplierName ? `- ${item.supplierName}` : ""}
+                          </p>
                         </TableCell>
-                        <TableCell>{item.quantity} {item.unitCode || ""}</TableCell>
+                        <TableCell>
+                          {item.quantity} {item.unitCode || ""}
+                        </TableCell>
                         <TableCell>{item.originCountryCode || "-"}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={statusClass[item.confirmationStatus]}>{item.confirmationStatus}</Badge>
-                          {item.grn && <Link to={`/grn/${item.grn._id}`} className="mt-1 block text-xs text-blue-600 hover:underline">{item.grn.referenceNo}</Link>}
-                          {item.stockUpdateError && <p className="mt-1 max-w-xs text-xs text-red-600">{item.stockUpdateError}</p>}
+                          <Badge
+                            variant="outline"
+                            className={statusClass[item.confirmationStatus]}
+                          >
+                            {item.confirmationStatus}
+                          </Badge>
+                          {item.grn && (
+                            <Link
+                              to={`/grn/${item.grn._id}`}
+                              className="mt-1 block text-xs text-blue-600 hover:underline"
+                            >
+                              {item.grn.referenceNo}
+                            </Link>
+                          )}
+                          {item.stockUpdateError && (
+                            <p className="mt-1 max-w-xs text-xs text-red-600">
+                              {item.stockUpdateError}
+                            </p>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="grid min-w-64 gap-2">
-                            <Select value={selected[item._id]?.productId || ""} onValueChange={(value) => updateSelected(item._id, { productId: value })}>
-                              <SelectTrigger><SelectValue placeholder="Product" /></SelectTrigger>
+                            <Select
+                              value={selected[item._id]?.productId || ""}
+                              onValueChange={(value) =>
+                                updateSelected(item._id, { productId: value })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Product" />
+                              </SelectTrigger>
                               <SelectContent>
-                                {products.map((product) => <SelectItem key={product._id} value={product._id}>{product.name} {product.sku ? `(${product.sku})` : ""}</SelectItem>)}
+                                {products.map((product) => (
+                                  <SelectItem
+                                    key={product._id}
+                                    value={product._id}
+                                  >
+                                    {product.name}{" "}
+                                    {product.sku ? `(${product.sku})` : ""}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
-                            <Select value={selected[item._id]?.warehouseId || ""} onValueChange={(value) => updateSelected(item._id, { warehouseId: value })}>
-                              <SelectTrigger><SelectValue placeholder="Warehouse" /></SelectTrigger>
+                            <Select
+                              value={selected[item._id]?.warehouseId || ""}
+                              onValueChange={(value) =>
+                                updateSelected(item._id, { warehouseId: value })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Warehouse" />
+                              </SelectTrigger>
                               <SelectContent>
-                                {warehouses.map((warehouse) => <SelectItem key={warehouse._id} value={warehouse._id}>{warehouse.name}</SelectItem>)}
+                                {warehouses.map((warehouse) => (
+                                  <SelectItem
+                                    key={warehouse._id}
+                                    value={warehouse._id}
+                                  >
+                                    {warehouse.name}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
-                            <Select value={selected[item._id]?.supplierId || ""} onValueChange={(value) => updateSelected(item._id, { supplierId: value })}>
-                              <SelectTrigger><SelectValue placeholder="Supplier optional" /></SelectTrigger>
+                            <Select
+                              value={selected[item._id]?.supplierId || ""}
+                              onValueChange={(value) =>
+                                updateSelected(item._id, { supplierId: value })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Supplier optional" />
+                              </SelectTrigger>
                               <SelectContent>
-                                {suppliers.map((supplier) => <SelectItem key={supplier._id} value={supplier._id}>{supplier.name}</SelectItem>)}
+                                {suppliers.map((supplier) => (
+                                  <SelectItem
+                                    key={supplier._id}
+                                    value={supplier._id}
+                                  >
+                                    {supplier.name}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>
@@ -267,15 +424,40 @@ export default function ImportedItemsPage() {
                         <TableCell>
                           {item.confirmationStatus === "pending" ? (
                             <div className="flex min-w-64 flex-col gap-2">
-                              <Button size="sm" onClick={() => confirmImport(item)} disabled={busyId === item._id}>
-                                {busyId === item._id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                              <Button
+                                size="sm"
+                                onClick={() => confirmImport(item)}
+                                disabled={busyId === item._id}
+                              >
+                                {busyId === item._id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="mr-2 h-4 w-4" />
+                                )}
                                 Confirm
                               </Button>
-                              <Input placeholder="Rejection reason" value={selected[item._id]?.reason || ""} onChange={(event) => updateSelected(item._id, { reason: event.target.value })} />
-                              <Button size="sm" variant="outline" onClick={() => rejectImport(item)} disabled={busyId === item._id}>Reject</Button>
+                              <Input
+                                placeholder="Rejection reason"
+                                value={selected[item._id]?.reason || ""}
+                                onChange={(event) =>
+                                  updateSelected(item._id, {
+                                    reason: event.target.value,
+                                  })
+                                }
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => rejectImport(item)}
+                                disabled={busyId === item._id}
+                              >
+                                Reject
+                              </Button>
                             </div>
                           ) : (
-                            <span className="text-sm text-slate-500">No action</span>
+                            <span className="text-sm text-slate-500">
+                              No action
+                            </span>
                           )}
                         </TableCell>
                       </TableRow>
