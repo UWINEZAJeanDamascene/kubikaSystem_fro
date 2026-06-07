@@ -79,7 +79,7 @@ function documentLink(item: QueueItem) {
   return routes[item.documentType] || "#";
 }
 
-export default function EBMRetryQueuePage() {
+export function EBMRetryQueueContent() {
   const [items, setItems] = useState<QueueItem[]>([]);
   const [alerts, setAlerts] = useState<EBMAlert[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -197,7 +197,6 @@ export default function EBMRetryQueuePage() {
   };
 
   return (
-    <Layout>
     <div className="min-h-screen bg-slate-50 p-6 dark:bg-slate-950">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -391,6 +390,13 @@ export default function EBMRetryQueuePage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function EBMRetryQueuePage() {
+  return (
+    <Layout>
+      <EBMRetryQueueContent />
     </Layout>
   );
 }

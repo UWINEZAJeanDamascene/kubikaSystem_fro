@@ -84,7 +84,7 @@ function DeviceStatusBadge({ status }: { status: string }) {
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
-export default function EBMComplianceDashboard() {
+export function EBMComplianceDashboardContent() {
   const [devices, setDevices] = useState<{
     mode: string;
     tin?: string | null;
@@ -133,7 +133,7 @@ export default function EBMComplianceDashboard() {
     (queueCounts.failed ?? 0) + (queueCounts.abandoned ?? 0) + alerts.length;
 
   return (
-    <Layout>
+    <div className="bg-slate-50 px-4 py-6 dark:bg-slate-950 sm:px-6 lg:px-8">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -400,6 +400,14 @@ export default function EBMComplianceDashboard() {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+export default function EBMComplianceDashboard() {
+  return (
+    <Layout>
+      <EBMComplianceDashboardContent />
     </Layout>
   );
 }

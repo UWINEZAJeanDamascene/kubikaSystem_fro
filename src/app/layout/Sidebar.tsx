@@ -486,34 +486,6 @@ const purchasingNav: NavSection = {
         "Purchase orders",
       ],
     },
-    {
-      nameKey: "nav.ebmUnmatchedPurchases",
-      href: "/ebm/unmatched-purchases",
-      icon: FileText,
-      permission: "purchase_orders:read",
-      featureKey: "purchases",
-      moduleNames: ["EBM unmatched purchases", "Purchase orders"],
-    },
-    {
-      nameKey: "nav.ebmRetryQueue",
-      href: "/ebm/retry-queue",
-      icon: FileText,
-      permission: "purchase_orders:read",
-      featureKey: "purchases",
-      moduleNames: ["EBM retry queue", "Purchase orders"],
-    },
-    {
-      nameKey: "nav.ebmCompliance",
-      href: "/ebm/compliance",
-      icon: ShieldCheck,
-      permission: "purchase_orders:read",
-      featureKey: "purchases",
-      moduleNames: [
-        "EBM retry queue",
-        "EBM unmatched purchases",
-        "Purchase orders",
-      ],
-    },
   ],
 };
 
