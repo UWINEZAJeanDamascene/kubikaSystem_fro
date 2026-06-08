@@ -41,6 +41,9 @@ interface Category {
   name: string;
   children?: Category[];
   parent?: string | null;
+  defaultInventoryAccount?: string;
+  defaultCogsAccount?: string;
+  defaultRevenueAccount?: string;
 }
 
 interface Supplier {
@@ -340,18 +343,76 @@ export default function ProductFormPage() {
 
   const loadAccounts = async () => {
     try {
-      const response = await chartOfAccountsApi.getAll({ isActive: true });
-      if (response.success && response.data) {
-        const accountsData = Array.isArray(response.data) ? response.data : [];
-        setAccounts(accountsData as ChartAccount[]);
-      } else {
-        setAccounts([]);
-      }
+      const [invResp, cogsResp, expResp, revResp] = await Promise.all([
+        chartOfAccountsApi.getAll({ isActive: true, type: 'asset' }),
+        chartOfAccountsApi.getAll({ isActive: true, type: 'cogs' }),
+        chartOfAccountsApi.getAll({ isActive: true, type: 'expense' }),
+        chartOfAccountsApi.getAll({ isActive: true, type: 'revenue' }),
+      ]);
+
+      const inv = invResp.success && invResp.data ? (Array.isArray(invResp.data) ? invResp.data : []) : [];
+      const cogs = cogsResp.success && cogsResp.data ? (Array.isArray(cogsResp.data) ? cogsResp.data : []) : [];
+      const expenses = expResp.success && expResp.data ? (Array.isArray(expResp.data) ? expResp.data : []) : [];
+      const rev = revResp.success && revResp.data ? (Array.isArray(revResp.data) ? revResp.data : []) : [];
+
+      setAccounts([...inv, ...cogs, ...expenses, ...rev] as ChartAccount[]);
     } catch (error) {
       console.error('[ProductForm] Failed to load accounts:', error);
       setAccounts([]);
     }
   };
+
+  const getDefaultAccountCode = (type: string, preferredCode?: string) => {
+    if (!accounts || !accounts.length) return '';
+    const typed = accounts.filter(a => a.type === type || (type === 'cogs' && a.type === 'expense'));
+    if (!typed.length) return '';
+
+    const normalizedPreferred = preferredCode ? String(preferredCode) : null;
+    const preferred = normalizedPreferred ? typed.find(a => String(a.code) === normalizedPreferred || String((a as any)._id) === normalizedPreferred) : null;
+    if (preferred) return preferred.code || '';
+
+    // For asset type, prefer accounts with 'inventory' in the name
+    if (type === 'asset') {
+      const inventoryAccount = typed.find(a => a.name?.toLowerCase().includes('inventory'));
+      if (inventoryAccount) return inventoryAccount.code || '';
+    }
+
+    // Sort numerically by code to ensure proper ordering (e.g., 1400 after 1000)
+    const sorted = [...typed].sort((a, b) => {
+      const codeA = parseInt(String(a.code), 10) || 0;
+      const codeB = parseInt(String(b.code), 10) || 0;
+      return codeA - codeB;
+    });
+    return sorted[0]?.code || '';
+  };
+
+  // Auto-pick sensible defaults for new products when accounts (and optional category defaults) are available
+  useEffect(() => {
+    if (isEditMode) return;
+    if (!accounts || !accounts.length) return;
+
+    const selectedCategory = categories.find((cat: any) => String(cat._id) === String(formData.category));
+
+    setFormData((prev) => {
+      let changed = false;
+      const next = { ...prev };
+
+      if (!prev.inventory_account_id) {
+        const inv = getDefaultAccountCode('asset', selectedCategory?.defaultInventoryAccount);
+        if (inv) { next.inventory_account_id = inv; changed = true; }
+      }
+      if (!prev.cogs_account_id) {
+        const cogs = getDefaultAccountCode('cogs', selectedCategory?.defaultCogsAccount);
+        if (cogs) { next.cogs_account_id = cogs; changed = true; }
+      }
+      if (!prev.revenue_account_id) {
+        const rev = getDefaultAccountCode('revenue', selectedCategory?.defaultRevenueAccount);
+        if (rev) { next.revenue_account_id = rev; changed = true; }
+      }
+
+      return changed ? next : prev;
+    });
+  }, [accounts, categories, formData.category, isEditMode]);
 
   const loadEbmCodes = async () => {
     setEbmCodesLoading(true);
@@ -1115,7 +1176,7 @@ export default function ProductFormPage() {
                         <SelectValue placeholder={t('products.selectAccount') || 'Select account'} />
                       </SelectTrigger>
                       <SelectContent className="dark:bg-slate-800">
-                        {(accounts || []).filter(a => a.type === 'cogs').map((account) => (
+                        {(accounts || []).filter(a => a.type === 'cogs' || a.type === 'expense').map((account) => (
                           <SelectItem key={account.code} value={account.code} className="dark:text-slate-200">{account.code} - {account.name}</SelectItem>
                         ))}
                       </SelectContent>
