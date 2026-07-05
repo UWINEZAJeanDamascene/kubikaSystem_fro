@@ -229,7 +229,7 @@ export default function SmartImportPage() {
               <CardContent className="space-y-4 p-6">
                 {entityType === "opening_stock" && (
                   <Alert
-                    variant="warning"
+                    variant="default"
                     className="border border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-400/40 dark:bg-amber-500/10 dark:text-amber-100"
                   >
                     <AlertCircle className="h-4 w-4" />
@@ -453,3 +453,4 @@ export default function SmartImportPage() {
     </Layout>
   );
 }
+

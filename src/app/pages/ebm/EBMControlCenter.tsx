@@ -14,7 +14,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { ebmApi, type EBMDeviceStatusResponse } from "@/lib/api";
+import { ebmApi, type EBMDeviceStatusResponse, type EBMStockReconciliationResponse, type EBMStockReconciliationRow } from "@/lib/api";
 import { Layout } from "@/app/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
@@ -43,6 +43,7 @@ interface QueueCounts {
   submitted?: number;
 }
 
+
 export default function EBMControlCenter() {
   const [loading, setLoading] = useState(false);
   const [syncingCodes, setSyncingCodes] = useState(false);
@@ -51,6 +52,9 @@ export default function EBMControlCenter() {
   const [unmatchedCount, setUnmatchedCount] = useState(0);
   const [unmatchedItems, setUnmatchedItems] = useState<UnmatchedPurchase[]>([]);
   const [unmatchedSyncing, setUnmatchedSyncing] = useState(false);
+  const [stockRecon, setStockRecon] = useState<EBMStockReconciliationResponse["data"] | null>(null);
+  const [stockReconLoading, setStockReconLoading] = useState(false);
+  const [stockResubmitting, setStockResubmitting] = useState(false);
 
   const branchStats = useMemo(() => {
     const total = devices?.branches?.length || 0;
@@ -133,6 +137,32 @@ export default function EBMControlCenter() {
       setUnmatchedSyncing(false);
     }
   };
+  const handleStockReconcile = async () => {
+    setStockReconLoading(true);
+    try {
+      const response = await ebmApi.reconcileStock({ branchId: "00" });
+      setStockRecon(response.data);
+      const count = response.data.summary?.discrepancy || 0;
+      toast.success(count ? `Stock reconciliation completed with ${count} differences` : "Stock master matches local stock");
+    } catch (error: any) {
+      toast.error(error?.message || "Stock reconciliation failed");
+    } finally {
+      setStockReconLoading(false);
+    }
+  };
+
+  const handleStockResubmit = async () => {
+    setStockResubmitting(true);
+    try {
+      const response = await ebmApi.resubmitStockMaster({ branchId: stockRecon?.branchId || "00", allDiscrepancies: true });
+      toast.success(`Submitted ${response.data.submitted} stock master update(s)`);
+      await handleStockReconcile();
+    } catch (error: any) {
+      toast.error(error?.message || "Stock master resubmission failed");
+    } finally {
+      setStockResubmitting(false);
+    }
+  };
 
   useEffect(() => {
     load();
@@ -166,6 +196,7 @@ export default function EBMControlCenter() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="retry">Retry Queue</TabsTrigger>
             <TabsTrigger value="unmatched">Unmatched Purchases</TabsTrigger>
+            <TabsTrigger value="stock">Stock Master</TabsTrigger>
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
           </TabsList>
 
@@ -235,7 +266,7 @@ export default function EBMControlCenter() {
                     </Button>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Tip: Use branch insurance dialog on Warehouses to keep `/branches/saveBrancheInsurances` compliant.
+                    Tip: Use branch insurance dialog on Warehouses to keep `/branches/saveBranchInsurance` compliant.
                   </p>
                 </CardContent>
               </Card>
@@ -322,6 +353,10 @@ export default function EBMControlCenter() {
                         <ShieldCheck className="h-4 w-4" /> EBM status filter
                       </Link>
                     </Button>
+                    <Button onClick={handleStockReconcile} disabled={stockReconLoading} variant="outline" className="gap-2">
+                      {stockReconLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                      Reconcile stock
+                    </Button>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400">Use item class, tax type, insurance flags (isrcAplcbYn) in product forms per §3.3.4.</p>
                 </CardContent>
@@ -366,6 +401,16 @@ export default function EBMControlCenter() {
               syncing={unmatchedSyncing}
               onRefresh={load}
               onSync={handleUnmatchedSync}
+            />
+          </TabsContent>
+
+          <TabsContent value="stock">
+            <StockMasterTab
+              reconciliation={stockRecon}
+              loading={stockReconLoading}
+              resubmitting={stockResubmitting}
+              onReconcile={handleStockReconcile}
+              onResubmit={handleStockResubmit}
             />
           </TabsContent>
 
@@ -446,3 +491,94 @@ function UnmatchedPurchasesTab({
     </div>
   );
 }
+
+
+
+function StockMasterTab({
+  reconciliation,
+  loading,
+  resubmitting,
+  onReconcile,
+  onResubmit,
+}: {
+  reconciliation: EBMStockReconciliationResponse["data"] | null;
+  loading: boolean;
+  resubmitting: boolean;
+  onReconcile: () => Promise<void> | void;
+  onResubmit: () => Promise<void> | void;
+}) {
+  const rows = reconciliation?.rows || [];
+  const actionable = rows.filter((row) => row.status === "discrepancy" || row.status === "missing_vsdc").length;
+
+  const statusLabel = (row: EBMStockReconciliationRow) => {
+    if (row.status === "missing_vsdc") return "Missing in VSDC";
+    if (row.status === "missing_local") return "Missing locally";
+    if (row.status === "discrepancy") return "Different";
+    return "Matched";
+  };
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Stock Master Reconciliation</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Compare local product stock with RRA VSDC residual quantities.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={onReconcile} disabled={loading} className="gap-2">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            Reconcile
+          </Button>
+          <Button variant="outline" onClick={onResubmit} disabled={resubmitting || loading || actionable === 0} className="gap-2">
+            {resubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+            Resubmit differences
+          </Button>
+        </div>
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-2 text-sm">
+        <Badge variant="outline">Branch: {reconciliation?.branchId || "00"}</Badge>
+        <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200">Matched: {reconciliation?.summary?.matched || 0}</Badge>
+        <Badge className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200">Different: {reconciliation?.summary?.discrepancy || 0}</Badge>
+        <Badge className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-200">Missing VSDC: {reconciliation?.summary?.missing_vsdc || 0}</Badge>
+        <Badge className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">Missing local: {reconciliation?.summary?.missing_local || 0}</Badge>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 dark:border-slate-800">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Item Code</TableHead>
+              <TableHead>Product</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Local Qty</TableHead>
+              <TableHead className="text-right">VSDC Qty</TableHead>
+              <TableHead className="text-right">Difference</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.slice(0, 50).map((row) => (
+              <TableRow key={`${row.itemCd}-${row.status}`}>
+                <TableCell className="font-mono text-xs">{row.itemCd}</TableCell>
+                <TableCell>{row.productName || row.vsdcItemName || "-"}</TableCell>
+                <TableCell>{statusLabel(row)}</TableCell>
+                <TableCell className="text-right">{row.localQty == null ? "-" : row.localQty.toLocaleString()}</TableCell>
+                <TableCell className="text-right">{row.vsdcQty == null ? "-" : row.vsdcQty.toLocaleString()}</TableCell>
+                <TableCell className="text-right">{row.difference.toLocaleString()}</TableCell>
+              </TableRow>
+            ))}
+            {!rows.length && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                  {loading ? "Loading..." : "Run reconciliation to compare local stock with VSDC"}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+

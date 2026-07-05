@@ -37,6 +37,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Separator } from '@/app/components/ui/separator';
 import { toast } from 'sonner';
 import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
+import EBMFiscalReceiptBlock from '@/app/components/EBMFiscalReceiptBlock';
 
 interface CreditNoteLine {
   _id: string;
@@ -114,6 +115,12 @@ interface CreditNote {
   ebm?: {
     ebmStatus?: string;
     rcptNo?: string | null;
+    rcptDt?: string | null;
+    sdcId?: string | null;
+    mrcNo?: string | null;
+    curRcptNo?: string | number | null;
+    totRcptNo?: string | number | null;
+    rptNo?: string | number | null;
     rcptSign?: string | null;
     intrlData?: string | null;
     qrCode?: string | null;
@@ -612,14 +619,9 @@ export default function CreditNoteDetailPage() {
                     <CardTitle className="text-base text-slate-900 dark:text-white">RRA EBM</CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-2 text-sm">
+                <CardContent className="space-y-3 text-sm">
                   <div className="flex items-center justify-between"><span className="text-slate-500">Status</span><EBMStatusBadge status={creditNote.ebm?.ebmStatus} /></div>
-                  <div className="flex items-center justify-between"><span className="text-slate-500">Receipt No</span><span className="font-mono">{creditNote.ebm?.rcptNo || '-'}</span></div>
-                  <div className="flex items-center justify-between"><span className="text-slate-500">Original Receipt</span><span className="font-mono">{creditNote.ebm?.orgRcptNo || '-'}</span></div>
-                  <div className="flex items-center justify-between"><span className="text-slate-500">Refund Reason</span><span className="font-mono">{creditNote.ebm?.rfdRsnCd || '-'}</span></div>
-                  <div className="flex items-center justify-between"><span className="text-slate-500">Submitted</span><span>{creditNote.ebm?.submittedAt ? new Date(creditNote.ebm.submittedAt).toLocaleString() : '-'}</span></div>
-                  {creditNote.ebm?.rcptSign && <div className="break-all rounded-md bg-slate-50 p-2 font-mono text-xs dark:bg-slate-900">{creditNote.ebm.rcptSign}</div>}
-                  {creditNote.ebm?.lastError && <div className="rounded-md bg-red-50 p-2 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300">{creditNote.ebm.lastError}</div>}
+                  <EBMFiscalReceiptBlock receipt={creditNote.ebm} documentLabel="Credit note" title="RRA EBM Credit Note Receipt" compact />
                 </CardContent>
               </Card>
 

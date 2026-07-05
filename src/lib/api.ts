@@ -1497,6 +1497,31 @@ export interface EBMInitializeResponse {
   };
 }
 
+
+export interface EBMStockReconciliationRow {
+  itemCd: string;
+  productId?: string | null;
+  productName?: string | null;
+  sku?: string;
+  localQty: number | null;
+  vsdcQty: number | null;
+  vsdcItemName?: string | null;
+  branchId?: string;
+  status: "matched" | "discrepancy" | "missing_vsdc" | "missing_local";
+  difference: number;
+}
+
+export interface EBMStockReconciliationResponse {
+  success: boolean;
+  data: {
+    branchId: string;
+    mode?: string;
+    resultDt?: string | null;
+    pulledAt?: string;
+    summary: Record<string, number>;
+    rows: EBMStockReconciliationRow[];
+  };
+}
 export const ebmApi = {
   getDevices: () => request<EBMDeviceStatusResponse>("/ebm/devices"),
   initializeDevice: (payload: {
@@ -1523,6 +1548,11 @@ export const ebmApi = {
     const query = buildQuery(params as Record<string, any>);
     return request<{ success: boolean; data: Array<{ tin: string; taxpayerName: string; statusCode?: string | null }> }>(`/ebm/codes/tins${query ? `?${query}` : ""}`);
   },
+  verifyCustomerTin: (payload: { tin: string; branchId?: string; bhfId?: string }) =>
+    request<{ success: boolean; data: unknown; verification?: unknown }>("/ebm/customers/verify-tin", {
+      method: "POST",
+      body: payload,
+    }),
   getNotices: () => request<{ success: boolean; data: Array<{ noticeNumber: string; title?: string | null; content?: string | null; noticeDate?: string | null }> }>("/ebm/notices"),
   registerBranch: (payload: { branchId: string }) =>
     request<{ success: boolean; data: unknown }>("/ebm/branches/register", {
@@ -1550,6 +1580,16 @@ export const ebmApi = {
     request<{ success: boolean; data: unknown }>(`/ebm/imports/${id}/retry-stock`, {
       method: "POST",
       body: payload,
+    }),
+  reconcileStock: (payload?: { branchId?: string; bhfId?: string; lastReqDt?: string }) =>
+    request<EBMStockReconciliationResponse>("/ebm/stock/reconcile", {
+      method: "POST",
+      body: payload || {},
+    }),
+  resubmitStockMaster: (payload?: { branchId?: string; bhfId?: string; itemCd?: string; itemCode?: string; productId?: string; allDiscrepancies?: boolean; lastReqDt?: string }) =>
+    request<{ success: boolean; data: { branchId: string; checked: number; selected: number; submitted: number; failed: number; results: unknown[]; summary: Record<string, number> } }>("/ebm/stock/reconcile/resubmit", {
+      method: "POST",
+      body: payload || {},
     }),
   syncPurchases: (payload?: { branchId?: string; full?: boolean }) =>
     request<{ success: boolean; data: unknown }>("/ebm/purchases/sync", {
@@ -1655,14 +1695,19 @@ export const clientsApi = {
   getById: (id: string) =>
     request<{ success: boolean; data: unknown }>(`/clients/${id}`),
   create: (client: unknown) =>
-    request<{ success: boolean; data: unknown }>("/clients", {
+    request<{ success: boolean; data: unknown; ebmBranchCustomer?: unknown }>("/clients", {
       method: "POST",
       body: client,
     }),
   update: (id: string, client: unknown) =>
-    request<{ success: boolean; data: unknown }>(`/clients/${id}`, {
+    request<{ success: boolean; data: unknown; ebmBranchCustomer?: unknown }>(`/clients/${id}`, {
       method: "PUT",
       body: client,
+    }),
+  verifyEbmTin: (id: string, payload?: { branchId?: string; bhfId?: string }) =>
+    request<{ success: boolean; data: unknown; verification?: unknown }>(`/clients/${id}/ebm/verify-tin`, {
+      method: "POST",
+      body: payload || {},
     }),
   delete: (id: string) =>
     request<{ success: boolean; message: string }>(`/clients/${id}`, {
@@ -1672,6 +1717,11 @@ export const clientsApi = {
     request<{ success: boolean; data: unknown }>(
       `/clients/${id}/toggle-status`,
       { method: "PUT" },
+    ),
+  saveEbmBranchCustomer: (id: string, payload?: { branchId?: string; bhfId?: string }) =>
+    request<{ success: boolean; data: unknown; vsdc?: unknown; payload?: unknown }>(
+      `/clients/${id}/ebm/branch-customer`,
+      { method: "POST", body: payload || {} },
     ),
   getPurchaseHistory: (
     id: string,
@@ -1924,7 +1974,11 @@ export const invoicesApi = {
       `/sales-invoices/${id}/confirm`,
       { method: "PUT" },
     ),
-  recordPayment: (
+  verifyCustomerTin: (id: string, payload?: { branchId?: string; bhfId?: string }) =>
+    request<{ success: boolean; data: unknown; verification?: unknown }>(
+      `/sales-invoices/${id}/ebm/verify-tin`,
+      { method: "POST", body: payload || {} },
+    ),  recordPayment: (
     id: string,
     data: {
       amount: number;
@@ -12213,3 +12267,7 @@ export const projectsApi = {
       };
     }>("/projects/statistics"),
 };
+
+
+
+

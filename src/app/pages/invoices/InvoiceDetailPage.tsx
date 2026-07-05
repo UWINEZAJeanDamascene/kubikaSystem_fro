@@ -25,6 +25,7 @@ import {
   CalendarDays,
   Ban,
   ChevronRight,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -51,6 +52,7 @@ import {
 } from '@/app/components/ui/dialog';
 import { useTranslation } from 'react-i18next';
 import { EBMStatusBadge } from '@/app/components/EBMStatusBadge';
+import EBMFiscalReceiptBlock from '@/app/components/EBMFiscalReceiptBlock';
 
 interface Invoice {
   _id: string;
@@ -135,12 +137,20 @@ interface Invoice {
     rcptSign?: string | null;
     intrlData?: string | null;
     rcptNo?: string | null;
+    rcptDt?: string | null;
+    sdcId?: string | null;
+    mrcNo?: string | null;
+    curRcptNo?: string | number | null;
+    totRcptNo?: string | number | null;
+    rptNo?: string | number | null;
     submittedAt?: string | null;
     ebmStatus?: string;
     retryCount?: number;
     lastError?: string | null;
     qrCode?: string | null;
+    customerTinVerification?: { status?: string; taxpayerName?: string; verifiedAt?: string; resultMsg?: string } | null;
   };
+  ebmCustomerTinVerification?: { status?: string; taxpayerName?: string; verifiedAt?: string; resultMsg?: string } | null;
 }
 
 interface CreditNote {
@@ -185,6 +195,7 @@ export default function InvoiceDetailPage() {
   const [paymentReference, setPaymentReference] = useState('');
   const [bankAccountId, setBankAccountId] = useState('');
   const [bankAccounts, setBankAccounts] = useState<Array<{_id: string; name: string; accountType: string}>>([]);
+  const [verifyingTin, setVerifyingTin] = useState(false);
 
   const fetchInvoice = useCallback(async () => {
     if (!id) return;
@@ -217,6 +228,25 @@ export default function InvoiceDetailPage() {
     fetchBankAccounts();
   }, [fetchInvoice, fetchBankAccounts]);
 
+  const handleVerifyCustomerTin = async () => {
+    if (!id) return;
+    const tin = (invoice?.customerTin || invoice?.client?.taxId || '').replace(/\D/g, '').slice(0, 9);
+    if (!/^\d{9}$/.test(tin)) {
+      alert('Invoice customer needs a valid 9-digit Rwanda TIN before RRA verification.');
+      return;
+    }
+    setVerifyingTin(true);
+    try {
+      const response = await invoicesApi.verifyCustomerTin(id, { branchId: '00' });
+      if (response.success && response.data) setInvoice(response.data as Invoice);
+      const verification = (response.verification || (response.data as any)?.ebmCustomerTinVerification) as any;
+      alert(`Customer TIN verified${verification?.taxpayerName ? `: ${verification.taxpayerName}` : ''}`);
+    } catch (error: any) {
+      alert(error?.message || 'RRA customer TIN verification failed');
+    } finally {
+      setVerifyingTin(false);
+    }
+  };
   const handleConfirm = async () => {
     if (!id) return;
     setActionLoading(true);
@@ -385,6 +415,7 @@ export default function InvoiceDetailPage() {
     return map[status] || status;
   };
   const customerTin = invoice.customerTin || invoice.client?.taxId || '';
+  const customerTinVerification = invoice.ebmCustomerTinVerification || invoice.ebm?.customerTinVerification;
   const hasInvalidCustomerTin = Boolean(customerTin) && !/^\d{9}$/.test(customerTin);
 
   return (
@@ -445,6 +476,12 @@ export default function InvoiceDetailPage() {
                       <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                         <MapPin className="h-3.5 w-3.5 text-slate-400" />
                         {invoice.client.contact.address}
+                      </div>
+                    )}
+                    {customerTin && (
+                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                        <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
+                        TIN: {customerTinVerification?.status === 'valid' ? `${customerTin} verified` : customerTin}
                       </div>
                     )}
                     {invoice.paymentTerms && (
@@ -527,6 +564,10 @@ export default function InvoiceDetailPage() {
                     Record Payment
                   </Button>
                 )}
+                <Button size="sm" variant="outline" onClick={handleVerifyCustomerTin} disabled={verifyingTin || !/^\d{9}$/.test(customerTin)} className="gap-1.5 dark:border-slate-700 dark:text-slate-200">
+                  <ShieldCheck className="h-4 w-4" />
+                  {verifyingTin ? 'Verifying TIN' : 'Verify TIN'}
+                </Button>
                 <Button size="sm" variant="outline" onClick={handleDownloadPDF} className="gap-1.5 dark:border-slate-700 dark:text-slate-200">
                   <Download className="h-4 w-4" />
                   PDF
@@ -779,25 +820,22 @@ export default function InvoiceDetailPage() {
                     <EBMStatusBadge status={invoice.ebm?.ebmStatus} />
                   </div>
                 </CardHeader>
-                <CardContent className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    ["RRA receipt number", invoice.ebm?.rcptNo || "-"],
-                    ["Submitted at", invoice.ebm?.submittedAt ? new Date(invoice.ebm.submittedAt).toLocaleString() : "-"],
-                    ["Retry count", String(invoice.ebm?.retryCount || 0)],
-                    ["RRA internal data", invoice.ebm?.intrlData || "-"],
-                    ["Receipt signature", invoice.ebm?.rcptSign || "-"],
-                    ["QR code data", invoice.ebm?.qrCode || "-"],
-                  ].map(([label, value]) => (
-                    <div key={label} className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
-                      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
-                      <p className="mt-1 break-words text-sm text-slate-900 dark:text-slate-100">{value}</p>
+                <CardContent className="space-y-4">
+                  <EBMFiscalReceiptBlock receipt={invoice.ebm} documentLabel="Invoice" />
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                      <p className="text-xs font-semibold uppercase text-slate-500">Submitted at</p>
+                      <p className="mt-1 break-words text-sm text-slate-900 dark:text-slate-100">{invoice.ebm?.submittedAt ? new Date(invoice.ebm.submittedAt).toLocaleString() : "-"}</p>
                     </div>
-                  ))}
-                  {invoice.ebm?.lastError && (
-                    <div className="sm:col-span-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
-                      {invoice.ebm.lastError}
+                    <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                      <p className="text-xs font-semibold uppercase text-slate-500">Retry count</p>
+                      <p className="mt-1 break-words text-sm text-slate-900 dark:text-slate-100">{String(invoice.ebm?.retryCount || 0)}</p>
                     </div>
-                  )}
+                    <div className="rounded-md border border-slate-200 p-3 dark:border-slate-800">
+                      <p className="text-xs font-semibold uppercase text-slate-500">QR source</p>
+                      <p className="mt-1 break-words text-sm text-slate-900 dark:text-slate-100">{invoice.ebm?.qrCode ? "RRA payload" : "Pending"}</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

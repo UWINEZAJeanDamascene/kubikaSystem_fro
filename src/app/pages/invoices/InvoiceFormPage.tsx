@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { invoicesApi, clientsApi, productsApi, warehousesApi } from '@/lib/api';
+import { invoicesApi, clientsApi, productsApi, warehousesApi, ebmApi } from '@/lib/api';
 import { Layout } from '../../layout/Layout';
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
   List,
   FileText,
   DollarSign,
+  ShieldCheck,
 } from 'lucide-react';
 import { Skeleton } from '@/app/components/ui/skeleton';
 import { Button } from '@/app/components/ui/button';
@@ -54,12 +55,14 @@ interface Client {
   _id: string;
   name: string;
   code?: string;
+  taxId?: string;
 }
 
 interface Warehouse {
   _id: string;
   name: string;
   code?: string;
+  taxId?: string;
 }
 
 interface InvoiceLine {
@@ -114,6 +117,7 @@ export default function InvoiceFormPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [verifyingTin, setVerifyingTin] = useState(false);
 
   const [formData, setFormData] = useState<InvoiceFormData>({
     client: '',
@@ -303,6 +307,25 @@ export default function InvoiceFormPage() {
     return subtotal - discount + tax;
   };
 
+  const selectedClient = clients.find(client => client._id === formData.client);
+
+  const handleVerifyCustomerTin = async () => {
+    const tin = (selectedClient?.taxId || '').replace(/\D/g, '').slice(0, 9);
+    if (!/^\d{9}$/.test(tin)) {
+      alert('Selected client needs a valid 9-digit Rwanda TIN before RRA verification.');
+      return;
+    }
+    setVerifyingTin(true);
+    try {
+      const response = await ebmApi.verifyCustomerTin({ tin, branchId: '00' });
+      const verification = (response.verification || response.data) as any;
+      alert(`Customer TIN verified${verification?.taxpayerName ? `: ${verification.taxpayerName}` : ''}`);
+    } catch (error: any) {
+      alert(error?.message || 'RRA customer TIN verification failed');
+    } finally {
+      setVerifyingTin(false);
+    }
+  };
   const handleSave = async (confirmImmediately: boolean = false) => {
     if (!formData.client || formData.lines.length === 0) {
       alert(t('invoice.selectClient', 'Please select a client'));
@@ -432,16 +455,22 @@ export default function InvoiceFormPage() {
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <Label className="text-sm text-slate-700 dark:text-slate-300">Client *</Label>
-                      <Select value={formData.client} onValueChange={(value) => setFormData(prev => ({ ...prev, client: value }))}>
-                        <SelectTrigger className="bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white">
-                          <SelectValue placeholder="Select client" />
-                        </SelectTrigger>
-                        <SelectContent className="dark:border-slate-800 dark:bg-slate-950">
-                          {clients.map(client => (
-                            <SelectItem key={client._id} value={client._id} className="dark:text-slate-200">{client.name} ({client.code})</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex gap-2">
+                        <Select value={formData.client} onValueChange={(value) => setFormData(prev => ({ ...prev, client: value }))}>
+                          <SelectTrigger className="bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white">
+                            <SelectValue placeholder="Select client" />
+                          </SelectTrigger>
+                          <SelectContent className="dark:border-slate-800 dark:bg-slate-950">
+                            {clients.map(client => (
+                              <SelectItem key={client._id} value={client._id} className="dark:text-slate-200">{client.name} ({client.code})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button type="button" variant="outline" onClick={handleVerifyCustomerTin} disabled={verifyingTin || !/^\d{9}$/.test(selectedClient?.taxId || '')} className="shrink-0 gap-1.5 dark:border-slate-700 dark:text-slate-200">
+                          <ShieldCheck className="h-4 w-4" />
+                          {verifyingTin ? 'Verifying' : 'Verify'}
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-sm text-slate-700 dark:text-slate-300">Currency</Label>

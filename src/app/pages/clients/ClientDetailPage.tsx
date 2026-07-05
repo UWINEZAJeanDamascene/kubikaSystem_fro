@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { clientsApi } from '@/lib/api';
+import { toast } from 'sonner';
 import { Layout } from '../../layout/Layout';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import {
@@ -20,6 +21,7 @@ import {
   ClipboardList,
   AlertCircle,
   Building2,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
@@ -41,6 +43,9 @@ interface Client {
   name: string;
   code: string;
   type: 'individual' | 'company';
+  taxId?: string;
+  ebmTinVerification?: { status?: string; taxpayerName?: string; verifiedAt?: string; resultMsg?: string } | null;
+  ebmBranchCustomers?: Array<{ branchId?: string; status?: string; submittedAt?: string; error?: string }>;
   contact: {
     email?: string;
     phone?: string;
@@ -109,6 +114,8 @@ export default function ClientDetailPage() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [invoiceSummary, setInvoiceSummary] = useState({ totalAmount: 0, totalPaid: 0, totalBalance: 0 });
+  const [savingEbmCustomer, setSavingEbmCustomer] = useState(false);
+  const [verifyingTin, setVerifyingTin] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -198,6 +205,38 @@ export default function ClientDetailPage() {
     }
   };
 
+  const handleVerifyTin = async () => {
+    if (!id) return;
+    if (!/^\d{9}$/.test(client?.taxId || '')) {
+      toast.error('Client needs a valid 9-digit Rwanda TIN before RRA verification');
+      return;
+    }
+    setVerifyingTin(true);
+    try {
+      const response = await clientsApi.verifyEbmTin(id, { branchId: '00' });
+      if (response.success && response.data) setClient(response.data as Client);
+      const verification = response.verification as any;
+      toast.success(`Client TIN verified${verification?.taxpayerName ? `: ${verification.taxpayerName}` : ''}`);
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to verify client TIN with RRA');
+    } finally {
+      setVerifyingTin(false);
+    }
+  };
+  const handleSaveEbmBranchCustomer = async () => {
+    if (!id) return;
+    setSavingEbmCustomer(true);
+    try {
+      const response = await clientsApi.saveEbmBranchCustomer(id, { branchId: '00' });
+      if (response.success && response.data) setClient(response.data as Client);
+      toast.success('Client saved to RRA branch customers');
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to save client to RRA branch customers');
+    } finally {
+      setSavingEbmCustomer(false);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '-';
     return new Date(dateStr).toLocaleDateString();
@@ -242,6 +281,13 @@ export default function ClientDetailPage() {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  const branchCustomerStatus = client?.ebmBranchCustomers?.find((item) => item.branchId === '00') || client?.ebmBranchCustomers?.[0];
+  const branchCustomerLabel = branchCustomerStatus?.status === 'registered'
+    ? `Branch ${branchCustomerStatus.branchId || '00'} registered`
+    : branchCustomerStatus?.status === 'failed'
+      ? `Failed: ${branchCustomerStatus.error || 'Retry needed'}`
+      : 'Not registered';
 
   const AVATAR_COLORS = [
     'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
@@ -325,6 +371,14 @@ export default function ClientDetailPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 sm:mt-2">
+                  <Button variant="outline" size="sm" onClick={handleVerifyTin} disabled={verifyingTin || !/^\d{9}$/.test(client.taxId || '')} className="gap-1.5 dark:border-slate-700 dark:text-slate-200">
+                    {verifyingTin ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                    <span className="hidden sm:inline">Verify TIN</span>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleSaveEbmBranchCustomer} disabled={savingEbmCustomer} className="gap-1.5 dark:border-slate-700 dark:text-slate-200">
+                    {savingEbmCustomer ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                    <span className="hidden sm:inline">RRA Customer</span>
+                  </Button>
                   <Button variant="outline" size="sm" onClick={handleDownloadStatement} className="gap-1.5 dark:border-slate-700 dark:text-slate-200">
                     <FileText className="h-4 w-4" />
                     <span className="hidden sm:inline">Statement</span>
@@ -491,6 +545,9 @@ export default function ClientDetailPage() {
                   <CardContent className="space-y-3">
                     {[
                       { icon: Building2, label: 'Type', value: client.type.charAt(0).toUpperCase() + client.type.slice(1) },
+                      { icon: ShieldCheck, label: 'TIN', value: client.taxId || '-' },
+                      { icon: ShieldCheck, label: 'RRA TIN', value: client.ebmTinVerification?.status === 'valid' ? (client.ebmTinVerification.taxpayerName || 'Verified') : 'Not verified' },
+                      { icon: ShieldCheck, label: 'RRA Customer', value: branchCustomerLabel },
                       { icon: CreditCard, label: 'Payment Terms', value: getPaymentTermsLabel(client.paymentTerms) },
                       { icon: CreditCard, label: 'Credit Limit', value: formatCurrency(client.creditLimit || 0) },
                       { icon: TrendingUp, label: 'Total Purchases', value: formatCurrency(client.totalPurchases || 0) },
@@ -713,3 +770,4 @@ export default function ClientDetailPage() {
     </Layout>
   );
 }
+

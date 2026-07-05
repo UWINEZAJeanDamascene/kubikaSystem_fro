@@ -1,3 +1,5 @@
+import type { EBMFiscalReceiptData } from '@/app/components/EBMFiscalReceiptBlock';
+
 /**
  * Stacy AI — Invoice Template System
  * Defines data structures, template styles, and AI selection logic
@@ -56,6 +58,7 @@ export interface InvoiceData {
   notes?: string;
   terms?: string;
   qrCodeUrl?: string;
+  ebmReceipt?: EBMFiscalReceiptData | null;
 }
 
 /** Detect business type from context to pick the right template. */

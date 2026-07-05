@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Printer, FileText, CheckCircle, Download, Loader2 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { type InvoiceData, formatCurrency, type InvoiceTemplateStyle } from '@/lib/invoiceTemplates';
+import EBMFiscalReceiptBlock from '@/app/components/EBMFiscalReceiptBlock';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Invoice Preview Component — Renders 6 professional templates
@@ -92,15 +93,23 @@ export default function InvoicePreview({ data }: InvoicePreviewProps) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function InvoiceRenderer({ data, style }: { data: InvoiceData; style: InvoiceTemplateStyle }) {
+  let template = <KigaliModern data={data} />;
   switch (style) {
-    case 'kigali-modern': return <KigaliModern data={data} />;
-    case 'classic-trust': return <ClassicTrust data={data} />;
-    case 'industrial-bold': return <IndustrialBold data={data} />;
-    case 'elegant-minimal': return <ElegantMinimal data={data} />;
-    case 'rwanda-corporate': return <RwandaCorporate data={data} />;
-    case 'creative-fresh': return <CreativeFresh data={data} />;
-    default: return <KigaliModern data={data} />;
+    case 'classic-trust': template = <ClassicTrust data={data} />; break;
+    case 'industrial-bold': template = <IndustrialBold data={data} />; break;
+    case 'elegant-minimal': template = <ElegantMinimal data={data} />; break;
+    case 'rwanda-corporate': template = <RwandaCorporate data={data} />; break;
+    case 'creative-fresh': template = <CreativeFresh data={data} />; break;
+    case 'kigali-modern':
+    default: template = <KigaliModern data={data} />;
   }
+
+  return (
+    <div>
+      {template}
+      <EBMFiscalReceiptBlock receipt={data.ebmReceipt} documentLabel="Invoice" className="mx-auto mt-4 max-w-2xl" />
+    </div>
+  );
 }
 
 // ─── Shared sub-components ──────────────────────────────────────────────────
@@ -394,7 +403,7 @@ function RwandaCorporate({ data }: { data: InvoiceData }) {
 
       <div className="mt-6 text-center text-xs text-slate-500">
         <p>This invoice is generated in compliance with Rwanda Revenue Authority (RRA) regulations.</p>
-        <p>VAT registered. EBM receipt should be issued upon payment.</p>
+        <p>VAT registered. RRA fiscal receipt details are printed below when certified.</p>
       </div>
     </div>
   );

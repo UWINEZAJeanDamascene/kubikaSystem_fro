@@ -796,7 +796,7 @@ export default function WarehousesPage() {
           <DialogContent className="max-h-[88vh] max-w-3xl overflow-hidden bg-white p-0 dark:bg-slate-900 border-slate-200 dark:border-slate-700">
             <DialogHeader className="border-b border-slate-200 px-6 py-5 dark:border-slate-700">
               <DialogTitle className="text-slate-900 dark:text-white">
-                Branch insurance (VSDC /branches/saveBrancheInsurances)
+                Branch insurance (VSDC /branches/saveBranchInsurance)
               </DialogTitle>
               <DialogDescription className="text-slate-600 dark:text-slate-300">
                 Configure the insurance codes, names, and rates that will be submitted to RRA for this branch. Required when products are marked insurance applicable (isrcAplcbYn = "Y").
@@ -911,3 +911,4 @@ export default function WarehousesPage() {
     </Layout>
   );
 }
+

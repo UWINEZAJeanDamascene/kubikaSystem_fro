@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { clientsApi } from '@/lib/api';
+import { clientsApi, ebmApi } from '@/lib/api';
 import { Layout } from '../../layout/Layout';
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
   CreditCard,
   ToggleLeft,
   FileText,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -26,6 +27,7 @@ import {
 } from '@/app/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Label } from '@/app/components/ui/label';
+import { Switch } from '@/app/components/ui/switch';
 import { useTranslation } from 'react-i18next';
 
 interface ClientFormData {
@@ -67,6 +69,8 @@ export default function ClientFormPage() {
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [verifyingTin, setVerifyingTin] = useState(false);
+  const [registerWithEbmBranch, setRegisterWithEbmBranch] = useState(false);
   const [formData, setFormData] = useState<ClientFormData>(initialFormData);
 
   useEffect(() => {
@@ -120,6 +124,26 @@ export default function ClientFormPage() {
     }
   };
 
+  const handleVerifyTin = async () => {
+    const tin = (formData.taxId || '').replace(/\D/g, '').slice(0, 9);
+    if (!/^\d{9}$/.test(tin)) {
+      alert('Enter a valid 9-digit Rwanda TIN before verification.');
+      return;
+    }
+    setVerifyingTin(true);
+    try {
+      const response = isEditMode && id
+        ? await clientsApi.verifyEbmTin(id, { branchId: '00' })
+        : await ebmApi.verifyCustomerTin({ tin, branchId: '00' });
+      const verification = (response.verification || response.data) as any;
+      alert(`TIN verified${verification?.taxpayerName ? `: ${verification.taxpayerName}` : ''}`);
+    } catch (error: any) {
+      alert(error?.message || 'RRA TIN verification failed');
+    } finally {
+      setVerifyingTin(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -140,7 +164,9 @@ export default function ClientFormPage() {
         paymentTerms: formData.paymentTerms,
         creditLimit: formData.creditLimit,
         notes: formData.notes,
-        isActive: formData.isActive
+        isActive: formData.isActive,
+        registerWithEbmBranch,
+        ebmBranchId: '00'
       };
 
       let response;
@@ -274,15 +300,21 @@ export default function ClientFormPage() {
                       </div>
                       <div className="space-y-1.5">
                         <Label htmlFor="taxId" className="text-sm text-slate-700 dark:text-slate-300">TIN Number</Label>
-                        <Input
-                          id="taxId"
-                          value={formData.taxId || ''}
-                          onChange={(e) => handleChange('taxId', e.target.value.replace(/\D/g, '').slice(0, 9))}
-                          inputMode="numeric"
-                          maxLength={9}
-                          className="h-10 bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-                          placeholder="9-digit Rwanda TIN"
-                        />
+                        <div className="flex gap-2">
+                          <Input
+                            id="taxId"
+                            value={formData.taxId || ''}
+                            onChange={(e) => handleChange('taxId', e.target.value.replace(/\D/g, '').slice(0, 9))}
+                            inputMode="numeric"
+                            maxLength={9}
+                            className="h-10 bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                            placeholder="9-digit Rwanda TIN"
+                          />
+                          <Button type="button" variant="outline" onClick={handleVerifyTin} disabled={verifyingTin || (formData.taxId || '').length !== 9} className="h-10 shrink-0 gap-1.5 dark:border-slate-700 dark:text-slate-200">
+                            <ShieldCheck className="h-4 w-4" />
+                            {verifyingTin ? 'Verifying' : 'Verify'}
+                          </Button>
+                        </div>
                         {formData.taxId && formData.taxId.length !== 9 && (
                           <p className="text-xs text-amber-600 dark:text-amber-300">TIN should be 9 digits for B2B EBM invoices.</p>
                         )}
@@ -396,7 +428,15 @@ export default function ClientFormPage() {
                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       {isEditMode ? 'Update Client' : 'Create Client'}
                     </Button>
-                    <Button type="button" variant="outline" onClick={() => navigate('/clients')} className="w-full dark:border-slate-700 dark:text-slate-200">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium text-slate-900 dark:text-white">Register RRA customer</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Branch 00</p>
+                        </div>
+                        <Switch checked={registerWithEbmBranch} onCheckedChange={setRegisterWithEbmBranch} />
+                      </div>
+                    </div>                    <Button type="button" variant="outline" onClick={() => navigate('/clients')} className="w-full dark:border-slate-700 dark:text-slate-200">
                       Cancel
                     </Button>
                   </CardContent>

@@ -95,6 +95,7 @@ interface Product {
   taxRate?: number;
   ebm?: {
     isRegisteredWithEBM?: boolean;
+    ebmItemCode?: string | null;
     ebmRegisteredAt?: string | null;
     ebmRegistrationError?: string | null;
   };
@@ -669,6 +670,9 @@ export default function ProductsListPage() {
                       <TableRow key={product._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
                         <TableCell className="font-medium">
                           <span className="text-slate-900 dark:text-white">{product.sku}</span>
+                          {product.ebm?.ebmItemCode && (
+                            <div className="mt-1 font-mono text-xs text-slate-500 dark:text-slate-400">RRA {product.ebm.ebmItemCode}</div>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div>
@@ -866,3 +870,4 @@ export default function ProductsListPage() {
     </Layout>
   );
 }
+

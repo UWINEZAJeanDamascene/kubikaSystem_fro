@@ -518,7 +518,7 @@ export default function SalesLegacyPage() {
         });
         toast.success('Till opened');
       } else {
-        toast.error(response.message || 'Failed to open till');
+        toast.error((response as any).message || 'Failed to open till');
       }
     } catch (error: any) {
       console.error('Failed to open till:', error);
@@ -544,7 +544,7 @@ export default function SalesLegacyPage() {
         setClosingCountInput('');
         toast.success('Till closed');
       } else {
-        toast.error(response.message || 'Failed to close till');
+        toast.error((response as any).message || 'Failed to close till');
       }
     } catch (error: any) {
       console.error('Failed to close till:', error);
@@ -1488,3 +1488,4 @@ export default function SalesLegacyPage() {
     </Layout>
   );
 }
+
